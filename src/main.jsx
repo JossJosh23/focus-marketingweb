@@ -22,6 +22,11 @@ function LoadingScreen({ text = "Verificando tu sesión segura…" }) {
   return <main className="loading-screen"><Logo /><div className="loader"></div><p>{text}</p></main>;
 }
 
+function FullPageRedirect({ to, text = "Abriendo tu espacio…" }) {
+  useEffect(() => { window.location.replace(to); }, [to]);
+  return <LoadingScreen text={text} />;
+}
+
 function MaintenanceScreen({ retry }) {
   return <main className="maintenance-page"><Logo /><div className="maintenance-icon"><RefreshCw /></div><span className="eyebrow">CONEXIÓN TEMPORALMENTE INTERRUMPIDA</span><h1>Estamos realizando<br />una mejora.</h1><p>Tu espacio estará disponible nuevamente en unos minutos.</p><button onClick={retry}><RefreshCw /> Volver a comprobar</button></main>;
 }
@@ -70,7 +75,7 @@ function Login() {
       await new Promise((resolve) => setTimeout(resolve, 300));
       setStage("Abriendo tu espacio…");
       await new Promise((resolve) => setTimeout(resolve, 250));
-      goTo(result.user.role === "admin" ? "/admin" : "/client");
+      window.location.assign(result.user.role === "admin" ? "/admin" : "/client");
     } catch (requestError) { setError(requestError.name === "TypeError" ? "No se pudo conectar con el servidor. Revisa tu conexión a internet." : requestError.message); setStage(""); }
   }
   if (connection === "offline") return <MaintenanceScreen retry={checkConnection} />;
@@ -178,8 +183,8 @@ function App() {
   if (session.checking) return <LoadingScreen />;
   if (path === "/forgot-password") return <ForgotPassword />;
   if (path === "/reset-password") return <ResetPassword />;
-  if (session.user) { const target = session.user.role === "admin" ? "/admin" : "/client"; if (path !== target) { setTimeout(() => goTo(target), 0); return <LoadingScreen text="Abriendo tu espacio…" />; } return session.user.role === "admin" ? <AdminPanel user={session.user} /> : <PrivateArea user={session.user} />; }
-  if (path === "/admin" || path === "/client") { setTimeout(() => goTo("/"), 0); return <LoadingScreen />; }
+  if (session.user) { const target = session.user.role === "admin" ? "/admin" : "/client"; if (path !== target) return <FullPageRedirect to={target} />; return session.user.role === "admin" ? <AdminPanel user={session.user} /> : <PrivateArea user={session.user} />; }
+  if (path === "/admin" || path === "/client") return <FullPageRedirect to="/" text="Volviendo al inicio de sesión…" />;
   return <Login />;
 }
 

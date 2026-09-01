@@ -125,19 +125,23 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
     doc.roundedRect(91, 38, 192, 16, 3, 3, "F");
     doc.rect(91, 48, 192, 6, "F");
     text(doc, item.topic || "Sin título", 187, 49, { bold: true, size: (item.topic || "").length > 55 ? 9 : 12, color: [255, 255, 255], align: "center", width: 165, maxLines: 1 });
-    label(doc, "Objetivo", 99, 67);
-    text(doc, item.objective || "Sin objetivo agregado", 139, 67, { bold: true, size: 9, width: 132, maxLines: 3 });
-    label(doc, "Texto de publicación", 99, 91);
-    text(doc, item.copy || "Sin texto agregado", 139, 91, { size: 8.5, width: 132, maxLines: 6 });
-    label(doc, "Referencia visual", 99, 132);
+    doc.setDrawColor(220, 228, 223);
+    doc.setLineWidth(.25);
+    doc.line(180, 54, 180, 184);
+    doc.line(91, 91, 180, 91);
+    label(doc, "Objetivo", 98, 66);
+    text(doc, item.objective || "Sin objetivo agregado", 98, 78, { bold: true, size: 9, width: 74, maxLines: 3 });
+    label(doc, "Texto de publicación", 98, 103);
+    text(doc, item.copy || "Sin texto agregado", 98, 115, { size: 8.5, width: 74, maxLines: 14 });
+    label(doc, "Referencia visual", 187, 66);
     doc.setFillColor(231, 240, 235);
     doc.setDrawColor(201, 217, 208);
-    doc.roundedRect(139, 119, 132, 53, 3, 3, "FD");
+    doc.roundedRect(187, 74, 88, 101, 3, 3, "FD");
     if (item.mediaUrl && item.mediaType === "image") {
-      try { addContainedImage(doc, item.mediaUrl, 142, 122, 126, 47); }
-      catch { text(doc, item.productionReference || "Referencia visual adjunta", 205, 148, { bold: true, size: 9, color: GREEN, align: "center", width: 110 }); }
+      try { addContainedImage(doc, item.mediaUrl, 190, 77, 82, 95); }
+      catch { text(doc, item.productionReference || "Referencia visual adjunta", 231, 126, { bold: true, size: 9, color: GREEN, align: "center", width: 72, maxLines: 5 }); }
     } else {
-      text(doc, item.mediaType === "video" ? "VIDEO ADJUNTO EN EL PORTAL" : item.productionReference || "IMAGEN / IDEA POR DEFINIR", 205, 148, { bold: true, size: 9, color: GREEN, align: "center", width: 110 });
+      text(doc, item.mediaType === "video" ? "VIDEO ADJUNTO EN EL PORTAL" : item.productionReference || "IMAGEN / IDEA POR DEFINIR", 231, 126, { bold: true, size: 9, color: GREEN, align: "center", width: 72, maxLines: 5 });
     }
     pageFooter(doc, period, index + 2);
   });

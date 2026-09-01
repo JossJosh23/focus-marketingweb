@@ -45,7 +45,7 @@ async function authenticate(req, res, next) {
     const token = req.cookies.focugex_session;
     if (!token) return res.status(401).json({ error: "No has iniciado sesión." });
     const payload = jwt.verify(token, jwtSecret, { issuer: "focugex" });
-    const result = await pool.query(`SELECT u.id, u.name, u.email, u.role, u.last_login_at, s.id AS session_id
+    const result = await pool.query(`SELECT u.id, u.name, u.username, u.email, u.company_name, u.role, u.last_login_at, s.id AS session_id
       FROM users u JOIN auth_sessions s ON s.user_id = u.id
       WHERE u.id = $1 AND s.id = $2 AND u.active = TRUE AND s.revoked_at IS NULL AND s.expires_at > NOW()`, [payload.sub, payload.jti]);
     if (result.rowCount === 0) return res.status(401).json({ error: "Sesión no válida." });
@@ -62,6 +62,8 @@ function requireAdmin(req, res, next) {
   if (req.user.role !== "admin") return res.status(403).json({ error: "Acceso exclusivo para administradores." });
   next();
 }
+
+const rolePath = (role) => role === "admin" ? "/admin" : role === "manager" ? "/manager" : "/client";
 
 app.get("/health", async (_req, res) => {
   try { await pool.query("SELECT 1"); res.json({ status: "ok", database: "connected" }); }
@@ -152,7 +154,7 @@ app.get("/", async (req, res, next) => {
         AND s.revoked_at IS NULL AND s.expires_at > NOW()`, [payload.sub, payload.jti]);
     if (!result.rowCount) return next();
     res.setHeader("Cache-Control", "no-store");
-    return res.redirect(302, result.rows[0].role === "admin" ? "/admin" : "/client");
+    return res.redirect(302, rolePath(result.rows[0].role));
   } catch {
     res.clearCookie("focugex_session", baseCookieOptions);
     return next();
@@ -170,12 +172,14 @@ app.post("/api/admin/users", authenticate, requireAdmin, async (req, res) => {
   const email = String(req.body.email || "").trim().toLowerCase();
   const companyName = String(req.body.companyName || "").trim();
   const password = String(req.body.password || "");
+  const role = String(req.body.role || "client");
+  if (!["manager", "client"].includes(role)) return res.status(400).json({ error: "Selecciona un rol válido para el usuario." });
   if (!name || !username || !email || !companyName || password.length < 10) return res.status(400).json({ error: "Todos los campos son obligatorios y la contraseña debe tener al menos 10 caracteres." });
   if (!/^[a-z0-9._-]{3,40}$/.test(username)) return res.status(400).json({ error: "El usuario debe tener entre 3 y 40 caracteres y usar solamente letras, números, punto, guion o guion bajo." });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "Ingresa un correo electrónico válido." });
   try {
     const passwordHash = await bcrypt.hash(password, 12);
-    const result = await pool.query("INSERT INTO users (name, username, email, company_name, password_hash, role) VALUES ($1, $2, $3, $4, $5, 'client') RETURNING id, name, username, email, company_name, role, active, created_at, last_login_at", [name, username, email, companyName, passwordHash]);
+    const result = await pool.query("INSERT INTO users (name, username, email, company_name, password_hash, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, username, email, company_name, role, active, created_at, last_login_at", [name, username, email, companyName, passwordHash, role]);
     res.status(201).json({ user: result.rows[0] });
   } catch (error) {
     if (error.code === "23505") return res.status(409).json({ error: "Ya existe una cuenta con ese correo o nombre de usuario." });
@@ -191,16 +195,18 @@ app.patch("/api/admin/users/:id", authenticate, requireAdmin, async (req, res) =
   const companyName = String(req.body.companyName || "").trim();
   const password = String(req.body.password || "");
   const active = req.body.active !== false;
+  const role = String(req.body.role || "client");
+  if (!["manager", "client"].includes(role)) return res.status(400).json({ error: "Selecciona un rol válido para el usuario." });
   if (!Number.isInteger(id) || !name || !username || !email || !companyName) return res.status(400).json({ error: "Los datos del usuario están incompletos." });
   if (!/^[a-z0-9._-]{3,40}$/.test(username) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "El correo o nombre de usuario no es válido." });
   if (password && password.length < 10) return res.status(400).json({ error: "La contraseña nueva debe tener al menos 10 caracteres." });
   try {
     const passwordHash = password ? await bcrypt.hash(password, 12) : null;
     const result = await pool.query(`UPDATE users SET name = $1, username = $2, email = $3, company_name = $4, active = $5,
-      password_hash = COALESCE($6, password_hash), updated_at = NOW()
-      WHERE id = $7 AND role = 'client'
-      RETURNING id, name, username, email, company_name, role, active, created_at, last_login_at`, [name, username, email, companyName, active, passwordHash, id]);
-    if (!result.rowCount) return res.status(404).json({ error: "Usuario cliente no encontrado." });
+      password_hash = COALESCE($6, password_hash), role = $7, updated_at = NOW()
+      WHERE id = $8 AND role <> 'admin'
+      RETURNING id, name, username, email, company_name, role, active, created_at, last_login_at`, [name, username, email, companyName, active, passwordHash, role, id]);
+    if (!result.rowCount) return res.status(404).json({ error: "Usuario no encontrado." });
     if (!active || passwordHash) await pool.query("UPDATE auth_sessions SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL", [id]);
     res.json({ user: result.rows[0] });
   } catch (error) {

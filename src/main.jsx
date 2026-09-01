@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { AlertTriangle, ArrowLeft, ArrowRight, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, CircleCheck, Copy, Dices, Eye, EyeOff, HelpCircle, Laptop, LayoutDashboard, LockKeyhole, LogOut, Mail, Menu, Moon, Pencil, Plus, RefreshCw, Search, Settings, ShieldCheck, Sparkles, TrendingUp, UserPlus, UserRound, Users, UserX, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, BarChart3, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, CircleCheck, ClipboardCheck, Copy, Dices, Eye, EyeOff, FileText, HelpCircle, Laptop, LayoutDashboard, LockKeyhole, LogOut, Mail, Menu, MessageSquare, Moon, Pencil, Plus, RefreshCw, Search, Settings, ShieldCheck, Sparkles, TrendingUp, UserPlus, UserRound, Users, UserX, X } from "lucide-react";
 import "./styles.css";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function Logo() { return <div className="brand"><img src="/logo-focugex.png" alt="" /><b>FOCU<i>GEX</i></b></div>; }
 function goTo(path) { window.history.pushState({}, "", path); window.dispatchEvent(new PopStateEvent("popstate")); }
+function pathForRole(role) { return role === "admin" ? "/admin" : role === "manager" ? "/manager" : "/client"; }
 
 async function api(path, options = {}) {
   const response = await fetch(path, { credentials: "include", ...options });
@@ -75,7 +76,7 @@ function Login() {
       await new Promise((resolve) => setTimeout(resolve, 300));
       setStage("Abriendo tu espacio…");
       await new Promise((resolve) => setTimeout(resolve, 250));
-      window.location.assign(result.user.role === "admin" ? "/admin" : "/client");
+      window.location.assign(pathForRole(result.user.role));
     } catch (requestError) { setError(requestError.name === "TypeError" ? "No se pudo conectar con el servidor. Revisa tu conexión a internet." : requestError.message); setStage(""); }
   }
   if (connection === "offline") return <MaintenanceScreen retry={checkConnection} />;
@@ -122,7 +123,7 @@ function generateUserPassword(name) {
 }
 
 function UserModal({ user, onClose, onSaved }) {
-  const [form, setForm] = useState({ name: user?.name || "", username: user?.username || "", email: user?.email || "", companyName: user?.company_name || "", password: "", active: user?.active ?? true });
+  const [form, setForm] = useState({ name: user?.name || "", username: user?.username || "", email: user?.email || "", companyName: user?.company_name || "", role: user?.role || "client", password: "", active: user?.active ?? true });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -136,8 +137,8 @@ function UserModal({ user, onClose, onSaved }) {
     } catch (requestError) { setError(requestError.message); }
     finally { setSaving(false); }
   }
-  return <div className="user-modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="user-modal" role="dialog" aria-modal="true" aria-labelledby="user-modal-title"><header><div><span className="eyebrow">GESTIÓN DE ACCESO</span><h2 id="user-modal-title">{user ? "Editar usuario" : "Crear usuario"}</h2><p>{user ? "Actualiza la información o el acceso de esta cuenta." : "Crea una cuenta para que el cliente ingrese a FOCUGEX."}</p></div><button onClick={onClose} aria-label="Cerrar"><X /></button></header><form onSubmit={submit}>
-    <div className="user-form-grid"><label>Nombre completo<input value={form.name} onChange={(e) => update("name", e.target.value)} required placeholder="Ej. Adriana López" /></label><label>Nombre de usuario<input value={form.username} onChange={(e) => update("username", e.target.value.toLowerCase().replace(/\s/g, ""))} required minLength="3" placeholder="adriana.lopez" /></label><label>Correo electrónico<input value={form.email} onChange={(e) => update("email", e.target.value)} type="email" required placeholder="usuario@gmail.com" /></label><label>Empresa<input value={form.companyName} onChange={(e) => update("companyName", e.target.value)} required placeholder="Nombre de la empresa" /></label></div>
+  return <div className="user-modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="user-modal" role="dialog" aria-modal="true" aria-labelledby="user-modal-title"><header><div><span className="eyebrow">GESTIÓN DE ACCESO</span><h2 id="user-modal-title">{user ? "Editar usuario" : "Crear usuario"}</h2><p>{user ? "Actualiza la información o el acceso de esta cuenta." : "Crea una cuenta de gestor de marketing o cliente."}</p></div><button onClick={onClose} aria-label="Cerrar"><X /></button></header><form onSubmit={submit}>
+    <div className="user-form-grid"><label>Nombre completo<input value={form.name} onChange={(e) => update("name", e.target.value)} required placeholder="Ej. Adriana López" /></label><label>Nombre de usuario<input value={form.username} onChange={(e) => update("username", e.target.value.toLowerCase().replace(/\s/g, ""))} required minLength="3" placeholder="adriana.lopez" /></label><label>Correo electrónico<input value={form.email} onChange={(e) => update("email", e.target.value)} type="email" required placeholder="usuario@gmail.com" /></label><label>Empresa<input value={form.companyName} onChange={(e) => update("companyName", e.target.value)} required placeholder="Nombre de la empresa" /></label><label>Rol de acceso<select value={form.role} onChange={(e) => update("role", e.target.value)}><option value="client">Cliente · revisa y aprueba</option><option value="manager">Gestor · crea y administra</option></select></label></div>
     <label>Contraseña {user && <small>Déjala vacía para conservar la actual</small>}<div className="generated-password"><input value={form.password} onChange={(e) => update("password", e.target.value)} type={showPassword ? "text" : "password"} required={!user} minLength="10" placeholder="Mínimo 10 caracteres" /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label="Mostrar contraseña">{showPassword ? <EyeOff /> : <Eye />}</button><button type="button" className="generate-button" onClick={generate}><Dices /> Generar clave</button>{form.password && <button type="button" onClick={() => navigator.clipboard.writeText(form.password)} aria-label="Copiar contraseña"><Copy /></button>}</div></label>
     {user && <label className="user-active-toggle"><input type="checkbox" checked={form.active} onChange={(e) => update("active", e.target.checked)} /><span><i></i></span><div><b>Usuario activo</b><small>Puede iniciar sesión en la plataforma</small></div></label>}
     {error && <div className="error-message"><AlertTriangle />{error}</div>}
@@ -147,9 +148,9 @@ function UserModal({ user, onClose, onSaved }) {
 
 function UsersModule({ users, onCreate, onEdit }) {
   const [query, setQuery] = useState("");
-  const clients = users.filter((item) => item.role === "client");
-  const filtered = clients.filter((item) => `${item.name} ${item.username} ${item.email} ${item.company_name}`.toLowerCase().includes(query.toLowerCase()));
-  return <div className="users-module"><div className="users-heading"><div><span className="eyebrow">PRIMER MÓDULO</span><h1>Usuarios</h1><p>Crea y administra las cuentas que pueden acceder al espacio de clientes.</p></div><button onClick={onCreate}><UserPlus /> Crear usuario</button></div><div className="users-summary"><article><span>Total de usuarios</span><b>{clients.length}</b></article><article><span>Usuarios activos</span><b>{clients.filter((item) => item.active).length}</b></article><article><span>Usuarios suspendidos</span><b>{clients.filter((item) => !item.active).length}</b></article></div><section className="users-table-card"><header><div className="users-search"><Search /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar usuario, correo o empresa" /></div><span>{filtered.length} resultado{filtered.length === 1 ? "" : "s"}</span></header>{filtered.length ? <div className="users-table"><div className="users-table-row table-head"><span>Usuario</span><span>Empresa</span><span>Estado</span><span>Último acceso</span><span></span></div>{filtered.map((item) => <div className="users-table-row" key={item.id}><div className="user-cell"><i>{item.name.split(" ").map((part) => part[0]).slice(0, 2).join("")}</i><span><b>{item.name}</b><small>@{item.username} · {item.email}</small></span></div><span>{item.company_name}</span><span><i className={`status-pill ${item.active ? "active" : "inactive"}`}>{item.active ? "Activo" : "Suspendido"}</i></span><span>{item.last_login_at ? new Date(item.last_login_at).toLocaleDateString("es-EC") : "Sin acceso"}</span><button onClick={() => onEdit(item)}><Pencil /> Editar</button></div>)}</div> : <div className="users-empty"><Users /><h3>No hay usuarios todavía</h3><p>Crea la primera cuenta de cliente para comenzar.</p><button onClick={onCreate}><Plus /> Crear primer usuario</button></div>}</section></div>;
+  const members = users.filter((item) => item.role !== "admin");
+  const filtered = members.filter((item) => `${item.name} ${item.username} ${item.email} ${item.company_name} ${item.role}`.toLowerCase().includes(query.toLowerCase()));
+  return <div className="users-module"><div className="users-heading"><div><span className="eyebrow">GESTIÓN DE EQUIPO</span><h1>Usuarios</h1><p>Administra gestores de marketing y clientes desde un solo lugar.</p></div><button onClick={onCreate}><UserPlus /> Crear usuario</button></div><div className="users-summary"><article><span>Total de usuarios</span><b>{members.length}</b></article><article><span>Gestores de marketing</span><b>{members.filter((item) => item.role === "manager").length}</b></article><article><span>Clientes</span><b>{members.filter((item) => item.role === "client").length}</b></article></div><section className="users-table-card"><header><div className="users-search"><Search /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar usuario, correo o empresa" /></div><span>{filtered.length} resultado{filtered.length === 1 ? "" : "s"}</span></header>{filtered.length ? <div className="users-table"><div className="users-table-row table-head"><span>Usuario</span><span>Empresa / rol</span><span>Estado</span><span>Último acceso</span><span></span></div>{filtered.map((item) => <div className="users-table-row" key={item.id}><div className="user-cell"><i>{item.name.split(" ").map((part) => part[0]).slice(0, 2).join("")}</i><span><b>{item.name}</b><small>@{item.username} · {item.email}</small></span></div><span className="company-role">{item.company_name}<small>{item.role === "manager" ? "Gestor de marketing" : "Cliente"}</small></span><span><i className={`status-pill ${item.active ? "active" : "inactive"}`}>{item.active ? "Activo" : "Suspendido"}</i></span><span>{item.last_login_at ? new Date(item.last_login_at).toLocaleDateString("es-EC") : "Sin acceso"}</span><button onClick={() => onEdit(item)}><Pencil /> Editar</button></div>)}</div> : <div className="users-empty"><Users /><h3>No hay usuarios todavía</h3><p>Crea una cuenta de gestor o cliente para comenzar.</p><button onClick={onCreate}><Plus /> Crear primer usuario</button></div>}</section></div>;
 }
 
 function AdminPanel({ user }) {
@@ -227,19 +228,35 @@ function AdminPanel({ user }) {
         <div className="sidebar-profile-head"><Logo /></div>
       </div>
       <div className="sidebar-empty"><span>Panel administrativo</span><p>Gestiona los accesos de tu plataforma.</p></div>
-      <nav className="admin-modules" aria-label="Módulos administrativos"><button className={section === "users" ? "active" : ""} onClick={() => openSection("users")}><Users /><span>Usuarios</span><small>{users.filter((item) => item.role === "client").length}</small></button></nav>
+      <nav className="admin-modules" aria-label="Módulos administrativos"><button className={section === "users" ? "active" : ""} onClick={() => openSection("users")}><Users /><span>Usuarios</span><small>{users.filter((item) => item.role !== "admin").length}</small></button></nav>
       <button className="sidebar-logout" onClick={logout}><LogOut /> Cerrar sesión</button>
     </aside>
     {userModal && <UserModal user={userModal.user} onClose={() => setUserModal(null)} onSaved={saveUser} />}
   </main>;
 }
 
-function PrivateArea({ user }) {
-  const [sessions, setSessions] = useState([]); const [closed, setClosed] = useState(false);
-  useEffect(() => { api("/api/auth/sessions").then((r) => setSessions(r.sessions)).catch(() => {}); }, []);
+const portalModules = [
+  { id: "overview", label: "Resumen", icon: LayoutDashboard },
+  { id: "calendar", label: "Calendario", icon: CalendarDays },
+  { id: "materials", label: "Materiales", icon: FileText },
+  { id: "reports", label: "Informes", icon: BarChart3 },
+];
+
+function RolePortal({ user }) {
+  const [section, setSection] = useState("overview");
+  const manager = user.role === "manager";
+  const firstName = user.name.split(" ")[0];
   async function logout() { await api("/api/auth/logout", { method: "POST" }); window.location.assign("/"); }
-  async function closeOthers() { await api("/api/auth/sessions/others", { method: "DELETE" }); setSessions((items) => items.filter((item) => item.current)); setClosed(true); }
-  return <main className="session-page"><Logo /><span className="eyebrow">ACCESO AUTORIZADO</span><h1>Hola, {user.name}</h1><p>Ingresaste al espacio de {user.role === "admin" ? "administración" : "cliente"} de FOCUGEX.</p>{user.last_login_at && <div className="last-access"><ShieldCheck /> Último acceso registrado: {new Date(user.last_login_at).toLocaleString("es-EC")}</div>}<section className="sessions-card"><div><Laptop /><span><b>Sesiones activas</b><small>{sessions.length} dispositivo{sessions.length === 1 ? "" : "s"} conectado{sessions.length === 1 ? "" : "s"}</small></span></div>{sessions.length > 1 && <button onClick={closeOthers}>Cerrar las demás</button>}{closed && <small>Las demás sesiones fueron cerradas.</small>}</section><button onClick={logout}><LogOut /> Cerrar sesión</button></main>;
+  return <main className={`role-portal ${manager ? "manager-portal" : "client-portal"}`}>
+    <aside className="portal-sidebar"><Logo /><span className="portal-role">{manager ? "GESTOR DE MARKETING" : "PORTAL DEL CLIENTE"}</span><nav>{portalModules.map(({ id, label, icon: Icon }) => <button key={id} className={section === id ? "active" : ""} onClick={() => setSection(id)}><Icon />{label}</button>)}</nav><div className="portal-company"><Building2 /><span><small>ESPACIO DE TRABAJO</small><b>{user.company_name || "FOCUGEX"}</b></span></div><button className="portal-logout" onClick={logout}><LogOut /> Cerrar sesión</button></aside>
+    <section className="portal-workspace"><header><div><small>{manager ? "OPERACIÓN DE MARKETING" : "SEGUIMIENTO DE MARKETING"}</small><b>{portalModules.find((item) => item.id === section)?.label}</b></div><div className="portal-profile"><i>{user.name.split(" ").map((part) => part[0]).slice(0, 2).join("")}</i><span><b>{user.name}</b><small>{manager ? "Gestor" : "Cliente"}</small></span></div></header>
+      <div className="portal-content">
+        <div className="portal-welcome"><div><span className="eyebrow">{manager ? "CENTRO DE GESTIÓN" : "TODO EN UN SOLO LUGAR"}</span><h1>Hola, {firstName}</h1><p>{manager ? "Organiza el contenido, los cronogramas y las entregas de tus clientes." : "Revisa el avance, los próximos contenidos y los resultados de tu marca."}</p></div>{manager && <button><Plus /> Nuevo contenido</button>}</div>
+        {section === "overview" && <><div className="portal-stats"><article><CalendarDays /><span>Próximas publicaciones<b>8</b><small>Durante este mes</small></span></article><article><ClipboardCheck /><span>{manager ? "Pendientes de revisión" : "Por aprobar"}<b>3</b><small>Requieren atención</small></span></article><article><TrendingUp /><span>Alcance del mes<b>24.8K</b><small className="positive">+18% frente al mes anterior</small></span></article></div><div className="portal-grid"><article className="portal-card"><header><div><small>PRÓXIMAMENTE</small><h2>Calendario de contenidos</h2></div><button onClick={() => setSection("calendar")}>Ver calendario</button></header><ul className="schedule-list"><li><i>03<span>SEP</span></i><div><b>Historia · Inicio de mes</b><span>Instagram · 10:00</span></div><em className="ready">Listo</em></li><li><i>05<span>SEP</span></i><div><b>Reel · Presentación de producto</b><span>Instagram y TikTok · 18:30</span></div><em>En revisión</em></li><li><i>08<span>SEP</span></i><div><b>Carrusel educativo</b><span>Instagram · 12:00</span></div><em className="draft">Borrador</em></li></ul></article><article className="portal-card approvals"><header><div><small>{manager ? "ACTIVIDAD" : "TU PARTICIPACIÓN"}</small><h2>{manager ? "Últimas entregas" : "Material por aprobar"}</h2></div></header><div className="approval-preview"><FileText /><div><b>Campaña de septiembre</b><span>5 piezas · Actualizado hoy</span></div></div><p>{manager ? "El material está preparado para enviarlo al cliente." : "Tenemos nuevo material esperando tu revisión."}</p><button>{manager ? "Enviar a revisión" : "Revisar y aprobar"}<ArrowRight /></button></article></div></>}
+        {section !== "overview" && <section className="portal-empty-state">{section === "calendar" ? <CalendarDays /> : section === "materials" ? <FileText /> : <BarChart3 />}<h2>{section === "calendar" ? "Calendario de contenidos" : section === "materials" ? "Biblioteca de materiales" : "Informes y resultados"}</h2><p>{manager ? "Este módulo está listo para recibir y administrar la información de los clientes." : "Aquí podrás consultar toda la información que el equipo comparta contigo."}</p>{manager && <button><Plus /> Agregar información</button>}</section>}
+      </div>
+    </section>
+  </main>;
 }
 
 function App() {
@@ -249,8 +266,8 @@ function App() {
   if (session.checking) return <LoadingScreen />;
   if (path === "/forgot-password") return <ForgotPassword />;
   if (path === "/reset-password") return <ResetPassword />;
-  if (session.user) { const target = session.user.role === "admin" ? "/admin" : "/client"; if (path !== target) return <FullPageRedirect to={target} />; return session.user.role === "admin" ? <AdminPanel user={session.user} /> : <PrivateArea user={session.user} />; }
-  if (path === "/admin" || path === "/client") return <FullPageRedirect to="/" text="Volviendo al inicio de sesión…" />;
+  if (session.user) { const target = pathForRole(session.user.role); if (path !== target) return <FullPageRedirect to={target} />; return session.user.role === "admin" ? <AdminPanel user={session.user} /> : <RolePortal user={session.user} />; }
+  if (["/admin", "/manager", "/client"].includes(path)) return <FullPageRedirect to="/" text="Volviendo al inicio de sesión…" />;
   return <Login />;
 }
 

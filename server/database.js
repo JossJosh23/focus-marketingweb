@@ -17,7 +17,7 @@ export async function initializeDatabase() {
       name VARCHAR(120) NOT NULL,
       email VARCHAR(255) NOT NULL UNIQUE,
       password_hash VARCHAR(255) NOT NULL,
-      role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'client')),
+      role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'manager', 'client')),
       active BOOLEAN NOT NULL DEFAULT TRUE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -26,6 +26,8 @@ export async function initializeDatabase() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_ip VARCHAR(64);
     ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(80);
     ALTER TABLE users ADD COLUMN IF NOT EXISTS company_name VARCHAR(160);
+    ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+    ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'manager', 'client'));
     UPDATE users SET username = 'usuario-' || id WHERE username IS NULL;
     CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_idx ON users(LOWER(username));
 

@@ -26,8 +26,21 @@ export async function initializeDatabase() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_ip VARCHAR(64);
     ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(80);
     ALTER TABLE users ADD COLUMN IF NOT EXISTS company_name VARCHAR(160);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS agency_name VARCHAR(160);
+    UPDATE users SET agency_name = company_name WHERE role = 'manager' AND agency_name IS NULL;
     ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
     ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'manager', 'client'));
+
+    CREATE TABLE IF NOT EXISTS activity_logs (
+      id BIGSERIAL PRIMARY KEY,
+      actor_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      action VARCHAR(80) NOT NULL,
+      target_type VARCHAR(40),
+      target_id VARCHAR(80),
+      details JSONB NOT NULL DEFAULT '{}',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS activity_logs_created_idx ON activity_logs(created_at DESC);
     UPDATE users SET username = 'usuario-' || id WHERE username IS NULL;
     CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_idx ON users(LOWER(username));
 
@@ -88,6 +101,12 @@ export async function initializeDatabase() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS calendar_publications_company_idx ON calendar_publications(LOWER(company_name), publication_date, publication_time);
+    ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS approval_status VARCHAR(30) NOT NULL DEFAULT 'pending';
+    ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS client_comment TEXT NOT NULL DEFAULT '';
+    ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
+    ALTER TABLE calendar_publications DROP CONSTRAINT IF EXISTS calendar_publications_created_by_fkey;
+    ALTER TABLE calendar_publications ALTER COLUMN created_by DROP NOT NULL;
+    ALTER TABLE calendar_publications ADD CONSTRAINT calendar_publications_created_by_fkey FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
 
     DELETE FROM auth_sessions WHERE expires_at <= NOW() OR revoked_at < NOW() - INTERVAL '30 days';
     DELETE FROM password_reset_tokens WHERE expires_at <= NOW() OR used_at < NOW() - INTERVAL '7 days';

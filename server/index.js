@@ -27,9 +27,11 @@ app.use(cookieParser());
 
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false });
 const resetLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 5, standardHeaders: true, legacyHeaders: false });
+const registerLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standardHeaders: true, legacyHeaders: false });
 const baseCookieOptions = { httpOnly: true, secure: production, sameSite: "lax", path: "/" };
 const hash = (value) => crypto.createHash("sha256").update(value).digest("hex");
 const strongPassword = (value) => value.length >= 10 && /[A-Z]/.test(value) && /[0-9]/.test(value);
+const logActivity = (actorId, action, targetType, targetId, details = {}) => pool.query("INSERT INTO activity_logs (actor_id, action, target_type, target_id, details) VALUES ($1,$2,$3,$4,$5)", [actorId, action, targetType, String(targetId || ""), details]);
 
 function deviceInfo(req) {
   const agent = req.get("user-agent") || "Dispositivo desconocido";
@@ -46,7 +48,7 @@ async function authenticate(req, res, next) {
     const token = req.cookies.focugex_session;
     if (!token) return res.status(401).json({ error: "No has iniciado sesión." });
     const payload = jwt.verify(token, jwtSecret, { issuer: "focugex" });
-    const result = await pool.query(`SELECT u.id, u.name, u.username, u.email, u.company_name, u.role, u.last_login_at, s.id AS session_id
+    const result = await pool.query(`SELECT u.id, u.name, u.username, u.email, u.company_name, u.agency_name, u.role, u.last_login_at, s.id AS session_id
       FROM users u JOIN auth_sessions s ON s.user_id = u.id
       WHERE u.id = $1 AND s.id = $2 AND u.active = TRUE AND s.revoked_at IS NULL AND s.expires_at > NOW()`, [payload.sub, payload.jti]);
     if (result.rowCount === 0) return res.status(401).json({ error: "Sesión no válida." });
@@ -119,6 +121,21 @@ app.post("/api/auth/login", loginLimiter, async (req, res) => {
   const sessionCookie = remember ? { ...baseCookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 } : baseCookieOptions;
   res.cookie("focugex_session", signSession(user, sessionId, remember), sessionCookie);
   res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role, lastLoginAt: user.last_login_at } });
+});
+
+app.post("/api/auth/register-manager", registerLimiter, async (req, res) => {
+  const name = String(req.body.name || "").trim();
+  const username = String(req.body.username || "").trim().toLowerCase();
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const agencyName = String(req.body.agencyName || "").trim();
+  const password = String(req.body.password || "");
+  if (!name || !/^[a-z0-9._-]{3,40}$/.test(username) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || agencyName.length < 2 || !strongPassword(password)) return res.status(400).json({ error: "Completa los datos y usa una contraseña con 10 caracteres, una mayúscula y un número." });
+  try {
+    const passwordHash = await bcrypt.hash(password, 12);
+    const result = await pool.query("INSERT INTO users (name, username, email, agency_name, password_hash, role) VALUES ($1,$2,$3,$4,$5,'manager') RETURNING id, name, username, email, agency_name, role", [name, username, email, agencyName, passwordHash]);
+    await logActivity(result.rows[0].id, "manager.registered", "user", result.rows[0].id, { agencyName });
+    res.status(201).json({ message: "Cuenta creada. Ya puedes iniciar sesión." });
+  } catch (error) { if (error.code === "23505") return res.status(409).json({ error: "Ya existe una cuenta con ese correo o usuario." }); throw error; }
 });
 
 app.get("/api/auth/me", authenticate, (req, res) => res.json({ user: req.user }));
@@ -212,6 +229,7 @@ app.post("/api/manager/clients", authenticate, requireManager, async (req, res) 
     const result = await client.query("INSERT INTO users (name, username, email, company_name, password_hash, role) VALUES ($1,$2,$3,$4,$5,'client') RETURNING id, name, username, email, company_name, active, last_login_at", [name, username, email, company.name, passwordHash]);
     await client.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2)", [result.rows[0].id, company.id]);
     await client.query("COMMIT");
+    await logActivity(req.user.id, "client.created", "user", result.rows[0].id, { company: company.name });
     res.status(201).json({ client: result.rows[0], company });
   } catch (error) { await client.query("ROLLBACK"); if (error.status) return res.status(error.status).json({ error: error.message }); if (error.code === "23505") return res.status(409).json({ error: "Ya existe una cuenta con ese correo o usuario." }); throw error; } finally { client.release(); }
 });
@@ -220,10 +238,22 @@ app.get("/api/calendar/publications", authenticate, async (req, res) => {
   const company = await companyForRequest(req);
   if (!company) return res.json({ publications: [] });
   const result = await pool.query(`SELECT id, publication_date AS date, publication_time AS time, topic, copy, format, platforms,
-    media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName"
+    media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName", approval_status AS "approvalStatus", client_comment AS "clientComment", reviewed_at AS "reviewedAt"
     FROM calendar_publications WHERE LOWER(company_name) = LOWER($1)
     ORDER BY publication_date, publication_time NULLS LAST`, [company]);
   res.json({ publications: result.rows });
+});
+
+app.patch("/api/calendar/publications/:id/review", authenticate, async (req, res) => {
+  if (req.user.role !== "client") return res.status(403).json({ error: "Solo el cliente puede responder una publicación." });
+  const status = String(req.body.status || "");
+  const comment = String(req.body.comment || "").trim();
+  if (!['approved', 'changes_requested'].includes(status) || (status === 'changes_requested' && !comment) || comment.length > 3000) return res.status(400).json({ error: "Selecciona una respuesta válida y explica los cambios solicitados." });
+  const result = await pool.query(`UPDATE calendar_publications SET approval_status = $1, client_comment = $2, reviewed_at = NOW(), updated_at = NOW()
+    WHERE id = $3 AND LOWER(company_name) = LOWER($4) RETURNING approval_status AS "approvalStatus", client_comment AS "clientComment", reviewed_at AS "reviewedAt"`, [status, comment, req.params.id, req.user.company_name || ""]);
+  if (!result.rowCount) return res.status(404).json({ error: "Publicación no encontrada." });
+  await logActivity(req.user.id, `publication.${status}`, "publication", req.params.id, { company: req.user.company_name });
+  res.json({ review: result.rows[0] });
 });
 
 app.put("/api/calendar/publications/:id", authenticate, requireManager, async (req, res) => {
@@ -248,8 +278,9 @@ app.put("/api/calendar/publications/:id", authenticate, requireManager, async (r
       media_data = EXCLUDED.media_data, media_type = EXCLUDED.media_type, media_name = EXCLUDED.media_name, updated_at = NOW()
     WHERE LOWER(calendar_publications.company_name) = LOWER(EXCLUDED.company_name)
     RETURNING id, publication_date AS date, publication_time AS time, topic, copy, format, platforms,
-      media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName"`, [id, company, req.user.id, date, time, topic, copy, format, platforms, mediaUrl || null, mediaType, mediaName]);
+      media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName", approval_status AS "approvalStatus", client_comment AS "clientComment", reviewed_at AS "reviewedAt"`, [id, company, req.user.id, date, time, topic, copy, format, platforms, mediaUrl || null, mediaType, mediaName]);
   if (!result.rowCount) return res.status(403).json({ error: "No puedes modificar publicaciones de otra empresa." });
+  await logActivity(req.user.id, "publication.saved", "publication", id, { company });
   res.json({ publication: result.rows[0] });
 });
 
@@ -279,8 +310,23 @@ app.get("/", async (req, res, next) => {
 });
 
 app.get("/api/admin/users", authenticate, requireAdmin, async (_req, res) => {
-  const result = await pool.query("SELECT id, name, username, email, company_name, role, active, created_at, last_login_at FROM users ORDER BY created_at DESC");
+  const result = await pool.query("SELECT id, name, username, email, company_name, agency_name, role, active, created_at, last_login_at FROM users ORDER BY created_at DESC");
   res.json({ users: result.rows });
+});
+
+app.get("/api/admin/activity", authenticate, requireAdmin, async (_req, res) => {
+  const result = await pool.query(`SELECT a.id, a.action, a.target_type, a.target_id, a.details, a.created_at, u.name AS actor_name
+    FROM activity_logs a LEFT JOIN users u ON u.id = a.actor_id ORDER BY a.created_at DESC LIMIT 100`);
+  res.json({ activities: result.rows });
+});
+
+app.delete("/api/admin/users/:id", authenticate, requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id === Number(req.user.id)) return res.status(400).json({ error: "No puedes eliminar esta cuenta." });
+  const result = await pool.query("DELETE FROM users WHERE id = $1 AND role <> 'admin' RETURNING id, name, role", [id]);
+  if (!result.rowCount) return res.status(404).json({ error: "Usuario no encontrado." });
+  await logActivity(req.user.id, "user.deleted", "user", id, { name: result.rows[0].name, role: result.rows[0].role });
+  res.status(204).end();
 });
 
 app.post("/api/admin/users", authenticate, requireAdmin, async (req, res) => {
@@ -296,9 +342,9 @@ app.post("/api/admin/users", authenticate, requireAdmin, async (req, res) => {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "Ingresa un correo electrónico válido." });
   try {
     const passwordHash = await bcrypt.hash(password, 12);
-    const result = await pool.query("INSERT INTO users (name, username, email, company_name, password_hash, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, username, email, company_name, role, active, created_at, last_login_at", [name, username, email, companyName, passwordHash, role]);
-    const company = await pool.query("INSERT INTO companies (name) VALUES ($1) ON CONFLICT (LOWER(name)) DO UPDATE SET name = EXCLUDED.name RETURNING id", [companyName]);
-    await pool.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [result.rows[0].id, company.rows[0].id]);
+    const result = await pool.query("INSERT INTO users (name, username, email, company_name, agency_name, password_hash, role) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, name, username, email, company_name, agency_name, role, active, created_at, last_login_at", [name, username, email, role === "client" ? companyName : null, role === "manager" ? companyName : null, passwordHash, role]);
+    if (role === "client") { const company = await pool.query("INSERT INTO companies (name) VALUES ($1) ON CONFLICT (LOWER(name)) DO UPDATE SET name = EXCLUDED.name RETURNING id", [companyName]); await pool.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [result.rows[0].id, company.rows[0].id]); }
+    await logActivity(req.user.id, "user.created", "user", result.rows[0].id, { role });
     res.status(201).json({ user: result.rows[0] });
   } catch (error) {
     if (error.code === "23505") return res.status(409).json({ error: "Ya existe una cuenta con ese correo o nombre de usuario." });
@@ -321,13 +367,13 @@ app.patch("/api/admin/users/:id", authenticate, requireAdmin, async (req, res) =
   if (password && !strongPassword(password)) return res.status(400).json({ error: "La contraseña nueva debe tener 10 caracteres, una mayúscula y un número." });
   try {
     const passwordHash = password ? await bcrypt.hash(password, 12) : null;
-    const result = await pool.query(`UPDATE users SET name = $1, username = $2, email = $3, company_name = $4, active = $5,
-      password_hash = COALESCE($6, password_hash), role = $7, updated_at = NOW()
+    const result = await pool.query(`UPDATE users SET name = $1, username = $2, email = $3, company_name = CASE WHEN $7 = 'client' THEN $4 ELSE NULL END,
+      agency_name = CASE WHEN $7 = 'manager' THEN $4 ELSE NULL END, active = $5, password_hash = COALESCE($6, password_hash), role = $7, updated_at = NOW()
       WHERE id = $8 AND role <> 'admin'
-      RETURNING id, name, username, email, company_name, role, active, created_at, last_login_at`, [name, username, email, companyName, active, passwordHash, role, id]);
+      RETURNING id, name, username, email, company_name, agency_name, role, active, created_at, last_login_at`, [name, username, email, companyName, active, passwordHash, role, id]);
     if (!result.rowCount) return res.status(404).json({ error: "Usuario no encontrado." });
-    const company = await pool.query("INSERT INTO companies (name) VALUES ($1) ON CONFLICT (LOWER(name)) DO UPDATE SET name = EXCLUDED.name RETURNING id", [companyName]);
-    await pool.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [id, company.rows[0].id]);
+    if (role === "client") { const company = await pool.query("INSERT INTO companies (name) VALUES ($1) ON CONFLICT (LOWER(name)) DO UPDATE SET name = EXCLUDED.name RETURNING id", [companyName]); await pool.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [id, company.rows[0].id]); }
+    await logActivity(req.user.id, "user.updated", "user", id, { role, active });
     if (!active || passwordHash) await pool.query("UPDATE auth_sessions SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL", [id]);
     res.json({ user: result.rows[0] });
   } catch (error) {

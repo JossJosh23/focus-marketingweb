@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { AlertTriangle, ArrowLeft, ArrowRight, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, CircleCheck, Eye, EyeOff, Laptop, LockKeyhole, LogOut, Mail, Menu, Plus, RefreshCw, Search, ShieldCheck, Sparkles, TrendingUp, Users, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, CircleCheck, Eye, EyeOff, HelpCircle, Laptop, LayoutDashboard, LockKeyhole, LogOut, Mail, Menu, MessageSquare, Moon, Plus, PlugZap, RefreshCw, Search, Settings, ShieldCheck, Sparkles, TrendingUp, UserRound, Users, X } from "lucide-react";
 import "./styles.css";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -114,7 +114,10 @@ function ResetPassword() {
 
 function AdminPanel({ user }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("focugex_admin_theme") === "dark");
   const [users, setUsers] = useState([]);
+  const profileMenuRef = useRef(null);
   const initials = user.name.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase();
 
   useEffect(() => { api("/api/admin/users").then((result) => setUsers(result.users)).catch(() => {}); }, []);
@@ -124,9 +127,17 @@ function AdminPanel({ user }) {
     document.body.style.overflow = menuOpen ? "hidden" : "";
     return () => { document.removeEventListener("keydown", closeWithEscape); document.body.style.overflow = ""; };
   }, [menuOpen]);
+  useEffect(() => {
+    function closeProfileMenu(event) { if (!profileMenuRef.current?.contains(event.target)) setProfileMenuOpen(false); }
+    function closeWithEscape(event) { if (event.key === "Escape") setProfileMenuOpen(false); }
+    document.addEventListener("mousedown", closeProfileMenu);
+    document.addEventListener("keydown", closeWithEscape);
+    return () => { document.removeEventListener("mousedown", closeProfileMenu); document.removeEventListener("keydown", closeWithEscape); };
+  }, []);
+  useEffect(() => { localStorage.setItem("focugex_admin_theme", darkMode ? "dark" : "light"); }, [darkMode]);
   async function logout() { await api("/api/auth/logout", { method: "POST" }); window.location.assign("/"); }
 
-  return <main className="admin-shell">
+  return <main className={`admin-shell ${darkMode ? "admin-dark" : ""}`}>
     <section className="admin-workspace">
       <header className="admin-topbar">
         <button className="mobile-menu" onClick={() => setMenuOpen(true)} aria-label="Abrir navegación"><Menu /></button>
@@ -134,10 +145,19 @@ function AdminPanel({ user }) {
         <div className="topbar-actions">
           <label className="admin-search"><Search /><input placeholder="Buscar en FOCUGEX" aria-label="Buscar" /></label>
           <button className="notification-button" aria-label="Notificaciones"><Bell /><i></i></button>
-          <div className="topbar-profile" title="Perfil del administrador">
-            <div className="topbar-avatar">{initials}<i></i></div>
-            <div className="topbar-profile-copy"><b>{user.name}</b><span>{user.email}</span></div>
-            <small>ADMIN</small>
+          <div className="topbar-profile-wrap" ref={profileMenuRef}>
+            <button className={`topbar-profile ${profileMenuOpen ? "active" : ""}`} onClick={() => setProfileMenuOpen(!profileMenuOpen)} aria-expanded={profileMenuOpen} aria-haspopup="menu">
+              <div className="topbar-avatar">{initials}<i></i></div>
+              <div className="topbar-profile-copy"><b>{user.name}</b><span>{user.email}</span></div>
+              <small>ADMIN</small><ChevronDown className="profile-chevron" />
+            </button>
+            {profileMenuOpen && <div className="account-menu" role="menu">
+              <div className="account-menu-head"><div className="menu-avatar">{initials}<i></i></div><div><b>{user.name}</b><span>{user.email}</span></div><small>ADMIN</small></div>
+              <div className="account-menu-group"><button role="menuitem"><LayoutDashboard /><span>Panel principal</span></button><button role="menuitem"><MessageSquare /><span>Mensajes</span><i className="menu-badge yellow">21</i></button><button role="menuitem" className="selected"><Settings /><span>Configuración</span></button><button role="menuitem"><PlugZap /><span>Integraciones</span><i className="menu-badge">8</i></button><button role="menuitem" onClick={() => setDarkMode(!darkMode)}><Moon /><span>Modo oscuro</span><i className={`theme-switch ${darkMode ? "on" : ""}`}><em></em></i></button></div>
+              <span className="account-menu-label">CUENTA</span>
+              <div className="account-menu-group secondary"><button role="menuitem"><UserRound /><span>Mi perfil</span></button><button role="menuitem"><ShieldCheck /><span>Seguridad y sesiones</span></button><button role="menuitem"><HelpCircle /><span>Centro de ayuda</span></button></div>
+              <button className="account-logout" role="menuitem" onClick={logout}><LogOut /> Cerrar sesión</button>
+            </div>}
           </div>
         </div>
       </header>

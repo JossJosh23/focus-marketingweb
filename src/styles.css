@@ -52,10 +52,6 @@ blockquote span { display: block; margin-top: 6px; color: #7f8da4; font-size: 9p
 .eyebrow { color: var(--violet); font-size: 9px; font-weight: 800; letter-spacing: 1.7px; }
 .form-panel h2 { margin: 9px 0 7px; font-size: 39px; letter-spacing: -1.5px; }
 .lead { margin: 0 0 30px; color: var(--muted); font-size: 13px; }
-.role-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 5px; border-radius: 13px; background: #f0f2f8; }
-.role-tabs button { border: 0; border-radius: 10px; padding: 13px; display: flex; justify-content: center; align-items: center; gap: 7px; background: transparent; color: #687086; font-size: 10px; }
-.role-tabs button svg { width: 16px; }
-.role-tabs button.active { color: var(--blue); background: white; box-shadow: 0 7px 20px #292d6817; }
 form > label { display: block; margin-top: 19px; font-size: 11px; font-weight: 700; }
 input { width: 100%; margin-top: 8px; padding: 14px 15px; border: 1px solid var(--line); border-radius: 11px; outline: none; background: #fafbfe; color: var(--text); transition: .2s; }
 input:focus { border-color: #787af4; background: white; box-shadow: 0 0 0 4px #5b5cf014; }

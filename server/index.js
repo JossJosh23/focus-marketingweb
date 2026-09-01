@@ -62,14 +62,13 @@ app.get("/health", async (_req, res) => {
 app.post("/api/auth/login", loginLimiter, async (req, res) => {
   const email = String(req.body.email || "").trim().toLowerCase();
   const password = String(req.body.password || "");
-  const requestedRole = req.body.role === "client" ? "client" : "admin";
   const remember = req.body.remember === true;
   if (!email || !password) return res.status(400).json({ error: "Ingresa tu correo y contraseña." });
 
   const result = await pool.query("SELECT id, name, email, role, password_hash FROM users WHERE email = $1 AND active = TRUE", [email]);
   const user = result.rows[0];
   const valid = user ? await bcrypt.compare(password, user.password_hash) : false;
-  if (!valid || user.role !== requestedRole) return res.status(401).json({ error: "Correo, contraseña o tipo de acceso incorrecto." });
+  if (!valid) return res.status(401).json({ error: "Correo o contraseña incorrectos." });
 
   const sessionCookie = remember ? { ...baseCookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 } : baseCookieOptions;
   res.cookie("focugex_session", signSession(user, remember), sessionCookie);

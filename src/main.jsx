@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { AlertTriangle, ArrowRight, Building2, Check, Eye, EyeOff, LogOut, ShieldCheck, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, Check, Eye, EyeOff, LogOut, ShieldCheck, Sparkles } from "lucide-react";
 import "./styles.css";
 
 function Logo() {
@@ -17,7 +17,6 @@ function LoadingScreen() {
 }
 
 function Login() {
-  const [role, setRole] = useState("admin");
   const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [capsLock, setCapsLock] = useState(false);
@@ -51,7 +50,7 @@ function Login() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email: data.get("email"), password: data.get("password"), role, remember }),
+        body: JSON.stringify({ email: data.get("email"), password: data.get("password"), remember }),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -83,11 +82,7 @@ function Login() {
       <section className="form-panel">
         <form onSubmit={submit}>
           <div className={`connection-status ${connection}`}><span></span>{connection === "online" ? "Sistema disponible" : connection === "offline" ? "Sin conexión al servidor" : "Comprobando conexión"}</div>
-          <span className="eyebrow">BIENVENIDO DE NUEVO</span><h2>Inicia sesión</h2><p className="lead">Accede a tu espacio de trabajo.</p>
-          <div className="role-tabs" aria-label="Seleccionar tipo de acceso">
-            <button type="button" className={role === "admin" ? "active" : ""} onClick={() => setRole("admin")}><ShieldCheck /> Administrador</button>
-            <button type="button" className={role === "client" ? "active" : ""} onClick={() => setRole("client")}><Building2 /> Cliente</button>
-          </div>
+          <span className="eyebrow">BIENVENIDO DE NUEVO</span><h2>Inicia sesión</h2><p className="lead">Ingresa tus datos; te llevaremos automáticamente a tu espacio.</p>
           <label>Correo electrónico<input name="email" type="email" autoComplete="email" required placeholder="correo@empresa.com" /></label>
           <label>Contraseña
             <div className="password-field">

@@ -162,8 +162,21 @@ app.post("/api/admin/users", authenticate, requireAdmin, async (req, res) => {
   }
 });
 
-app.use(express.static(distPath, { maxAge: production ? "1d" : 0 }));
-app.get("*path", (_req, res) => res.sendFile(path.join(distPath, "index.html")));
+app.use(express.static(distPath, {
+  index: false,
+  maxAge: 0,
+  setHeaders(res, filePath) {
+    if (filePath.includes(`${path.sep}assets${path.sep}`)) {
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+    } else {
+      res.setHeader("Cache-Control", "no-cache");
+    }
+  },
+}));
+app.get("*path", (_req, res) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.sendFile(path.join(distPath, "index.html"));
+});
 app.use((error, _req, res, _next) => { console.error(error); res.status(500).json({ error: "Ocurrió un problema inesperado." }); });
 
 initializeDatabase().then(() => app.listen(port, "0.0.0.0", () => console.log(`FOCUGEX disponible en el puerto ${port}`))).catch((error) => { console.error("No fue posible iniciar FOCUGEX:", error.message); process.exit(1); });

@@ -128,6 +128,7 @@ export async function initializeDatabase() {
     ALTER TABLE content_plans ADD COLUMN IF NOT EXISTS posts_detail VARCHAR(500) NOT NULL DEFAULT '';
     ALTER TABLE content_plans ADD COLUMN IF NOT EXISTS videos_detail VARCHAR(500) NOT NULL DEFAULT '';
     ALTER TABLE content_plans ADD COLUMN IF NOT EXISTS video_boost_detail VARCHAR(500) NOT NULL DEFAULT '';
+    ALTER TABLE content_plans ADD COLUMN IF NOT EXISTS main_lines_count SMALLINT NOT NULL DEFAULT 0;
 
     DELETE FROM auth_sessions WHERE expires_at <= NOW() OR revoked_at < NOW() - INTERVAL '30 days';
     DELETE FROM password_reset_tokens WHERE expires_at <= NOW() OR used_at < NOW() - INTERVAL '7 days';

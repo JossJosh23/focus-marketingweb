@@ -104,12 +104,15 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
   doc.setDrawColor(...ORANGE); doc.setLineWidth(1); doc.line(18, 39, 40, 39);
   if (logoData) { try { addContainedImage(doc, logoData, 244, 10, 37, 24); } catch { text(doc, company, 281, 22, { bold: true, size: 12, color: GREEN, align: "right", width: 55 }); } }
   else text(doc, company, 281, 22, { bold: true, size: 12, color: GREEN, align: "right", width: 55 });
-  const lines = String(plan?.mainLines || "").split("\n").map((line) => line.trim()).filter(Boolean);
+  const rawMainLines = String(plan?.mainLines || "").trim();
+  const legacyCount = rawMainLines.match(/^(\d+)\s+l[ií]neas?\s+principales?\s*[,.:;-]?\s*/i);
+  const mainLinesCount = Number(plan?.mainLinesCount || legacyCount?.[1] || 0);
+  const mainLinesDetail = legacyCount ? rawMainLines.slice(legacyCount[0].length).trim() : rawMainLines;
   const rows = [
     ["POSTS", `${plan?.postsPerWeek || 0} espacios por semana`, plan?.postsDetail || "Sin distribución definida"],
     ["VIDEOS", `${plan?.videosPerMonth || 0} durante ${date.toLocaleDateString("es-EC", { month: "long" })}`, plan?.videosDetail || "Sin tipos de video definidos"],
     ["PAUTA DE VIDEO", plan?.videoSchedule || "Sin fechas definidas", plan?.videoBoostDetail || "Sin frecuencia definida"],
-    ["CONTENIDOS DEFINIDOS", `${lines.length} líneas principales`, lines.join(", ") || "Sin líneas principales definidas"],
+    ["CONTENIDOS DEFINIDOS", `${mainLinesCount} líneas principales`, mainLinesDetail || "Sin líneas principales definidas"],
   ];
   rows.forEach(([title, value, detail], index) => {
     const y = 58 + index * 32;

@@ -122,6 +122,27 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
     doc.setDrawColor(216, 225, 220); doc.setLineWidth(.25); doc.line(18, y + 17, 276, y + 17);
   });
   pageFooter(doc, period, 2);
+  let nextPageNumber = 3;
+  const keyDates = Array.isArray(plan?.keyDates) ? [...plan.keyDates].filter((item) => item.date && item.title).sort((a, b) => a.date.localeCompare(b.date)) : [];
+  for (let start = 0; start < keyDates.length; start += 5) {
+    const group = keyDates.slice(start, start + 5);
+    doc.addPage("a4", "landscape");
+    doc.setFillColor(...PAPER); doc.rect(0, 0, 297, 210, "F");
+    text(doc, `${keyDates.length} ideas ya le dan dirección al mes`, 18, 23, { bold: true, size: 17, width: 205, maxLines: 1 });
+    text(doc, "Las demás fechas se mantienen abiertas para completar la planificación.", 18, 33, { size: 8.5, color: MUTED, width: 205, maxLines: 1 });
+    doc.setDrawColor(...ORANGE); doc.setLineWidth(1); doc.line(18, 39, 40, 39);
+    if (logoData) { try { addContainedImage(doc, logoData, 244, 10, 37, 24); } catch { text(doc, company, 281, 22, { bold: true, size: 12, color: GREEN, align: "right", width: 55 }); } }
+    else text(doc, company, 281, 22, { bold: true, size: 12, color: GREEN, align: "right", width: 55 });
+    group.forEach((item, index) => {
+      const y = 55 + index * 27;
+      const dateLabel = new Date(`${item.date}T12:00:00`).toLocaleDateString("es-EC", { day: "2-digit", month: "short" }).toUpperCase().replace(".", "");
+      text(doc, dateLabel, 20, y, { bold: true, size: 8, color: ORANGE, width: 28, maxLines: 1 });
+      text(doc, item.title, 52, y, { bold: true, size: 12, color: GREEN, width: 85, maxLines: 2 });
+      text(doc, item.description || "Contenido por desarrollar", 145, y, { size: 9, width: 125, maxLines: 3 });
+      doc.setDrawColor(216, 225, 220); doc.setLineWidth(.25); doc.line(18, y + 13, 276, y + 13);
+    });
+    pageFooter(doc, period, nextPageNumber++);
+  }
 
   publications.forEach((item, index) => {
     doc.addPage("a4", "landscape");
@@ -170,7 +191,7 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
     } else {
       text(doc, item.mediaType === "video" ? "VIDEO ADJUNTO EN EL PORTAL" : item.productionReference || "IMAGEN / IDEA POR DEFINIR", 231, 126, { bold: true, size: 9, color: GREEN, align: "center", width: 72, maxLines: 5 });
     }
-    pageFooter(doc, period, index + 3);
+    pageFooter(doc, period, nextPageNumber + index);
   });
 
   return doc;

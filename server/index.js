@@ -312,9 +312,10 @@ app.get("/api/calendar/publications", authenticate, async (req, res) => {
   if (!company) return res.json({ publications: [] });
   const result = await pool.query(`SELECT id, TO_CHAR(publication_date, 'YYYY-MM-DD') AS date, TO_CHAR(publication_time, 'HH24:MI') AS time, topic, copy, format, platforms, objective,
     distribution_type AS "distributionType", production_reference AS "productionReference",
-    media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName", approval_status AS "approvalStatus", client_comment AS "clientComment", reviewed_at AS "reviewedAt"
+    media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName", approval_status AS "approvalStatus", client_comment AS "clientComment", reviewed_at AS "reviewedAt", is_draft_slot AS "isDraftSlot"
     FROM calendar_publications WHERE LOWER(company_name) = LOWER($1)
-    ORDER BY publication_date, publication_time NULLS LAST`, [company]);
+    AND ($2::boolean = TRUE OR is_draft_slot = FALSE)
+    ORDER BY publication_date, publication_time NULLS LAST`, [company, ['manager', 'collaborator'].includes(req.user.role)]);
   res.json({ publications: result.rows });
 });
 
@@ -324,7 +325,8 @@ app.get("/api/calendar/plan", authenticate, async (req, res) => {
   if (!company || !/^\d{4}-\d{2}$/.test(period)) return res.json({ plan: null });
   const result = await pool.query(`SELECT period, strategy_summary AS "strategySummary", posts_per_week AS "postsPerWeek",
     videos_per_month AS "videosPerMonth", video_schedule AS "videoSchedule", main_lines AS "mainLines", posts_detail AS "postsDetail",
-    videos_detail AS "videosDetail", video_boost_detail AS "videoBoostDetail", main_lines_count AS "mainLinesCount", updated_at AS "updatedAt"
+    videos_detail AS "videosDetail", video_boost_detail AS "videoBoostDetail", main_lines_count AS "mainLinesCount",
+    publication_interval_days AS "publicationIntervalDays", key_dates AS "keyDates", updated_at AS "updatedAt"
     FROM content_plans WHERE LOWER(company_name) = LOWER($1) AND period = $2`, [company, period]);
   res.json({ plan: result.rows[0] || null });
 });
@@ -341,13 +343,17 @@ app.put("/api/calendar/plan", authenticate, requireMarketing, async (req, res) =
   const videosDetail = String(req.body.videosDetail || "").trim();
   const videoBoostDetail = String(req.body.videoBoostDetail || "").trim();
   const mainLinesCount = Number(req.body.mainLinesCount || 0);
-  if (!company || !/^\d{4}-\d{2}$/.test(period) || !Number.isInteger(postsPerWeek) || postsPerWeek < 0 || postsPerWeek > 30 || !Number.isInteger(videosPerMonth) || videosPerMonth < 0 || videosPerMonth > 100 || !Number.isInteger(mainLinesCount) || mainLinesCount < 0 || mainLinesCount > 100 || strategySummary.length > 5000 || mainLines.length > 5000 || [postsDetail, videosDetail, videoBoostDetail, videoSchedule].some((value) => value.length > 500)) return res.status(400).json({ error: "La configuración mensual no es válida." });
-  const result = await pool.query(`INSERT INTO content_plans (company_name, period, strategy_summary, posts_per_week, videos_per_month, video_schedule, main_lines, posts_detail, videos_detail, video_boost_detail, main_lines_count, updated_by)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) ON CONFLICT (LOWER(company_name), period) DO UPDATE SET strategy_summary = EXCLUDED.strategy_summary,
+  const publicationIntervalDays = Number(req.body.publicationIntervalDays || 0);
+  const keyDates = Array.isArray(req.body.keyDates) ? req.body.keyDates.map((item) => ({ date: String(item.date || ""), title: String(item.title || "").trim(), description: String(item.description || "").trim() })) : [];
+  const validKeyDates = keyDates.length <= 40 && keyDates.every((item) => item.date.startsWith(`${period}-`) && /^\d{4}-\d{2}-\d{2}$/.test(item.date) && item.title.length <= 200 && item.description.length <= 500);
+  if (!company || !/^\d{4}-\d{2}$/.test(period) || !Number.isInteger(postsPerWeek) || postsPerWeek < 0 || postsPerWeek > 30 || !Number.isInteger(videosPerMonth) || videosPerMonth < 0 || videosPerMonth > 100 || !Number.isInteger(mainLinesCount) || mainLinesCount < 0 || mainLinesCount > 100 || !Number.isInteger(publicationIntervalDays) || publicationIntervalDays < 0 || publicationIntervalDays > 31 || !validKeyDates || strategySummary.length > 5000 || mainLines.length > 5000 || [postsDetail, videosDetail, videoBoostDetail, videoSchedule].some((value) => value.length > 500)) return res.status(400).json({ error: "La configuración mensual no es válida." });
+  const result = await pool.query(`INSERT INTO content_plans (company_name, period, strategy_summary, posts_per_week, videos_per_month, video_schedule, main_lines, posts_detail, videos_detail, video_boost_detail, main_lines_count, publication_interval_days, key_dates, updated_by)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) ON CONFLICT (LOWER(company_name), period) DO UPDATE SET strategy_summary = EXCLUDED.strategy_summary,
     posts_per_week = EXCLUDED.posts_per_week, videos_per_month = EXCLUDED.videos_per_month, video_schedule = EXCLUDED.video_schedule,
     main_lines = EXCLUDED.main_lines, posts_detail = EXCLUDED.posts_detail, videos_detail = EXCLUDED.videos_detail,
-    video_boost_detail = EXCLUDED.video_boost_detail, main_lines_count = EXCLUDED.main_lines_count, updated_by = EXCLUDED.updated_by, updated_at = NOW()
-    RETURNING period, strategy_summary AS "strategySummary", posts_per_week AS "postsPerWeek", videos_per_month AS "videosPerMonth", video_schedule AS "videoSchedule", main_lines AS "mainLines", posts_detail AS "postsDetail", videos_detail AS "videosDetail", video_boost_detail AS "videoBoostDetail", main_lines_count AS "mainLinesCount"`, [company, period, strategySummary, postsPerWeek, videosPerMonth, videoSchedule, mainLines, postsDetail, videosDetail, videoBoostDetail, mainLinesCount, req.user.id]);
+    video_boost_detail = EXCLUDED.video_boost_detail, main_lines_count = EXCLUDED.main_lines_count, publication_interval_days = EXCLUDED.publication_interval_days,
+    key_dates = EXCLUDED.key_dates, updated_by = EXCLUDED.updated_by, updated_at = NOW()
+    RETURNING period, strategy_summary AS "strategySummary", posts_per_week AS "postsPerWeek", videos_per_month AS "videosPerMonth", video_schedule AS "videoSchedule", main_lines AS "mainLines", posts_detail AS "postsDetail", videos_detail AS "videosDetail", video_boost_detail AS "videoBoostDetail", main_lines_count AS "mainLinesCount", publication_interval_days AS "publicationIntervalDays", key_dates AS "keyDates"`, [company, period, strategySummary, postsPerWeek, videosPerMonth, videoSchedule, mainLines, postsDetail, videosDetail, videoBoostDetail, mainLinesCount, publicationIntervalDays, JSON.stringify(keyDates), req.user.id]);
   await logActivity(req.user.id, "content_plan.saved", "company", company, { period });
   res.json({ plan: result.rows[0] });
 });
@@ -362,6 +368,34 @@ app.patch("/api/calendar/publications/:id/review", authenticate, async (req, res
   if (!result.rowCount) return res.status(404).json({ error: "Publicación no encontrada." });
   await logActivity(req.user.id, `publication.${status}`, "publication", req.params.id, { company: req.user.company_name });
   res.json({ review: result.rows[0] });
+});
+
+app.post("/api/calendar/generate-slots", authenticate, requireMarketing, async (req, res) => {
+  const company = await companyForRequest(req);
+  const period = String(req.body.period || "");
+  if (!company || !/^\d{4}-\d{2}$/.test(period)) return res.status(400).json({ error: "Selecciona un mes válido." });
+  const planResult = await pool.query(`SELECT posts_per_week, videos_per_month, publication_interval_days, key_dates FROM content_plans WHERE LOWER(company_name) = LOWER($1) AND period = $2`, [company, period]);
+  if (!planResult.rowCount) return res.status(404).json({ error: "Guarda primero la estructura del mes." });
+  const plan = planResult.rows[0];
+  const [year, month] = period.split("-").map(Number);
+  const days = new Date(year, month, 0).getDate();
+  const postCount = Number(plan.posts_per_week) * Math.ceil(days / 7);
+  const videoCount = Number(plan.videos_per_month);
+  const keyDates = Array.isArray(plan.key_dates) ? plan.key_dates.filter((item) => item.date && item.title) : [];
+  const genericPostCount = Math.max(0, postCount - keyDates.length);
+  const interval = Number(plan.publication_interval_days) || Math.max(1, Math.floor(days / Math.max(1, genericPostCount + videoCount)));
+  const slots = Array.from({ length: genericPostCount + videoCount }, (_, index) => ({ date: `${period}-${String(1 + (index * interval) % days).padStart(2, "0")}`, topic: `Espacio editable ${index + 1}`, copy: "", format: index < videoCount ? "reel" : "post" }));
+  for (const item of keyDates) slots.push({ date: item.date, topic: item.title, copy: item.description || "", format: "post" });
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query(`DELETE FROM calendar_publications WHERE LOWER(company_name) = LOWER($1) AND TO_CHAR(publication_date, 'YYYY-MM') = $2 AND is_draft_slot = TRUE`, [company, period]);
+    for (const slot of slots) await client.query(`INSERT INTO calendar_publications (id, company_name, created_by, publication_date, topic, copy, format, platforms, is_draft_slot) VALUES ($1,$2,$3,$4,$5,$6,$7,'{}',TRUE)`, [crypto.randomUUID(), company, req.user.id, slot.date, slot.topic, slot.copy, slot.format]);
+    await client.query("COMMIT");
+    await logActivity(req.user.id, "calendar.slots_generated", "company", company, { period, count: slots.length });
+    res.json({ count: slots.length });
+  } catch (error) { await client.query("ROLLBACK"); throw error; }
+  finally { client.release(); }
 });
 
 app.put("/api/calendar/publications/:id", authenticate, requireMarketing, async (req, res) => {
@@ -387,11 +421,11 @@ app.put("/api/calendar/publications/:id", authenticate, requireMarketing, async 
     ON CONFLICT (id) DO UPDATE SET publication_date = EXCLUDED.publication_date, publication_time = EXCLUDED.publication_time,
       topic = EXCLUDED.topic, copy = EXCLUDED.copy, format = EXCLUDED.format, platforms = EXCLUDED.platforms,
       media_data = EXCLUDED.media_data, media_type = EXCLUDED.media_type, media_name = EXCLUDED.media_name, objective = $13,
-      distribution_type = $14, production_reference = $15, updated_at = NOW()
+      distribution_type = $14, production_reference = $15, is_draft_slot = FALSE, updated_at = NOW()
     WHERE LOWER(calendar_publications.company_name) = LOWER(EXCLUDED.company_name)
     RETURNING id, TO_CHAR(publication_date, 'YYYY-MM-DD') AS date, TO_CHAR(publication_time, 'HH24:MI') AS time, topic, copy, format, platforms,
       media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName", objective, distribution_type AS "distributionType",
-      production_reference AS "productionReference", approval_status AS "approvalStatus", client_comment AS "clientComment", reviewed_at AS "reviewedAt"`, [id, company, req.user.id, date, time, topic, copy, format, platforms, mediaUrl || null, mediaType, mediaName, objective, distributionType, productionReference]);
+      production_reference AS "productionReference", approval_status AS "approvalStatus", client_comment AS "clientComment", reviewed_at AS "reviewedAt", is_draft_slot AS "isDraftSlot"`, [id, company, req.user.id, date, time, topic, copy, format, platforms, mediaUrl || null, mediaType, mediaName, objective, distributionType, productionReference]);
   if (!result.rowCount) return res.status(403).json({ error: "No puedes modificar publicaciones de otra empresa." });
   await logActivity(req.user.id, "publication.saved", "publication", id, { company });
   res.json({ publication: result.rows[0] });

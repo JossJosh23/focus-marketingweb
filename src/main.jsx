@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { AlertTriangle, ArrowLeft, ArrowRight, BarChart3, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, CircleCheck, Eye, EyeOff, FileText, Laptop, LayoutDashboard, LockKeyhole, LogOut, Mail, Menu, Plus, RefreshCw, Search, Settings, ShieldCheck, Sparkles, TrendingUp, Users } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, CircleCheck, Eye, EyeOff, Laptop, LockKeyhole, LogOut, Mail, Menu, Plus, RefreshCw, Search, ShieldCheck, Sparkles, TrendingUp, Users, X } from "lucide-react";
 import "./styles.css";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -107,42 +107,32 @@ function ResetPassword() {
   return <AuthCard><button className="back-link" onClick={() => goTo("/")}><ArrowLeft /> Volver</button><span className="eyebrow">NUEVA CONTRASEÑA</span><h1>Protege tu cuenta</h1>{message ? <><div className="success-box"><CheckCircle2 />{message}</div><button className="submit-button" onClick={() => goTo("/")}>Iniciar sesión <ArrowRight /></button></> : <form onSubmit={submit}><label>Nueva contraseña<input value={password} onChange={(e) => setPassword(e.target.value)} type="password" autoComplete="new-password" required /></label><div className="password-checks"><span className={checks[0] ? "ok" : ""}><Check />10 caracteres</span><span className={checks[1] ? "ok" : ""}><Check />Una mayúscula</span><span className={checks[2] ? "ok" : ""}><Check />Un número</span></div><label>Confirmar contraseña<input value={confirm} onChange={(e) => setConfirm(e.target.value)} type="password" autoComplete="new-password" required /></label><button className="submit-button">Actualizar contraseña <ArrowRight /></button>{error && <div className="error-message"><AlertTriangle />{error}</div>}</form>}</AuthCard>;
 }
 
-const adminNavigation = [
-  { id: "resumen", label: "Resumen", icon: LayoutDashboard },
-  { id: "clientes", label: "Clientes", icon: Building2 },
-  { id: "usuarios", label: "Usuarios", icon: Users },
-  { id: "calendario", label: "Calendario", icon: CalendarDays },
-  { id: "contenido", label: "Contenido", icon: FileText },
-  { id: "aprobaciones", label: "Aprobaciones", icon: CircleCheck, badge: 3 },
-  { id: "estadisticas", label: "Estadísticas", icon: BarChart3 },
-  { id: "configuracion", label: "Configuración", icon: Settings },
-];
-
 function AdminPanel({ user }) {
-  const [active, setActive] = useState("resumen");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [profileOpen, setProfileOpen] = useState(false);
   const [users, setUsers] = useState([]);
   const initials = user.name.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase();
-  const activeItem = adminNavigation.find((item) => item.id === active);
-  const ActiveSectionIcon = activeItem?.icon || LayoutDashboard;
 
   useEffect(() => { api("/api/admin/users").then((result) => setUsers(result.users)).catch(() => {}); }, []);
+  useEffect(() => {
+    function closeWithEscape(event) { if (event.key === "Escape") setMenuOpen(false); }
+    document.addEventListener("keydown", closeWithEscape);
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => { document.removeEventListener("keydown", closeWithEscape); document.body.style.overflow = ""; };
+  }, [menuOpen]);
   async function logout() { await api("/api/auth/logout", { method: "POST" }); window.location.assign("/"); }
-  function selectSection(id) { setActive(id); setMenuOpen(false); }
 
   return <main className="admin-shell">
     <section className="admin-workspace">
       <header className="admin-topbar">
         <button className="mobile-menu" onClick={() => setMenuOpen(true)} aria-label="Abrir navegación"><Menu /></button>
-        <div className="admin-breadcrumb"><span>Panel administrativo</span><b>{activeItem.label}</b></div>
+        <div className="admin-breadcrumb"><span>Panel administrativo</span><b>Vista principal</b></div>
         <div className="topbar-actions">
           <label className="admin-search"><Search /><input placeholder="Buscar en FOCUGEX" aria-label="Buscar" /></label>
           <button className="notification-button" aria-label="Notificaciones"><Bell /><i></i></button>
         </div>
       </header>
 
-      {active === "resumen" ? <div className="admin-dashboard">
+      <div className="admin-dashboard">
         <div className="dashboard-heading"><div><span className="eyebrow">CENTRO DE OPERACIONES</span><h1>Buenos días, {user.name.split(" ")[0]}</h1><p>Aquí tienes una vista clara de lo que está pasando en FOCUGEX.</p></div><button><Plus /> Nueva campaña</button></div>
         <div className="admin-kpis">
           <article><div className="kpi-icon purple"><Building2 /></div><span>Clientes activos</span><b>8</b><small><TrendingUp /> +2 este mes</small></article>
@@ -154,17 +144,17 @@ function AdminPanel({ user }) {
           <article className="performance-card"><div className="card-heading"><div><span>Rendimiento general</span><h2>Alcance de campañas</h2></div><button>Últimos 30 días <ChevronDown /></button></div><div className="performance-total"><b>184.2K</b><span>+18.4%</span></div><div className="chart-bars">{[32,46,42,60,55,73,68,87,81,94,88,100].map((height, index) => <i key={index} style={{ "--bar": `${height}%` }}></i>)}</div><div className="chart-labels"><span>1 Ago</span><span>10 Ago</span><span>20 Ago</span><span>30 Ago</span></div></article>
           <article className="activity-card"><div className="card-heading"><div><span>En tiempo real</span><h2>Actividad reciente</h2></div><button>Ver todo</button></div><ul><li><i className="activity-dot green"></i><div><b>Contenido aprobado</b><span>Manabiche · Hace 12 min</span></div></li><li><i className="activity-dot purple"></i><div><b>Nuevo cliente añadido</b><span>Restaurante Marea · Hace 1 h</span></div></li><li><i className="activity-dot blue"></i><div><b>Campaña programada</b><span>Lanzamiento septiembre · Hace 3 h</span></div></li></ul></article>
         </div>
-      </div> : <div className="section-placeholder"><div className="placeholder-icon"><ActiveSectionIcon /></div><span className="eyebrow">MÓDULO ADMINISTRATIVO</span><h1>{activeItem.label}</h1><p>La estructura de esta sección está preparada. La configuraremos paso a paso.</p><button onClick={() => setActive("resumen")}><ArrowLeft /> Volver al resumen</button></div>}
+      </div>
     </section>
 
     {menuOpen && <button className="admin-overlay" onClick={() => setMenuOpen(false)} aria-label="Cerrar navegación"></button>}
-    <aside className={`admin-sidebar ${menuOpen ? "open" : ""}`}>
+    <aside className={`admin-sidebar ${menuOpen ? "open" : ""}`} aria-label="Panel lateral administrativo">
+      <button className="sidebar-close" onClick={() => setMenuOpen(false)} aria-label="Cerrar panel lateral"><X /></button>
       <div className="sidebar-profile">
-        <div className="sidebar-profile-head"><Logo /><button className="profile-avatar" onClick={() => setProfileOpen(!profileOpen)} aria-label="Abrir menú del perfil">{initials}</button></div>
+        <div className="sidebar-profile-head"><Logo /><div className="profile-avatar" title={`Perfil de ${user.name}`}>{initials}<i></i></div></div>
         <div className="profile-control">
-          <button className="profile-copy" onClick={() => setProfileOpen(!profileOpen)}><span>{user.name}</span><small>Superadministrador</small></button>
-          <ChevronDown />
-          {profileOpen && <div className="profile-dropdown"><button><Users /> Mi perfil</button><button><Settings /> Configuración</button><button><Sparkles /> Plan Premium</button><hr /><button className="logout-option" onClick={logout}><LogOut /> Cerrar sesión</button></div>}
+          <div className="profile-copy"><span>{user.name}</span><small>Superadministrador</small></div>
+          <ShieldCheck />
         </div>
       </div>
       <div className="sidebar-empty"><span>Panel administrativo</span><p>Los módulos se añadirán paso a paso.</p></div>

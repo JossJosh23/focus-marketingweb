@@ -167,8 +167,7 @@ function AdminPanel({ user }) {
           {profileOpen && <div className="profile-dropdown"><button><Users /> Mi perfil</button><button><Settings /> Configuración</button><button><Sparkles /> Plan Premium</button><hr /><button className="logout-option" onClick={logout}><LogOut /> Cerrar sesión</button></div>}
         </div>
       </div>
-      <nav aria-label="Navegación administrativa">{adminNavigation.map((item) => { const Icon = item.icon; return <button key={item.id} className={active === item.id ? "active" : ""} onClick={() => selectSection(item.id)}><Icon /><span>{item.label}</span>{item.badge && <small>{item.badge}</small>}</button>; })}</nav>
-      <div className="sidebar-upgrade"><Sparkles /><b>FOCUGEX Premium</b><p>Desbloquea reportes avanzados y automatizaciones.</p><button>Ver beneficios</button></div>
+      <div className="sidebar-empty"><span>Panel administrativo</span><p>Los módulos se añadirán paso a paso.</p></div>
       <button className="sidebar-logout" onClick={logout}><LogOut /> Cerrar sesión</button>
     </aside>
   </main>;

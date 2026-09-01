@@ -24,14 +24,17 @@ function label(doc, value, x, y) {
   doc.line(x, y + 2, x + 15, y + 2);
 }
 
-function pageHeader(doc, company, periodLabel) {
+function pageHeader(doc, company, periodLabel, logoData) {
   text(doc, "CRONOGRAMA", 14, 17, { bold: true, size: 15, width: 43, maxLines: 1 });
   text(doc, "de contenido", 14, 23, { size: 10, color: GREEN, width: 43, maxLines: 1 });
   doc.setFillColor(...GREEN);
   doc.rect(60, 10, 1, 17, "F");
   text(doc, periodLabel.toUpperCase(), 68, 16, { bold: true, size: 8.5, color: GREEN, width: 85, maxLines: 1 });
   text(doc, "Planificación de redes sociales", 68, 22, { size: 7, color: MUTED, width: 85, maxLines: 1 });
-  text(doc, company, 282, 17, { bold: true, size: company.length > 24 ? 10 : 13, color: GREEN, align: "right", width: 72, maxLines: 1 });
+  if (logoData) {
+    try { addContainedImage(doc, logoData, 242, 8, 40, 20); }
+    catch { text(doc, company, 282, 17, { bold: true, size: company.length > 24 ? 10 : 13, color: GREEN, align: "right", width: 72, maxLines: 1 }); }
+  } else text(doc, company, 282, 17, { bold: true, size: company.length > 24 ? 10 : 13, color: GREEN, align: "right", width: 72, maxLines: 1 });
 }
 
 function addContainedImage(doc, source, x, y, width, height) {
@@ -55,7 +58,7 @@ function statusLabel(item) {
   return "PENDIENTE";
 }
 
-export async function createCalendarPdf({ company, period, plan, publications }) {
+export async function createCalendarPdf({ company, logoData, period, plan, publications }) {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const date = new Date(`${period}-01T12:00:00`);
@@ -63,11 +66,19 @@ export async function createCalendarPdf({ company, period, plan, publications })
 
   doc.setFillColor(...PAPER);
   doc.rect(0, 0, 297, 210, "F");
-  pageHeader(doc, company, periodLabel);
+  pageHeader(doc, company, periodLabel, logoData);
   doc.setFillColor(...ORANGE);
   doc.roundedRect(14, 42, 269, 38, 4, 4, "F");
-  text(doc, company, 24, 59, { bold: true, size: 25, color: [255, 255, 255], width: 180 });
-  text(doc, periodLabel, 24, 69, { size: 12, color: [255, 245, 235] });
+  if (logoData) {
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(23, 48, 67, 26, 3, 3, "F");
+    try { addContainedImage(doc, logoData, 27, 51, 59, 20); }
+    catch { text(doc, company, 24, 60, { bold: true, size: 22, color: [255, 255, 255], width: 75, maxLines: 1 }); }
+    text(doc, periodLabel, 104, 64, { bold: true, size: 13, color: [255, 255, 255], width: 150, maxLines: 1 });
+  } else {
+    text(doc, company, 24, 59, { bold: true, size: 25, color: [255, 255, 255], width: 180, maxLines: 1 });
+    text(doc, periodLabel, 24, 69, { size: 12, color: [255, 245, 235] });
+  }
   const metrics = [
     ["PUBLICACIONES", publications.length],
     ["POSTS POR SEMANA", plan?.posts_per_week ?? plan?.postsPerWeek ?? 0],
@@ -89,7 +100,7 @@ export async function createCalendarPdf({ company, period, plan, publications })
     doc.addPage("a4", "landscape");
     doc.setFillColor(...PAPER);
     doc.rect(0, 0, 297, 210, "F");
-    pageHeader(doc, company, periodLabel);
+    pageHeader(doc, company, periodLabel, logoData);
     doc.setFillColor(...GREEN);
     doc.roundedRect(14, 38, 71, 146, 3, 3, "F");
     text(doc, "PLATAFORMAS Y DATOS", 49.5, 49, { bold: true, size: 8, color: [255, 255, 255], align: "center", width: 62 });

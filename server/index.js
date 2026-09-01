@@ -206,7 +206,7 @@ app.delete("/api/auth/sessions/others", authenticate, async (req, res) => {
 });
 
 app.get("/api/manager/companies", authenticate, requireMarketing, async (req, res) => {
-  const result = await pool.query(`SELECT c.id, c.name, COUNT(u.id)::int AS clients
+  const result = await pool.query(`SELECT c.id, c.name, c.logo_data AS "logoData", COUNT(u.id)::int AS clients
     FROM user_companies uc JOIN companies c ON c.id = uc.company_id
     LEFT JOIN users u ON LOWER(u.company_name) = LOWER(c.name) AND u.role = 'client'
     WHERE uc.user_id = $1 GROUP BY c.id, c.name ORDER BY c.name`, [req.user.id]);
@@ -235,14 +235,25 @@ app.post("/api/manager/collaborators", authenticate, requireManager, async (req,
 
 app.post("/api/manager/companies", authenticate, requireManager, async (req, res) => {
   const name = String(req.body.name || "").trim();
+  const logoData = String(req.body.logoData || "");
   if (name.length < 2 || name.length > 160) return res.status(400).json({ error: "Ingresa un nombre de empresa válido." });
+  if (logoData && (!/^data:image\/(png|jpeg);base64,[a-z0-9+/=]+$/i.test(logoData) || logoData.length > 3_000_000)) return res.status(400).json({ error: "El logo debe ser PNG o JPG y no superar 2 MB." });
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     const company = await assignableCompany(client, req.user.id, name);
+    if (logoData) await client.query("UPDATE companies SET logo_data = $1 WHERE id = $2", [logoData, company.id]);
     await client.query("COMMIT");
-    res.status(201).json({ company: { ...company, clients: 0 } });
+    res.status(201).json({ company: { ...company, logoData: logoData || company.logo_data || null, clients: 0 } });
   } catch (error) { await client.query("ROLLBACK"); if (error.status) return res.status(error.status).json({ error: error.message }); throw error; } finally { client.release(); }
+});
+
+app.get("/api/company/current", authenticate, async (req, res) => {
+  const company = await companyForRequest(req);
+  if (!company) return res.status(404).json({ error: "No hay una empresa disponible." });
+  const result = await pool.query(`SELECT name, logo_data AS "logoData" FROM companies WHERE LOWER(name) = LOWER($1) LIMIT 1`, [company]);
+  if (!result.rowCount) return res.status(404).json({ error: "La empresa no existe." });
+  res.json({ company: result.rows[0] });
 });
 
 app.get("/api/manager/clients", authenticate, requireMarketing, async (req, res) => {

@@ -50,6 +50,7 @@ export async function initializeDatabase() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE UNIQUE INDEX IF NOT EXISTS companies_name_lower_idx ON companies(LOWER(name));
+    ALTER TABLE companies ADD COLUMN IF NOT EXISTS logo_data TEXT;
     INSERT INTO companies (name) SELECT DISTINCT company_name FROM users WHERE company_name IS NOT NULL AND company_name <> '' ON CONFLICT DO NOTHING;
 
     CREATE TABLE IF NOT EXISTS user_companies (

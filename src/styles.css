@@ -912,3 +912,19 @@ body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; back
 .admin-sidebar .admin-modules button > svg { color: #7D899F !important; }.admin-sidebar .admin-modules button.active > svg { color: #315BFF !important; }
 @media (max-width: 1100px) { .admin-kpis { min-height: 0; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: auto; }.admin-kpis .kpi-primary { min-height: 260px; grid-column: 1 / 3; grid-row: auto; }.admin-kpis .kpi-active { grid-column: 1 / 3; } }
 @media (max-width: 620px) { .admin-dashboard { padding: 26px 16px; }.admin-kpis { grid-template-columns: 1fr; }.admin-kpis .kpi-primary, .admin-kpis .kpi-active { grid-column: auto; }.admin-kpis .kpi-primary { min-height: 230px; }.admin-kpis .kpi-active { grid-template-columns: auto 1fr auto; }.real-data-note { align-items: flex-start; } }
+
+/* Consistencia visual del registro administrativo */
+.admin-dark .activity-log, .activity-log { margin-top: 24px; border: 1px solid #DCE3EF; border-radius: 6px; overflow: hidden; color: #172033; background: #fff; box-shadow: none; }
+.admin-dark .activity-log article, .activity-log article { min-height: 72px; padding: 15px 18px; border-bottom: 1px solid #E4E9F2; background: #fff; transition: background-color .18s ease; }
+.admin-dark .activity-log article:hover, .activity-log article:hover { background: #F8FAFF; }
+.admin-dark .activity-log article:last-child, .activity-log article:last-child { border-bottom: 0; }
+.admin-dark .activity-log article > svg, .activity-log article > svg { width: 19px; color: #20A979; }
+.admin-dark .activity-log b, .activity-log b { color: #25324A; font-size: 12px; font-weight: 700; text-transform: none; }
+.admin-dark .activity-log span, .activity-log span { margin-top: 5px; color: #667085; font-size: 10px; }
+.admin-dark .activity-log small, .activity-log small { max-width: min(36vw, 360px); padding: 5px 8px; border: 1px solid #DCE3EF; border-radius: 4px; overflow: hidden; color: #526078; background: #F8FAFD; font-size: 9px; font-style: normal; text-overflow: ellipsis; white-space: nowrap; }
+.activity-log small i { font-style: normal; color: #7D899F; }
+.admin-dark .activity-log .users-empty, .activity-log .users-empty { color: #172033; background: #fff; }.activity-log .users-empty > svg { color: #315BFF; }.activity-log .users-empty p { color: #667085; }
+.admin-dark .account-menu, .account-menu { border-color: #DCE3EF !important; color: #172033 !important; background: #fff !important; box-shadow: 0 18px 45px #18316A1b !important; }.admin-dark .account-menu::before, .account-menu::before { border-color: #DCE3EF !important; background: #fff !important; }
+.admin-dark .account-menu-group button, .admin-dark .account-logout, .account-menu-group button, .account-logout { color: #526078 !important; }.admin-dark .account-menu-group button:hover, .account-menu-group button:hover { color: #315BFF !important; background: #F0F4FF !important; }
+.admin-sidebar .sidebar-logout { color: #667085 !important; }.admin-sidebar .sidebar-logout:hover { color: #315BFF !important; background: #EEF3FF !important; }
+@media (max-width: 700px) { .activity-log article { align-items: flex-start; flex-wrap: wrap; }.activity-log article > div { min-width: calc(100% - 34px); }.activity-log small { max-width: 100%; margin-left: 31px; } }

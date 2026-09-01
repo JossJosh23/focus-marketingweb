@@ -8,7 +8,11 @@ function text(doc, value, x, y, options = {}) {
   doc.setFont("helvetica", options.bold ? "bold" : "normal");
   doc.setFontSize(options.size || 10);
   doc.setTextColor(...(options.color || INK));
-  const lines = doc.splitTextToSize(String(value || "—"), options.width || 100);
+  let lines = doc.splitTextToSize(String(value || "—"), options.width || 100);
+  if (options.maxLines && lines.length > options.maxLines) {
+    lines = lines.slice(0, options.maxLines);
+    lines[lines.length - 1] = `${lines[lines.length - 1].replace(/[.…]+$/, "")}…`;
+  }
   doc.text(lines, x, y, { align: options.align || "left" });
   return lines.length;
 }
@@ -21,13 +25,21 @@ function label(doc, value, x, y) {
 }
 
 function pageHeader(doc, company, periodLabel) {
-  text(doc, "CRONOGRAMA", 14, 17, { bold: true, size: 18 });
-  text(doc, "de contenido", 14, 24, { size: 12, color: GREEN });
+  text(doc, "CRONOGRAMA", 14, 17, { bold: true, size: 15, width: 43, maxLines: 1 });
+  text(doc, "de contenido", 14, 23, { size: 10, color: GREEN, width: 43, maxLines: 1 });
   doc.setFillColor(...GREEN);
-  doc.rect(54, 10, 1, 17, "F");
-  text(doc, periodLabel.toUpperCase(), 62, 16, { bold: true, size: 9, color: GREEN });
-  text(doc, "Planificación de redes sociales", 62, 22, { size: 7, color: MUTED });
-  text(doc, company, 282, 17, { bold: true, size: 14, color: GREEN, align: "right", width: 75 });
+  doc.rect(60, 10, 1, 17, "F");
+  text(doc, periodLabel.toUpperCase(), 68, 16, { bold: true, size: 8.5, color: GREEN, width: 85, maxLines: 1 });
+  text(doc, "Planificación de redes sociales", 68, 22, { size: 7, color: MUTED, width: 85, maxLines: 1 });
+  text(doc, company, 282, 17, { bold: true, size: company.length > 24 ? 10 : 13, color: GREEN, align: "right", width: 72, maxLines: 1 });
+}
+
+function addContainedImage(doc, source, x, y, width, height) {
+  const properties = doc.getImageProperties(source);
+  const scale = Math.min(width / properties.width, height / properties.height);
+  const imageWidth = properties.width * scale;
+  const imageHeight = properties.height * scale;
+  doc.addImage(source, properties.fileType, x + (width - imageWidth) / 2, y + (height - imageHeight) / 2, imageWidth, imageHeight, undefined, "FAST");
 }
 
 function pageFooter(doc, period, page) {
@@ -70,7 +82,7 @@ export async function createCalendarPdf({ company, period, plan, publications })
     text(doc, value, x + 7, 118, { bold: true, size: 20, color: GREEN });
   });
   label(doc, "Resumen de estrategia", 16, 145);
-  text(doc, plan?.strategy_summary ?? plan?.strategySummary ?? "Sin estrategia mensual registrada.", 16, 157, { size: 11, width: 260 });
+  text(doc, plan?.strategy_summary ?? plan?.strategySummary ?? "Sin estrategia mensual registrada.", 16, 157, { size: 10, width: 260, maxLines: 6 });
   pageFooter(doc, period, 1);
 
   publications.forEach((item, index) => {
@@ -93,7 +105,7 @@ export async function createCalendarPdf({ company, period, plan, publications })
     let factY = 83;
     facts.forEach(([name, value]) => {
       text(doc, name, 22, factY, { bold: true, size: 6.5, color: MUTED, width: 54 });
-      const count = text(doc, value, 22, factY + 7, { bold: true, size: 8, color: name === "ESTADO" ? ORANGE : INK, width: 54 });
+      const count = text(doc, value, 22, factY + 7, { bold: true, size: 8, color: name === "ESTADO" ? ORANGE : INK, width: 54, maxLines: name === "PRODUCCIÓN / REFERENCIA" ? 5 : 2 });
       factY += Math.max(22, 11 + count * 4);
     });
     doc.setDrawColor(...GREEN);
@@ -101,17 +113,17 @@ export async function createCalendarPdf({ company, period, plan, publications })
     doc.setFillColor(...ORANGE);
     doc.roundedRect(91, 38, 192, 16, 3, 3, "F");
     doc.rect(91, 48, 192, 6, "F");
-    text(doc, item.topic || "Sin título", 187, 49, { bold: true, size: 13, color: [255, 255, 255], align: "center", width: 170 });
+    text(doc, item.topic || "Sin título", 187, 49, { bold: true, size: (item.topic || "").length > 55 ? 9 : 12, color: [255, 255, 255], align: "center", width: 165, maxLines: 1 });
     label(doc, "Objetivo", 99, 67);
-    text(doc, item.objective || "Sin objetivo agregado", 139, 67, { bold: true, size: 9, width: 132 });
+    text(doc, item.objective || "Sin objetivo agregado", 139, 67, { bold: true, size: 9, width: 132, maxLines: 3 });
     label(doc, "Texto de publicación", 99, 91);
-    text(doc, item.copy || "Sin texto agregado", 139, 91, { size: 9, width: 132 });
+    text(doc, item.copy || "Sin texto agregado", 139, 91, { size: 8.5, width: 132, maxLines: 6 });
     label(doc, "Referencia visual", 99, 132);
     doc.setFillColor(231, 240, 235);
     doc.setDrawColor(201, 217, 208);
     doc.roundedRect(139, 119, 132, 53, 3, 3, "FD");
     if (item.mediaUrl && item.mediaType === "image") {
-      try { doc.addImage(item.mediaUrl, undefined, 142, 122, 126, 47, undefined, "FAST"); }
+      try { addContainedImage(doc, item.mediaUrl, 142, 122, 126, 47); }
       catch { text(doc, item.productionReference || "Referencia visual adjunta", 205, 148, { bold: true, size: 9, color: GREEN, align: "center", width: 110 }); }
     } else {
       text(doc, item.mediaType === "video" ? "VIDEO ADJUNTO EN EL PORTAL" : item.productionReference || "IMAGEN / IDEA POR DEFINIR", 205, 148, { bold: true, size: 9, color: GREEN, align: "center", width: 110 });

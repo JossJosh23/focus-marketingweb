@@ -33,6 +33,7 @@ function VisualPanel() {
   }
   function clearFocus(event) { delete event.currentTarget.dataset.focusActive; }
   return <section className="visual-panel" onPointerMove={moveRings} onPointerLeave={clearFocus}>
+    <div className="focus-aperture" aria-hidden="true"><i></i><i></i><i></i><i></i><span>Enfoque</span><b></b></div>
     <div className="visual-content"><Logo /><h1>Tu marketing,<br />en buenas manos.</h1><p>Planifica, revisa y entiende todo lo que hacemos para hacer crecer tu negocio.</p>
     </div>
   </section>;

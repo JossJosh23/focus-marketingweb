@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { AlertTriangle, ArrowLeft, ArrowRight, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, CircleCheck, Eye, EyeOff, HelpCircle, Laptop, LayoutDashboard, LockKeyhole, LogOut, Mail, Menu, MessageSquare, Moon, Plus, PlugZap, RefreshCw, Search, Settings, ShieldCheck, Sparkles, TrendingUp, UserRound, Users, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, CircleCheck, Eye, EyeOff, HelpCircle, Laptop, LayoutDashboard, LockKeyhole, LogOut, Mail, Menu, Moon, Plus, RefreshCw, Search, Settings, ShieldCheck, Sparkles, TrendingUp, UserRound, Users, X } from "lucide-react";
 import "./styles.css";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -152,8 +152,7 @@ function AdminPanel({ user }) {
               <small>ADMIN</small><ChevronDown className="profile-chevron" />
             </button>
             {profileMenuOpen && <div className="account-menu" role="menu">
-              <div className="account-menu-head"><div className="menu-avatar">{initials}<i></i></div><div><b>{user.name}</b><span>{user.email}</span></div><small>ADMIN</small></div>
-              <div className="account-menu-group"><button role="menuitem"><LayoutDashboard /><span>Panel principal</span></button><button role="menuitem"><MessageSquare /><span>Mensajes</span><i className="menu-badge yellow">21</i></button><button role="menuitem" className="selected"><Settings /><span>Configuración</span></button><button role="menuitem"><PlugZap /><span>Integraciones</span><i className="menu-badge">8</i></button><button role="menuitem" onClick={() => setDarkMode(!darkMode)}><Moon /><span>Modo oscuro</span><i className={`theme-switch ${darkMode ? "on" : ""}`}><em></em></i></button></div>
+              <div className="account-menu-group primary"><button role="menuitem"><LayoutDashboard /><span>Panel principal</span></button><button role="menuitem" className="selected"><Settings /><span>Configuración</span></button><button role="menuitem" onClick={() => setDarkMode(!darkMode)}><Moon /><span>Modo oscuro</span><i className={`theme-switch ${darkMode ? "on" : ""}`}><em></em></i></button></div>
               <span className="account-menu-label">CUENTA</span>
               <div className="account-menu-group secondary"><button role="menuitem"><UserRound /><span>Mi perfil</span></button><button role="menuitem"><ShieldCheck /><span>Seguridad y sesiones</span></button><button role="menuitem"><HelpCircle /><span>Centro de ayuda</span></button></div>
               <button className="account-logout" role="menuitem" onClick={logout}><LogOut /> Cerrar sesión</button>

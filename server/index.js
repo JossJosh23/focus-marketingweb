@@ -323,7 +323,8 @@ app.get("/api/calendar/plan", authenticate, async (req, res) => {
   const period = String(req.query.period || "");
   if (!company || !/^\d{4}-\d{2}$/.test(period)) return res.json({ plan: null });
   const result = await pool.query(`SELECT period, strategy_summary AS "strategySummary", posts_per_week AS "postsPerWeek",
-    videos_per_month AS "videosPerMonth", video_schedule AS "videoSchedule", main_lines AS "mainLines", updated_at AS "updatedAt"
+    videos_per_month AS "videosPerMonth", video_schedule AS "videoSchedule", main_lines AS "mainLines", posts_detail AS "postsDetail",
+    videos_detail AS "videosDetail", video_boost_detail AS "videoBoostDetail", updated_at AS "updatedAt"
     FROM content_plans WHERE LOWER(company_name) = LOWER($1) AND period = $2`, [company, period]);
   res.json({ plan: result.rows[0] || null });
 });
@@ -336,12 +337,16 @@ app.put("/api/calendar/plan", authenticate, requireMarketing, async (req, res) =
   const videosPerMonth = Number(req.body.videosPerMonth || 0);
   const videoSchedule = String(req.body.videoSchedule || "").trim();
   const mainLines = String(req.body.mainLines || "").trim();
-  if (!company || !/^\d{4}-\d{2}$/.test(period) || !Number.isInteger(postsPerWeek) || postsPerWeek < 0 || postsPerWeek > 30 || !Number.isInteger(videosPerMonth) || videosPerMonth < 0 || videosPerMonth > 100 || strategySummary.length > 5000 || mainLines.length > 5000) return res.status(400).json({ error: "La configuración mensual no es válida." });
-  const result = await pool.query(`INSERT INTO content_plans (company_name, period, strategy_summary, posts_per_week, videos_per_month, video_schedule, main_lines, updated_by)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (LOWER(company_name), period) DO UPDATE SET strategy_summary = EXCLUDED.strategy_summary,
+  const postsDetail = String(req.body.postsDetail || "").trim();
+  const videosDetail = String(req.body.videosDetail || "").trim();
+  const videoBoostDetail = String(req.body.videoBoostDetail || "").trim();
+  if (!company || !/^\d{4}-\d{2}$/.test(period) || !Number.isInteger(postsPerWeek) || postsPerWeek < 0 || postsPerWeek > 30 || !Number.isInteger(videosPerMonth) || videosPerMonth < 0 || videosPerMonth > 100 || strategySummary.length > 5000 || mainLines.length > 5000 || [postsDetail, videosDetail, videoBoostDetail, videoSchedule].some((value) => value.length > 500)) return res.status(400).json({ error: "La configuración mensual no es válida." });
+  const result = await pool.query(`INSERT INTO content_plans (company_name, period, strategy_summary, posts_per_week, videos_per_month, video_schedule, main_lines, posts_detail, videos_detail, video_boost_detail, updated_by)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) ON CONFLICT (LOWER(company_name), period) DO UPDATE SET strategy_summary = EXCLUDED.strategy_summary,
     posts_per_week = EXCLUDED.posts_per_week, videos_per_month = EXCLUDED.videos_per_month, video_schedule = EXCLUDED.video_schedule,
-    main_lines = EXCLUDED.main_lines, updated_by = EXCLUDED.updated_by, updated_at = NOW()
-    RETURNING period, strategy_summary AS "strategySummary", posts_per_week AS "postsPerWeek", videos_per_month AS "videosPerMonth", video_schedule AS "videoSchedule", main_lines AS "mainLines"`, [company, period, strategySummary, postsPerWeek, videosPerMonth, videoSchedule, mainLines, req.user.id]);
+    main_lines = EXCLUDED.main_lines, posts_detail = EXCLUDED.posts_detail, videos_detail = EXCLUDED.videos_detail,
+    video_boost_detail = EXCLUDED.video_boost_detail, updated_by = EXCLUDED.updated_by, updated_at = NOW()
+    RETURNING period, strategy_summary AS "strategySummary", posts_per_week AS "postsPerWeek", videos_per_month AS "videosPerMonth", video_schedule AS "videoSchedule", main_lines AS "mainLines", posts_detail AS "postsDetail", videos_detail AS "videosDetail", video_boost_detail AS "videoBoostDetail"`, [company, period, strategySummary, postsPerWeek, videosPerMonth, videoSchedule, mainLines, postsDetail, videosDetail, videoBoostDetail, req.user.id]);
   await logActivity(req.user.id, "content_plan.saved", "company", company, { period });
   res.json({ plan: result.rows[0] });
 });

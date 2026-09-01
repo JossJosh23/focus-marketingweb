@@ -96,6 +96,30 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
   text(doc, plan?.strategy_summary ?? plan?.strategySummary ?? "Sin estrategia mensual registrada.", 16, 157, { size: 10, width: 260, maxLines: 6 });
   pageFooter(doc, period, 1);
 
+  doc.addPage("a4", "landscape");
+  doc.setFillColor(...PAPER);
+  doc.rect(0, 0, 297, 210, "F");
+  text(doc, "Una estructura clara con espacio para nuevas ideas", 18, 23, { bold: true, size: 17, width: 205, maxLines: 1 });
+  text(doc, plan?.strategySummary || "Planificación mensual de contenidos.", 18, 33, { size: 8.5, color: MUTED, width: 205, maxLines: 2 });
+  doc.setDrawColor(...ORANGE); doc.setLineWidth(1); doc.line(18, 39, 40, 39);
+  if (logoData) { try { addContainedImage(doc, logoData, 244, 10, 37, 24); } catch { text(doc, company, 281, 22, { bold: true, size: 12, color: GREEN, align: "right", width: 55 }); } }
+  else text(doc, company, 281, 22, { bold: true, size: 12, color: GREEN, align: "right", width: 55 });
+  const lines = String(plan?.mainLines || "").split("\n").map((line) => line.trim()).filter(Boolean);
+  const rows = [
+    ["POSTS", `${plan?.postsPerWeek || 0} espacios por semana`, plan?.postsDetail || "Sin distribución definida"],
+    ["VIDEOS", `${plan?.videosPerMonth || 0} durante ${date.toLocaleDateString("es-EC", { month: "long" })}`, plan?.videosDetail || "Sin tipos de video definidos"],
+    ["PAUTA DE VIDEO", plan?.videoSchedule || "Sin fechas definidas", plan?.videoBoostDetail || "Sin frecuencia definida"],
+    ["CONTENIDOS DEFINIDOS", `${lines.length} líneas principales`, lines.join(", ") || "Sin líneas principales definidas"],
+  ];
+  rows.forEach(([title, value, detail], index) => {
+    const y = 58 + index * 32;
+    text(doc, title, 20, y, { bold: true, size: 7, color: ORANGE, width: 47, maxLines: 1 });
+    text(doc, value, 73, y + 1, { bold: true, size: 12, color: GREEN, width: 88, maxLines: 2 });
+    text(doc, detail, 166, y + 1, { size: 9, width: 105, maxLines: 3 });
+    doc.setDrawColor(216, 225, 220); doc.setLineWidth(.25); doc.line(18, y + 17, 276, y + 17);
+  });
+  pageFooter(doc, period, 2);
+
   publications.forEach((item, index) => {
     doc.addPage("a4", "landscape");
     doc.setFillColor(...PAPER);
@@ -143,7 +167,7 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
     } else {
       text(doc, item.mediaType === "video" ? "VIDEO ADJUNTO EN EL PORTAL" : item.productionReference || "IMAGEN / IDEA POR DEFINIR", 231, 126, { bold: true, size: 9, color: GREEN, align: "center", width: 72, maxLines: 5 });
     }
-    pageFooter(doc, period, index + 2);
+    pageFooter(doc, period, index + 3);
   });
 
   return doc;

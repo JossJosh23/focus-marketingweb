@@ -125,6 +125,9 @@ export async function initializeDatabase() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE UNIQUE INDEX IF NOT EXISTS content_plans_company_period_idx ON content_plans(LOWER(company_name), period);
+    ALTER TABLE content_plans ADD COLUMN IF NOT EXISTS posts_detail VARCHAR(500) NOT NULL DEFAULT '';
+    ALTER TABLE content_plans ADD COLUMN IF NOT EXISTS videos_detail VARCHAR(500) NOT NULL DEFAULT '';
+    ALTER TABLE content_plans ADD COLUMN IF NOT EXISTS video_boost_detail VARCHAR(500) NOT NULL DEFAULT '';
 
     DELETE FROM auth_sessions WHERE expires_at <= NOW() OR revoked_at < NOW() - INTERVAL '30 days';
     DELETE FROM password_reset_tokens WHERE expires_at <= NOW() OR used_at < NOW() - INTERVAL '7 days';

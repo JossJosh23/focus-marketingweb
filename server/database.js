@@ -31,6 +31,23 @@ export async function initializeDatabase() {
     UPDATE users SET username = 'usuario-' || id WHERE username IS NULL;
     CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_idx ON users(LOWER(username));
 
+    CREATE TABLE IF NOT EXISTS companies (
+      id BIGSERIAL PRIMARY KEY,
+      name VARCHAR(160) NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS companies_name_lower_idx ON companies(LOWER(name));
+    INSERT INTO companies (name) SELECT DISTINCT company_name FROM users WHERE company_name IS NOT NULL AND company_name <> '' ON CONFLICT DO NOTHING;
+
+    CREATE TABLE IF NOT EXISTS user_companies (
+      user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      company_id BIGINT NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+      PRIMARY KEY (user_id, company_id)
+    );
+    INSERT INTO user_companies (user_id, company_id)
+      SELECT u.id, c.id FROM users u JOIN companies c ON LOWER(c.name) = LOWER(u.company_name)
+      WHERE u.company_name IS NOT NULL AND u.company_name <> '' ON CONFLICT DO NOTHING;
+
     CREATE TABLE IF NOT EXISTS auth_sessions (
       id UUID PRIMARY KEY,
       user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

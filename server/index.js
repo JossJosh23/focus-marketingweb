@@ -70,6 +70,15 @@ function requireManager(req, res, next) {
 
 const rolePath = (role) => role === "admin" ? "/admin" : role === "manager" ? "/manager" : "/client";
 
+async function companyForRequest(req) {
+  if (req.user.role === "client") return req.user.company_name || "";
+  if (req.user.role !== "manager") return "";
+  const requested = String(req.get("x-focugex-company") || "").trim();
+  const result = await pool.query(`SELECT c.name FROM user_companies uc JOIN companies c ON c.id = uc.company_id
+    WHERE uc.user_id = $1 AND ($2 = '' OR LOWER(c.name) = LOWER($2)) ORDER BY c.name LIMIT 1`, [req.user.id, requested]);
+  return result.rows[0]?.name || "";
+}
+
 app.get("/health", async (_req, res) => {
   try { await pool.query("SELECT 1"); res.json({ status: "ok", database: "connected" }); }
   catch { res.status(503).json({ status: "error", database: "disconnected" }); }
@@ -148,16 +157,66 @@ app.delete("/api/auth/sessions/others", authenticate, async (req, res) => {
   res.status(204).end();
 });
 
+app.get("/api/manager/companies", authenticate, requireManager, async (req, res) => {
+  const result = await pool.query(`SELECT c.id, c.name, COUNT(u.id)::int AS clients
+    FROM user_companies uc JOIN companies c ON c.id = uc.company_id
+    LEFT JOIN users u ON LOWER(u.company_name) = LOWER(c.name) AND u.role = 'client'
+    WHERE uc.user_id = $1 GROUP BY c.id, c.name ORDER BY c.name`, [req.user.id]);
+  res.json({ companies: result.rows });
+});
+
+app.post("/api/manager/companies", authenticate, requireManager, async (req, res) => {
+  const name = String(req.body.name || "").trim();
+  if (name.length < 2 || name.length > 160) return res.status(400).json({ error: "Ingresa un nombre de empresa válido." });
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const company = await client.query("INSERT INTO companies (name) VALUES ($1) ON CONFLICT (LOWER(name)) DO UPDATE SET name = EXCLUDED.name RETURNING id, name", [name]);
+    await client.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [req.user.id, company.rows[0].id]);
+    await client.query("COMMIT");
+    res.status(201).json({ company: { ...company.rows[0], clients: 0 } });
+  } catch (error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }
+});
+
+app.get("/api/manager/clients", authenticate, requireManager, async (req, res) => {
+  const result = await pool.query(`SELECT u.id, u.name, u.username, u.email, u.company_name, u.active, u.last_login_at
+    FROM users u JOIN companies c ON LOWER(c.name) = LOWER(u.company_name) JOIN user_companies uc ON uc.company_id = c.id
+    WHERE uc.user_id = $1 AND u.role = 'client' ORDER BY u.created_at DESC`, [req.user.id]);
+  res.json({ clients: result.rows });
+});
+
+app.post("/api/manager/clients", authenticate, requireManager, async (req, res) => {
+  const name = String(req.body.name || "").trim();
+  const username = String(req.body.username || "").trim().toLowerCase();
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const companyName = String(req.body.companyName || "").trim();
+  const password = String(req.body.password || "");
+  if (!name || !/^[a-z0-9._-]{3,40}$/.test(username) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !companyName || password.length < 10) return res.status(400).json({ error: "Completa los datos y usa una contraseña de al menos 10 caracteres." });
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const company = await client.query("INSERT INTO companies (name) VALUES ($1) ON CONFLICT (LOWER(name)) DO UPDATE SET name = EXCLUDED.name RETURNING id, name", [companyName]);
+    await client.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [req.user.id, company.rows[0].id]);
+    const passwordHash = await bcrypt.hash(password, 12);
+    const result = await client.query("INSERT INTO users (name, username, email, company_name, password_hash, role) VALUES ($1,$2,$3,$4,$5,'client') RETURNING id, name, username, email, company_name, active, last_login_at", [name, username, email, company.rows[0].name, passwordHash]);
+    await client.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2)", [result.rows[0].id, company.rows[0].id]);
+    await client.query("COMMIT");
+    res.status(201).json({ client: result.rows[0], company: company.rows[0] });
+  } catch (error) { await client.query("ROLLBACK"); if (error.code === "23505") return res.status(409).json({ error: "Ya existe una cuenta con ese correo o usuario." }); throw error; } finally { client.release(); }
+});
+
 app.get("/api/calendar/publications", authenticate, async (req, res) => {
-  if (!req.user.company_name) return res.json({ publications: [] });
+  const company = await companyForRequest(req);
+  if (!company) return res.json({ publications: [] });
   const result = await pool.query(`SELECT id, publication_date AS date, publication_time AS time, topic, copy, format, platforms,
     media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName"
     FROM calendar_publications WHERE LOWER(company_name) = LOWER($1)
-    ORDER BY publication_date, publication_time NULLS LAST`, [req.user.company_name]);
+    ORDER BY publication_date, publication_time NULLS LAST`, [company]);
   res.json({ publications: result.rows });
 });
 
 app.put("/api/calendar/publications/:id", authenticate, requireManager, async (req, res) => {
+  const company = await companyForRequest(req);
   const id = String(req.params.id || "");
   const date = String(req.body.date || "");
   const time = String(req.body.time || "") || null;
@@ -168,7 +227,7 @@ app.put("/api/calendar/publications/:id", authenticate, requireManager, async (r
   const mediaUrl = String(req.body.mediaUrl || "");
   const mediaType = ["image", "video"].includes(req.body.mediaType) ? req.body.mediaType : null;
   const mediaName = String(req.body.mediaName || "").slice(0, 255) || null;
-  if (!req.user.company_name || !/^[0-9a-f-]{36}$/i.test(id) || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !topic || !["post", "reel", "historia"].includes(format)) return res.status(400).json({ error: "Los datos de la publicación están incompletos." });
+  if (!company || !/^[0-9a-f-]{36}$/i.test(id) || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !topic || !["post", "reel", "historia"].includes(format)) return res.status(400).json({ error: "Los datos de la publicación están incompletos." });
   if (mediaUrl && !mediaUrl.startsWith("data:image/") && !mediaUrl.startsWith("data:video/")) return res.status(400).json({ error: "El archivo multimedia no es válido." });
   const result = await pool.query(`INSERT INTO calendar_publications (id, company_name, created_by, publication_date, publication_time, topic, copy, format, platforms, media_data, media_type, media_name)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
@@ -177,13 +236,14 @@ app.put("/api/calendar/publications/:id", authenticate, requireManager, async (r
       media_data = EXCLUDED.media_data, media_type = EXCLUDED.media_type, media_name = EXCLUDED.media_name, updated_at = NOW()
     WHERE LOWER(calendar_publications.company_name) = LOWER(EXCLUDED.company_name)
     RETURNING id, publication_date AS date, publication_time AS time, topic, copy, format, platforms,
-      media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName"`, [id, req.user.company_name, req.user.id, date, time, topic, copy, format, platforms, mediaUrl || null, mediaType, mediaName]);
+      media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName"`, [id, company, req.user.id, date, time, topic, copy, format, platforms, mediaUrl || null, mediaType, mediaName]);
   if (!result.rowCount) return res.status(403).json({ error: "No puedes modificar publicaciones de otra empresa." });
   res.json({ publication: result.rows[0] });
 });
 
 app.delete("/api/calendar/publications/:id", authenticate, requireManager, async (req, res) => {
-  const result = await pool.query("DELETE FROM calendar_publications WHERE id = $1 AND LOWER(company_name) = LOWER($2)", [req.params.id, req.user.company_name || ""]);
+  const company = await companyForRequest(req);
+  const result = await pool.query("DELETE FROM calendar_publications WHERE id = $1 AND LOWER(company_name) = LOWER($2)", [req.params.id, company]);
   if (!result.rowCount) return res.status(404).json({ error: "Publicación no encontrada." });
   res.status(204).end();
 });
@@ -225,6 +285,8 @@ app.post("/api/admin/users", authenticate, requireAdmin, async (req, res) => {
   try {
     const passwordHash = await bcrypt.hash(password, 12);
     const result = await pool.query("INSERT INTO users (name, username, email, company_name, password_hash, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, name, username, email, company_name, role, active, created_at, last_login_at", [name, username, email, companyName, passwordHash, role]);
+    const company = await pool.query("INSERT INTO companies (name) VALUES ($1) ON CONFLICT (LOWER(name)) DO UPDATE SET name = EXCLUDED.name RETURNING id", [companyName]);
+    await pool.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [result.rows[0].id, company.rows[0].id]);
     res.status(201).json({ user: result.rows[0] });
   } catch (error) {
     if (error.code === "23505") return res.status(409).json({ error: "Ya existe una cuenta con ese correo o nombre de usuario." });
@@ -252,6 +314,8 @@ app.patch("/api/admin/users/:id", authenticate, requireAdmin, async (req, res) =
       WHERE id = $8 AND role <> 'admin'
       RETURNING id, name, username, email, company_name, role, active, created_at, last_login_at`, [name, username, email, companyName, active, passwordHash, role, id]);
     if (!result.rowCount) return res.status(404).json({ error: "Usuario no encontrado." });
+    const company = await pool.query("INSERT INTO companies (name) VALUES ($1) ON CONFLICT (LOWER(name)) DO UPDATE SET name = EXCLUDED.name RETURNING id", [companyName]);
+    await pool.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [id, company.rows[0].id]);
     if (!active || passwordHash) await pool.query("UPDATE auth_sessions SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL", [id]);
     res.json({ user: result.rows[0] });
   } catch (error) {

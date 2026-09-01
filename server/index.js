@@ -24,10 +24,10 @@ app.use(express.json({ limit: "20kb" }));
 app.use(cookieParser());
 
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false });
-const cookieOptions = { httpOnly: true, secure: production, sameSite: "lax", maxAge: 8 * 60 * 60 * 1000, path: "/" };
+const baseCookieOptions = { httpOnly: true, secure: production, sameSite: "lax", path: "/" };
 
-function signSession(user) {
-  return jwt.sign({ sub: String(user.id), role: user.role }, jwtSecret, { expiresIn: "8h", issuer: "focugex" });
+function signSession(user, remember) {
+  return jwt.sign({ sub: String(user.id), role: user.role }, jwtSecret, { expiresIn: remember ? "30d" : "8h", issuer: "focugex" });
 }
 
 async function authenticate(req, res, next) {
@@ -40,7 +40,7 @@ async function authenticate(req, res, next) {
     req.user = result.rows[0];
     next();
   } catch {
-    res.clearCookie("focugex_session", cookieOptions);
+    res.clearCookie("focugex_session", baseCookieOptions);
     return res.status(401).json({ error: "Tu sesión expiró. Inicia sesión nuevamente." });
   }
 }
@@ -63,6 +63,7 @@ app.post("/api/auth/login", loginLimiter, async (req, res) => {
   const email = String(req.body.email || "").trim().toLowerCase();
   const password = String(req.body.password || "");
   const requestedRole = req.body.role === "client" ? "client" : "admin";
+  const remember = req.body.remember === true;
   if (!email || !password) return res.status(400).json({ error: "Ingresa tu correo y contraseña." });
 
   const result = await pool.query("SELECT id, name, email, role, password_hash FROM users WHERE email = $1 AND active = TRUE", [email]);
@@ -70,13 +71,14 @@ app.post("/api/auth/login", loginLimiter, async (req, res) => {
   const valid = user ? await bcrypt.compare(password, user.password_hash) : false;
   if (!valid || user.role !== requestedRole) return res.status(401).json({ error: "Correo, contraseña o tipo de acceso incorrecto." });
 
-  res.cookie("focugex_session", signSession(user), cookieOptions);
+  const sessionCookie = remember ? { ...baseCookieOptions, maxAge: 30 * 24 * 60 * 60 * 1000 } : baseCookieOptions;
+  res.cookie("focugex_session", signSession(user, remember), sessionCookie);
   return res.json({ user: { id: user.id, name: user.name, email: user.email, role: user.role } });
 });
 
 app.get("/api/auth/me", authenticate, (req, res) => res.json({ user: req.user }));
 app.post("/api/auth/logout", (_req, res) => {
-  res.clearCookie("focugex_session", cookieOptions);
+  res.clearCookie("focugex_session", baseCookieOptions);
   res.status(204).end();
 });
 

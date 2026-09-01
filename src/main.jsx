@@ -1577,6 +1577,8 @@ function CalendarPresentation({
     month: "long",
     year: "numeric",
   });
+  const today = new Date();
+  const todayIso = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   return (
     <section className="calendar-presentation">
       <header>
@@ -1619,6 +1621,13 @@ function CalendarPresentation({
           )}
         </div>
       )}
+      <div className="calendar-legend" aria-label="Leyenda del calendario">
+        <span className="post"><i></i>Publicación</span>
+        <span className="reel"><i></i>Reel</span>
+        <span className="historia"><i></i>Historia</span>
+        <span className="key-date"><i></i>Fecha clave</span>
+        <small>Selecciona un contenido para ver todos sus detalles</small>
+      </div>
       <div className="month-calendar">
         <div className="weekdays">
           {["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"].map((day) => (
@@ -1643,9 +1652,7 @@ function CalendarPresentation({
             );
             return (
               <article
-                className={
-                  entries.length || keyDates.length ? "has-content" : ""
-                }
+                className={`${entries.length || keyDates.length ? "has-content" : ""} ${date === todayIso ? "is-today" : ""} ${(offset + index) % 7 > 4 ? "is-weekend" : ""}`.trim()}
                 key={day}
               >
                 <b>{day}</b>

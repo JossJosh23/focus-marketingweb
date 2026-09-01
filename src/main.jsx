@@ -232,6 +232,7 @@ function AdminPanel({ user }) {
 const portalModules = [
   { id: "overview", label: "Resumen", icon: LayoutDashboard },
   { id: "calendar", label: "Calendario", icon: CalendarDays },
+  { id: "calendar-pdf", label: "Crear PDF cronograma", icon: FileDown },
 ];
 
 const emptyPublication = { date: "", time: "", topic: "", copy: "", objective: "", productionReference: "", distributionType: "organic", format: "post", platforms: [], mediaUrl: "", mediaType: "", mediaName: "" };
@@ -385,7 +386,7 @@ function RolePortal({ user }) {
   function clientCreated({ client, company }) { setClients((current) => [client, ...current]); setCompanies((current) => current.some((item) => item.name.toLowerCase() === company.name.toLowerCase()) ? current : [...current, { ...company, clients: 1 }]); setActiveCompany(company.name); }
   function companyCreated(company) { setCompanies((current) => current.some((item) => item.id === company.id) ? current : [...current, company]); setActiveCompany(company.name); }
   async function logout() { await api("/api/auth/logout", { method: "POST" }); window.location.assign("/"); }
-  const modules = manager ? [...portalModules, { id: "calendar-pdf", label: "Crear PDF cronograma", icon: FileDown }, { id: "companies", label: "Empresas", icon: Building2 }, { id: "collaborators", label: "Colaboradores", icon: Users }] : portalModules;
+  const modules = manager ? [...portalModules, { id: "companies", label: "Empresas", icon: Building2 }, { id: "collaborators", label: "Colaboradores", icon: Users }] : portalModules;
   return <main className={`role-portal ${manager ? "manager-portal" : "client-portal"}`}>
     <aside className="portal-sidebar"><Logo /><span className="portal-role">{manager ? user.agency_name || "GESTOR DE MARKETING" : "PORTAL DEL CLIENTE"}</span><nav>{modules.map(({ id, label, icon: Icon }) => <button key={id} className={section === id ? "active" : ""} onClick={() => setSection(id)}><Icon />{label}</button>)}</nav><div className="portal-company"><Building2 /><span><small>{manager ? "CLIENTE ACTIVO" : "TU EMPRESA"}</small><b>{activeCompany || user.company_name || "Sin empresa seleccionada"}</b></span></div><button className="portal-logout" onClick={logout}><LogOut /> Cerrar sesión</button></aside>
     <section className="portal-workspace"><header><div><small>{manager ? "OPERACIÓN DE MARKETING" : "SEGUIMIENTO DE MARKETING"}</small><b>{modules.find((item) => item.id === section)?.label}</b></div><div className="portal-header-actions">{manager && <label className="company-switcher"><Building2 /><span><small>EMPRESA ACTIVA</small><select value={activeCompany} onChange={(e) => setActiveCompany(e.target.value)}>{companies.map((company) => <option key={company.id} value={company.name}>{company.name}</option>)}</select></span></label>}<div className="portal-profile"><i>{user.name.split(" ").map((part) => part[0]).slice(0, 2).join("")}</i><span><b>{user.name}</b><small>{manager ? "Gestor" : "Cliente"}</small></span></div></div></header>

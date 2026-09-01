@@ -22,7 +22,7 @@ if (jwtSecret.length < 32) throw new Error("JWT_SECRET debe tener al menos 32 ca
 
 app.set("trust proxy", 1);
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(express.json({ limit: "20kb" }));
+app.use(express.json({ limit: "15mb" }));
 app.use(cookieParser());
 
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHeaders: true, legacyHeaders: false });
@@ -60,6 +60,11 @@ async function authenticate(req, res, next) {
 
 function requireAdmin(req, res, next) {
   if (req.user.role !== "admin") return res.status(403).json({ error: "Acceso exclusivo para administradores." });
+  next();
+}
+
+function requireManager(req, res, next) {
+  if (req.user.role !== "manager") return res.status(403).json({ error: "Acceso exclusivo para gestores de marketing." });
   next();
 }
 
@@ -140,6 +145,46 @@ app.get("/api/auth/sessions", authenticate, async (req, res) => {
 
 app.delete("/api/auth/sessions/others", authenticate, async (req, res) => {
   await pool.query("UPDATE auth_sessions SET revoked_at = NOW() WHERE user_id = $1 AND id <> $2 AND revoked_at IS NULL", [req.user.id, req.user.session_id]);
+  res.status(204).end();
+});
+
+app.get("/api/calendar/publications", authenticate, async (req, res) => {
+  if (!req.user.company_name) return res.json({ publications: [] });
+  const result = await pool.query(`SELECT id, publication_date AS date, publication_time AS time, topic, copy, format, platforms,
+    media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName"
+    FROM calendar_publications WHERE LOWER(company_name) = LOWER($1)
+    ORDER BY publication_date, publication_time NULLS LAST`, [req.user.company_name]);
+  res.json({ publications: result.rows });
+});
+
+app.put("/api/calendar/publications/:id", authenticate, requireManager, async (req, res) => {
+  const id = String(req.params.id || "");
+  const date = String(req.body.date || "");
+  const time = String(req.body.time || "") || null;
+  const topic = String(req.body.topic || "").trim();
+  const copy = String(req.body.copy || "");
+  const format = String(req.body.format || "");
+  const platforms = Array.isArray(req.body.platforms) ? req.body.platforms.map(String).slice(0, 10) : [];
+  const mediaUrl = String(req.body.mediaUrl || "");
+  const mediaType = ["image", "video"].includes(req.body.mediaType) ? req.body.mediaType : null;
+  const mediaName = String(req.body.mediaName || "").slice(0, 255) || null;
+  if (!req.user.company_name || !/^[0-9a-f-]{36}$/i.test(id) || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !topic || !["post", "reel", "historia"].includes(format)) return res.status(400).json({ error: "Los datos de la publicación están incompletos." });
+  if (mediaUrl && !mediaUrl.startsWith("data:image/") && !mediaUrl.startsWith("data:video/")) return res.status(400).json({ error: "El archivo multimedia no es válido." });
+  const result = await pool.query(`INSERT INTO calendar_publications (id, company_name, created_by, publication_date, publication_time, topic, copy, format, platforms, media_data, media_type, media_name)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+    ON CONFLICT (id) DO UPDATE SET publication_date = EXCLUDED.publication_date, publication_time = EXCLUDED.publication_time,
+      topic = EXCLUDED.topic, copy = EXCLUDED.copy, format = EXCLUDED.format, platforms = EXCLUDED.platforms,
+      media_data = EXCLUDED.media_data, media_type = EXCLUDED.media_type, media_name = EXCLUDED.media_name, updated_at = NOW()
+    WHERE LOWER(calendar_publications.company_name) = LOWER(EXCLUDED.company_name)
+    RETURNING id, publication_date AS date, publication_time AS time, topic, copy, format, platforms,
+      media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName"`, [id, req.user.company_name, req.user.id, date, time, topic, copy, format, platforms, mediaUrl || null, mediaType, mediaName]);
+  if (!result.rowCount) return res.status(403).json({ error: "No puedes modificar publicaciones de otra empresa." });
+  res.json({ publication: result.rows[0] });
+});
+
+app.delete("/api/calendar/publications/:id", authenticate, requireManager, async (req, res) => {
+  const result = await pool.query("DELETE FROM calendar_publications WHERE id = $1 AND LOWER(company_name) = LOWER($2)", [req.params.id, req.user.company_name || ""]);
+  if (!result.rowCount) return res.status(404).json({ error: "Publicación no encontrada." });
   res.status(204).end();
 });
 

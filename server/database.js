@@ -53,6 +53,24 @@ export async function initializeDatabase() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS reset_tokens_hash_idx ON password_reset_tokens(token_hash);
+
+    CREATE TABLE IF NOT EXISTS calendar_publications (
+      id UUID PRIMARY KEY,
+      company_name VARCHAR(160) NOT NULL,
+      created_by BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      publication_date DATE NOT NULL,
+      publication_time TIME,
+      topic VARCHAR(200) NOT NULL,
+      copy TEXT NOT NULL DEFAULT '',
+      format VARCHAR(20) NOT NULL CHECK (format IN ('post', 'reel', 'historia')),
+      platforms TEXT[] NOT NULL DEFAULT '{}',
+      media_data TEXT,
+      media_type VARCHAR(10),
+      media_name VARCHAR(255),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS calendar_publications_company_idx ON calendar_publications(LOWER(company_name), publication_date, publication_time);
   `);
 
   const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();

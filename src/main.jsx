@@ -43,7 +43,7 @@ function VisualPanel() {
   }
   function clearFocus(event) { delete event.currentTarget.dataset.focusActive; event.currentTarget.querySelectorAll(".focus-word").forEach((word) => word.classList.remove("active")); }
   return <section className="visual-panel" onPointerMove={moveRings} onPointerLeave={clearFocus}>
-    <div className="focus-depth" aria-hidden="true"><span className="focus-word strategy">Estrategia</span><span className="focus-word content">Contenido</span><span className="focus-word brand-word">Marca</span><span className="focus-word results">Resultados</span></div>
+    <div className="focus-depth" aria-hidden="true"><span className="focus-word strategy">Estrategia</span><span className="focus-word content">Contenido</span><span className="focus-word brand-word">Marca</span><span className="focus-word results">Resultados</span><span className="focus-word ideas">Ideas</span><span className="focus-word audience">Audiencia</span><span className="focus-word campaigns">Campañas</span><span className="focus-word design">Diseño</span><span className="focus-word impact">Impacto</span><span className="focus-word growth">Crecimiento</span></div>
     <div className="visual-content"><Logo /><h1>Tu marketing,<br />en buenas manos.</h1><p>Planifica, revisa y entiende todo lo que hacemos para hacer crecer tu negocio.</p>
     </div>
   </section>;

@@ -27,13 +27,23 @@ function MaintenanceScreen({ retry }) {
 function VisualPanel() {
   function moveRings(event) {
     const panel = event.currentTarget.getBoundingClientRect();
-    event.currentTarget.style.setProperty("--focus-x", `${event.clientX - panel.left}px`);
-    event.currentTarget.style.setProperty("--focus-y", `${event.clientY - panel.top}px`);
+    const pointerX = event.clientX - panel.left;
+    const pointerY = event.clientY - panel.top;
+    event.currentTarget.style.setProperty("--focus-x", `${pointerX}px`);
+    event.currentTarget.style.setProperty("--focus-y", `${pointerY}px`);
+    let nearest = null; let nearestDistance = Infinity;
+    event.currentTarget.querySelectorAll(".focus-word").forEach((word) => {
+      const bounds = word.getBoundingClientRect();
+      const distance = Math.hypot(event.clientX - (bounds.left + bounds.width / 2), event.clientY - (bounds.top + bounds.height / 2));
+      if (distance < nearestDistance) { nearest = word; nearestDistance = distance; }
+      word.classList.remove("active");
+    });
+    nearest?.classList.add("active");
     event.currentTarget.dataset.focusActive = "true";
   }
-  function clearFocus(event) { delete event.currentTarget.dataset.focusActive; }
+  function clearFocus(event) { delete event.currentTarget.dataset.focusActive; event.currentTarget.querySelectorAll(".focus-word").forEach((word) => word.classList.remove("active")); }
   return <section className="visual-panel" onPointerMove={moveRings} onPointerLeave={clearFocus}>
-    <div className="focus-aperture" aria-hidden="true"><i></i><i></i><i></i><i></i><span>Enfoque</span><b></b></div>
+    <div className="focus-depth" aria-hidden="true"><span className="focus-word strategy">Estrategia</span><span className="focus-word content">Contenido</span><span className="focus-word brand-word">Marca</span><span className="focus-word results">Resultados</span></div>
     <div className="visual-content"><Logo /><h1>Tu marketing,<br />en buenas manos.</h1><p>Planifica, revisa y entiende todo lo que hacemos para hacer crecer tu negocio.</p>
     </div>
   </section>;

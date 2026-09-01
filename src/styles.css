@@ -157,6 +157,13 @@ input:focus { border-color: #787af4; background: white; box-shadow: 0 0 0 4px #5
 .notification-button, .mobile-menu { width: 40px; height: 40px; border: 1px solid #e3e7ef; border-radius: 11px; display: grid; place-items: center; position: relative; color: #596277; background: white; }
 .notification-button svg, .mobile-menu svg { width: 18px; }
 .notification-button i { width: 7px; height: 7px; border: 2px solid white; border-radius: 50%; position: absolute; right: 8px; top: 7px; background: #f04438; }
+.topbar-profile { min-width: 225px; height: 52px; padding: 6px 9px 6px 6px; border: 1px solid #e3e7ef; border-radius: 13px; display: flex; align-items: center; gap: 9px; background: white; box-shadow: 0 6px 18px #18204b09; }
+.topbar-avatar { width: 38px; height: 38px; min-width: 38px; border-radius: 50%; display: grid; place-items: center; position: relative; color: white; background: linear-gradient(135deg, #7556ed, #27bdf2); font-size: 9px; font-weight: 800; }
+.topbar-avatar i { width: 10px; height: 10px; border: 2px solid white; border-radius: 50%; position: absolute; right: -1px; bottom: 0; background: #22c77a; }
+.topbar-profile-copy { min-width: 0; display: flex; flex: 1; flex-direction: column; gap: 2px; }
+.topbar-profile-copy b, .topbar-profile-copy span { max-width: 118px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.topbar-profile-copy b { color: #252a3d; font-size: 9px; }.topbar-profile-copy span { color: #98a2b3; font-size: 7px; }
+.topbar-profile > small { padding: 4px 6px; border-radius: 7px; color: #667085; background: #f0f1f4; font-size: 6px; font-weight: 800; letter-spacing: .4px; }
 .mobile-menu { display: none; }
 .admin-dashboard { padding: 35px; animation: form-in .45s ease-out; }
 .dashboard-heading { margin-bottom: 28px; display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }
@@ -192,17 +199,11 @@ input:focus { border-color: #787af4; background: white; box-shadow: 0 0 0 4px #5
 .activity-card li div { display: flex; flex-direction: column; gap: 4px; }.activity-card li b { font-size: 10px; }.activity-card li span { color: #8c94a6; font-size: 8px; }
 .activity-dot { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 0 5px currentColor; opacity: .2; }.activity-dot.green { color: #19b67a; }.activity-dot.purple { color: #7b55ea; }.activity-dot.blue { color: #3d76ed; }
 .admin-sidebar { width: 282px; height: 100vh; padding: 22px 17px; grid-column: 1; grid-row: 1; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; z-index: 40; color: #dce4f3; background: linear-gradient(180deg, #11152f, #151b3d); box-shadow: 15px 0 45px #17204413; }
-.sidebar-profile-head { margin: 0 3px 18px 8px; display: flex; align-items: center; justify-content: space-between; }
+.sidebar-profile-head { margin: 0 3px 18px 8px; display: flex; align-items: center; }
 .sidebar-profile-head > .brand { margin: 0; font-size: 17px; }
 .sidebar-profile-head > .brand img { width: 38px; height: 38px; }
 .sidebar-close { width: 36px; height: 36px; border: 1px solid #ffffff14; border-radius: 10px; display: none; place-items: center; position: absolute; right: 14px; top: 14px; color: #b9c4d8; background: #ffffff08; }
 .sidebar-close svg { width: 17px; }
-.profile-control { min-height: 67px; padding: 9px; border: 1px solid #ffffff12; border-radius: 14px; display: flex; align-items: center; position: relative; background: #ffffff08; }
-.profile-avatar { width: 43px; height: 43px; min-width: 43px; border: 2px solid #73d9ff; border-radius: 50%; display: grid; place-items: center; position: relative; color: white; background: linear-gradient(135deg, #5763ee, #19bdf2); font-size: 11px; font-weight: 800; box-shadow: 0 8px 20px #19bdf22c; }
-.profile-avatar i { width: 10px; height: 10px; border: 2px solid #121734; border-radius: 50%; position: absolute; right: -1px; bottom: 0; background: #20c77a; }
-.profile-copy { min-width: 0; padding: 0 9px; display: flex; flex: 1; flex-direction: column; align-items: flex-start; color: white; }
-.profile-copy span { max-width: 125px; overflow: hidden; font-size: 10px; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }.profile-copy small { margin-top: 3px; color: #8490aa; font-size: 7px; }
-.profile-control > svg { width: 14px; color: #7f8ba4; }
 .sidebar-empty { margin-top: 28px; padding: 16px 12px; border-top: 1px solid #ffffff0d; color: #79869f; }
 .sidebar-empty span { color: #a8b3c8; font-size: 8px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
 .sidebar-empty p { margin: 7px 0 0; font-size: 8px; line-height: 1.6; }
@@ -264,4 +265,7 @@ input:focus { border-color: #787af4; background: white; box-shadow: 0 0 0 4px #5
   .performance-card, .activity-card { min-height: auto; padding: 17px; }
   .chart-bars { height: 135px; gap: 5px; }
   .admin-sidebar { width: min(282px, 88vw); }
+  .topbar-profile { min-width: 50px; width: 50px; padding: 6px; }
+  .topbar-profile-copy, .topbar-profile > small { display: none; }
+  .admin-breadcrumb span { display: none; }
 }

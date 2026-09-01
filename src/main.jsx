@@ -134,6 +134,11 @@ function AdminPanel({ user }) {
         <div className="topbar-actions">
           <label className="admin-search"><Search /><input placeholder="Buscar en FOCUGEX" aria-label="Buscar" /></label>
           <button className="notification-button" aria-label="Notificaciones"><Bell /><i></i></button>
+          <div className="topbar-profile" title="Perfil del administrador">
+            <div className="topbar-avatar">{initials}<i></i></div>
+            <div className="topbar-profile-copy"><b>{user.name}</b><span>{user.email}</span></div>
+            <small>ADMIN</small>
+          </div>
         </div>
       </header>
 
@@ -156,11 +161,7 @@ function AdminPanel({ user }) {
     <aside className={`admin-sidebar ${menuOpen ? "open" : ""}`} aria-label="Panel lateral administrativo">
       <button className="sidebar-close" onClick={() => setMenuOpen(false)} aria-label="Cerrar panel lateral"><X /></button>
       <div className="sidebar-profile">
-        <div className="sidebar-profile-head"><Logo /><div className="profile-avatar" title={`Perfil de ${user.name}`}>{initials}<i></i></div></div>
-        <div className="profile-control">
-          <div className="profile-copy"><span>{user.name}</span><small>Superadministrador</small></div>
-          <ShieldCheck />
-        </div>
+        <div className="sidebar-profile-head"><Logo /></div>
       </div>
       <div className="sidebar-empty"><span>Panel administrativo</span><p>Los módulos se añadirán paso a paso.</p></div>
       <button className="sidebar-logout" onClick={logout}><LogOut /> Cerrar sesión</button>

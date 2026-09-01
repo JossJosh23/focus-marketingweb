@@ -24,6 +24,10 @@ export async function initializeDatabase() {
     );
     ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_ip VARCHAR(64);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(80);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS company_name VARCHAR(160);
+    UPDATE users SET username = 'usuario-' || id WHERE username IS NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS users_username_lower_idx ON users(LOWER(username));
 
     CREATE TABLE IF NOT EXISTS auth_sessions (
       id UUID PRIMARY KEY,

@@ -160,22 +160,51 @@ app.get("/", async (req, res, next) => {
 });
 
 app.get("/api/admin/users", authenticate, requireAdmin, async (_req, res) => {
-  const result = await pool.query("SELECT id, name, email, role, active, created_at, last_login_at FROM users ORDER BY created_at DESC");
+  const result = await pool.query("SELECT id, name, username, email, company_name, role, active, created_at, last_login_at FROM users ORDER BY created_at DESC");
   res.json({ users: result.rows });
 });
 
 app.post("/api/admin/users", authenticate, requireAdmin, async (req, res) => {
   const name = String(req.body.name || "").trim();
+  const username = String(req.body.username || "").trim().toLowerCase();
   const email = String(req.body.email || "").trim().toLowerCase();
+  const companyName = String(req.body.companyName || "").trim();
   const password = String(req.body.password || "");
-  const role = req.body.role === "admin" ? "admin" : "client";
-  if (!name || !email || password.length < 10) return res.status(400).json({ error: "Nombre, correo y contraseña de al menos 10 caracteres son obligatorios." });
+  if (!name || !username || !email || !companyName || password.length < 10) return res.status(400).json({ error: "Todos los campos son obligatorios y la contraseña debe tener al menos 10 caracteres." });
+  if (!/^[a-z0-9._-]{3,40}$/.test(username)) return res.status(400).json({ error: "El usuario debe tener entre 3 y 40 caracteres y usar solamente letras, números, punto, guion o guion bajo." });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "Ingresa un correo electrónico válido." });
   try {
     const passwordHash = await bcrypt.hash(password, 12);
-    const result = await pool.query("INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role, active, created_at", [name, email, passwordHash, role]);
+    const result = await pool.query("INSERT INTO users (name, username, email, company_name, password_hash, role) VALUES ($1, $2, $3, $4, $5, 'client') RETURNING id, name, username, email, company_name, role, active, created_at, last_login_at", [name, username, email, companyName, passwordHash]);
     res.status(201).json({ user: result.rows[0] });
   } catch (error) {
-    if (error.code === "23505") return res.status(409).json({ error: "Ya existe un usuario con ese correo." });
+    if (error.code === "23505") return res.status(409).json({ error: "Ya existe una cuenta con ese correo o nombre de usuario." });
+    throw error;
+  }
+});
+
+app.patch("/api/admin/users/:id", authenticate, requireAdmin, async (req, res) => {
+  const id = Number(req.params.id);
+  const name = String(req.body.name || "").trim();
+  const username = String(req.body.username || "").trim().toLowerCase();
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const companyName = String(req.body.companyName || "").trim();
+  const password = String(req.body.password || "");
+  const active = req.body.active !== false;
+  if (!Number.isInteger(id) || !name || !username || !email || !companyName) return res.status(400).json({ error: "Los datos del usuario están incompletos." });
+  if (!/^[a-z0-9._-]{3,40}$/.test(username) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "El correo o nombre de usuario no es válido." });
+  if (password && password.length < 10) return res.status(400).json({ error: "La contraseña nueva debe tener al menos 10 caracteres." });
+  try {
+    const passwordHash = password ? await bcrypt.hash(password, 12) : null;
+    const result = await pool.query(`UPDATE users SET name = $1, username = $2, email = $3, company_name = $4, active = $5,
+      password_hash = COALESCE($6, password_hash), updated_at = NOW()
+      WHERE id = $7 AND role = 'client'
+      RETURNING id, name, username, email, company_name, role, active, created_at, last_login_at`, [name, username, email, companyName, active, passwordHash, id]);
+    if (!result.rowCount) return res.status(404).json({ error: "Usuario cliente no encontrado." });
+    if (!active || passwordHash) await pool.query("UPDATE auth_sessions SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL", [id]);
+    res.json({ user: result.rows[0] });
+  } catch (error) {
+    if (error.code === "23505") return res.status(409).json({ error: "Ya existe una cuenta con ese correo o nombre de usuario." });
     throw error;
   }
 });

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { AlertTriangle, ArrowLeft, ArrowRight, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, CircleCheck, Eye, EyeOff, HelpCircle, Laptop, LayoutDashboard, LockKeyhole, LogOut, Mail, Menu, Moon, Plus, RefreshCw, Search, Settings, ShieldCheck, Sparkles, TrendingUp, UserRound, Users, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, CircleCheck, Copy, Dices, Eye, EyeOff, HelpCircle, Laptop, LayoutDashboard, LockKeyhole, LogOut, Mail, Menu, Moon, Pencil, Plus, RefreshCw, Search, Settings, ShieldCheck, Sparkles, TrendingUp, UserPlus, UserRound, Users, UserX, X } from "lucide-react";
 import "./styles.css";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -112,11 +112,53 @@ function ResetPassword() {
   return <AuthCard><button className="back-link" onClick={() => goTo("/")}><ArrowLeft /> Volver</button><span className="eyebrow">NUEVA CONTRASEÑA</span><h1>Protege tu cuenta</h1>{message ? <><div className="success-box"><CheckCircle2 />{message}</div><button className="submit-button" onClick={() => goTo("/")}>Iniciar sesión <ArrowRight /></button></> : <form onSubmit={submit}><label>Nueva contraseña<input value={password} onChange={(e) => setPassword(e.target.value)} type="password" autoComplete="new-password" required /></label><div className="password-checks"><span className={checks[0] ? "ok" : ""}><Check />10 caracteres</span><span className={checks[1] ? "ok" : ""}><Check />Una mayúscula</span><span className={checks[2] ? "ok" : ""}><Check />Un número</span></div><label>Confirmar contraseña<input value={confirm} onChange={(e) => setConfirm(e.target.value)} type="password" autoComplete="new-password" required /></label><button className="submit-button">Actualizar contraseña <ArrowRight /></button>{error && <div className="error-message"><AlertTriangle />{error}</div>}</form>}</AuthCard>;
 }
 
+function generateUserPassword(name) {
+  const base = (name.trim().split(/\s+/)[0] || "Focugex").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z]/g, "").slice(0, 6);
+  const prefix = base ? base[0].toUpperCase() + base.slice(1).toLowerCase() : "Focugex";
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const random = crypto.getRandomValues(new Uint32Array(8));
+  const suffix = Array.from(random, (value) => alphabet[value % alphabet.length]).join("");
+  return `${prefix}@${suffix}`;
+}
+
+function UserModal({ user, onClose, onSaved }) {
+  const [form, setForm] = useState({ name: user?.name || "", username: user?.username || "", email: user?.email || "", companyName: user?.company_name || "", password: "", active: user?.active ?? true });
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  function update(field, value) { setForm((current) => ({ ...current, [field]: value })); }
+  function generate() { update("password", generateUserPassword(form.name)); setShowPassword(true); }
+  async function submit(event) {
+    event.preventDefault(); setSaving(true); setError("");
+    try {
+      const result = await api(user ? `/api/admin/users/${user.id}` : "/api/admin/users", { method: user ? "PATCH" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      onSaved(result.user);
+    } catch (requestError) { setError(requestError.message); }
+    finally { setSaving(false); }
+  }
+  return <div className="user-modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section className="user-modal" role="dialog" aria-modal="true" aria-labelledby="user-modal-title"><header><div><span className="eyebrow">GESTIÓN DE ACCESO</span><h2 id="user-modal-title">{user ? "Editar usuario" : "Crear usuario"}</h2><p>{user ? "Actualiza la información o el acceso de esta cuenta." : "Crea una cuenta para que el cliente ingrese a FOCUGEX."}</p></div><button onClick={onClose} aria-label="Cerrar"><X /></button></header><form onSubmit={submit}>
+    <div className="user-form-grid"><label>Nombre completo<input value={form.name} onChange={(e) => update("name", e.target.value)} required placeholder="Ej. Adriana López" /></label><label>Nombre de usuario<input value={form.username} onChange={(e) => update("username", e.target.value.toLowerCase().replace(/\s/g, ""))} required minLength="3" placeholder="adriana.lopez" /></label><label>Correo electrónico<input value={form.email} onChange={(e) => update("email", e.target.value)} type="email" required placeholder="usuario@gmail.com" /></label><label>Empresa<input value={form.companyName} onChange={(e) => update("companyName", e.target.value)} required placeholder="Nombre de la empresa" /></label></div>
+    <label>Contraseña {user && <small>Déjala vacía para conservar la actual</small>}<div className="generated-password"><input value={form.password} onChange={(e) => update("password", e.target.value)} type={showPassword ? "text" : "password"} required={!user} minLength="10" placeholder="Mínimo 10 caracteres" /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label="Mostrar contraseña">{showPassword ? <EyeOff /> : <Eye />}</button><button type="button" className="generate-button" onClick={generate}><Dices /> Generar clave</button>{form.password && <button type="button" onClick={() => navigator.clipboard.writeText(form.password)} aria-label="Copiar contraseña"><Copy /></button>}</div></label>
+    {user && <label className="user-active-toggle"><input type="checkbox" checked={form.active} onChange={(e) => update("active", e.target.checked)} /><span><i></i></span><div><b>Usuario activo</b><small>Puede iniciar sesión en la plataforma</small></div></label>}
+    {error && <div className="error-message"><AlertTriangle />{error}</div>}
+    <footer><button type="button" onClick={onClose}>Cancelar</button><button className="save-user" disabled={saving}>{saving ? "Guardando…" : user ? "Guardar cambios" : "Crear usuario"}<ArrowRight /></button></footer>
+  </form></section></div>;
+}
+
+function UsersModule({ users, onCreate, onEdit }) {
+  const [query, setQuery] = useState("");
+  const clients = users.filter((item) => item.role === "client");
+  const filtered = clients.filter((item) => `${item.name} ${item.username} ${item.email} ${item.company_name}`.toLowerCase().includes(query.toLowerCase()));
+  return <div className="users-module"><div className="users-heading"><div><span className="eyebrow">PRIMER MÓDULO</span><h1>Usuarios</h1><p>Crea y administra las cuentas que pueden acceder al espacio de clientes.</p></div><button onClick={onCreate}><UserPlus /> Crear usuario</button></div><div className="users-summary"><article><span>Total de usuarios</span><b>{clients.length}</b></article><article><span>Usuarios activos</span><b>{clients.filter((item) => item.active).length}</b></article><article><span>Usuarios suspendidos</span><b>{clients.filter((item) => !item.active).length}</b></article></div><section className="users-table-card"><header><div className="users-search"><Search /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar usuario, correo o empresa" /></div><span>{filtered.length} resultado{filtered.length === 1 ? "" : "s"}</span></header>{filtered.length ? <div className="users-table"><div className="users-table-row table-head"><span>Usuario</span><span>Empresa</span><span>Estado</span><span>Último acceso</span><span></span></div>{filtered.map((item) => <div className="users-table-row" key={item.id}><div className="user-cell"><i>{item.name.split(" ").map((part) => part[0]).slice(0, 2).join("")}</i><span><b>{item.name}</b><small>@{item.username} · {item.email}</small></span></div><span>{item.company_name}</span><span><i className={`status-pill ${item.active ? "active" : "inactive"}`}>{item.active ? "Activo" : "Suspendido"}</i></span><span>{item.last_login_at ? new Date(item.last_login_at).toLocaleDateString("es-EC") : "Sin acceso"}</span><button onClick={() => onEdit(item)}><Pencil /> Editar</button></div>)}</div> : <div className="users-empty"><Users /><h3>No hay usuarios todavía</h3><p>Crea la primera cuenta de cliente para comenzar.</p><button onClick={onCreate}><Plus /> Crear primer usuario</button></div>}</section></div>;
+}
+
 function AdminPanel({ user }) {
+  const [section, setSection] = useState("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem("focugex_admin_theme") === "dark");
   const [users, setUsers] = useState([]);
+  const [userModal, setUserModal] = useState(null);
   const profileMenuRef = useRef(null);
   const initials = user.name.split(" ").map((part) => part[0]).slice(0, 2).join("").toUpperCase();
 
@@ -136,12 +178,14 @@ function AdminPanel({ user }) {
   }, []);
   useEffect(() => { localStorage.setItem("focugex_admin_theme", darkMode ? "dark" : "light"); }, [darkMode]);
   async function logout() { await api("/api/auth/logout", { method: "POST" }); window.location.assign("/"); }
+  function openSection(nextSection) { setSection(nextSection); setMenuOpen(false); setProfileMenuOpen(false); }
+  function saveUser(savedUser) { setUsers((current) => current.some((item) => item.id === savedUser.id) ? current.map((item) => item.id === savedUser.id ? savedUser : item) : [savedUser, ...current]); setUserModal(null); }
 
   return <main className={`admin-shell ${darkMode ? "admin-dark" : ""}`}>
     <section className="admin-workspace">
       <header className="admin-topbar">
         <button className="mobile-menu" onClick={() => setMenuOpen(true)} aria-label="Abrir navegación"><Menu /></button>
-        <div className="admin-breadcrumb"><span>Panel administrativo</span><b>Vista principal</b></div>
+        <div className="admin-breadcrumb"><span>Panel administrativo</span><b>{section === "users" ? "Usuarios" : "Vista principal"}</b></div>
         <div className="topbar-actions">
           <label className="admin-search"><Search /><input placeholder="Buscar en FOCUGEX" aria-label="Buscar" /></label>
           <button className="notification-button" aria-label="Notificaciones"><Bell /><i></i></button>
@@ -152,7 +196,7 @@ function AdminPanel({ user }) {
               <small>ADMIN</small><ChevronDown className="profile-chevron" />
             </button>
             {profileMenuOpen && <div className="account-menu" role="menu">
-              <div className="account-menu-group primary"><button role="menuitem"><LayoutDashboard /><span>Panel principal</span></button><button role="menuitem" className="selected"><Settings /><span>Configuración</span></button><button role="menuitem" onClick={() => setDarkMode(!darkMode)}><Moon /><span>Modo oscuro</span><i className={`theme-switch ${darkMode ? "on" : ""}`}><em></em></i></button></div>
+              <div className="account-menu-group primary"><button role="menuitem" onClick={() => openSection("dashboard")}><LayoutDashboard /><span>Panel principal</span></button><button role="menuitem"><Settings /><span>Configuración</span></button><button role="menuitem" onClick={() => setDarkMode(!darkMode)}><Moon /><span>Modo oscuro</span><i className={`theme-switch ${darkMode ? "on" : ""}`}><em></em></i></button></div>
               <span className="account-menu-label">CUENTA</span>
               <div className="account-menu-group secondary"><button role="menuitem"><UserRound /><span>Mi perfil</span></button><button role="menuitem"><ShieldCheck /><span>Seguridad y sesiones</span></button><button role="menuitem"><HelpCircle /><span>Centro de ayuda</span></button></div>
               <button className="account-logout" role="menuitem" onClick={logout}><LogOut /> Cerrar sesión</button>
@@ -161,7 +205,7 @@ function AdminPanel({ user }) {
         </div>
       </header>
 
-      <div className="admin-dashboard">
+      {section === "users" ? <UsersModule users={users} onCreate={() => setUserModal({ mode: "create" })} onEdit={(selectedUser) => setUserModal({ mode: "edit", user: selectedUser })} /> : <div className="admin-dashboard">
         <div className="dashboard-heading"><div><span className="eyebrow">CENTRO DE OPERACIONES</span><h1>Buenos días, {user.name.split(" ")[0]}</h1><p>Aquí tienes una vista clara de lo que está pasando en FOCUGEX.</p></div><button><Plus /> Nueva campaña</button></div>
         <div className="admin-kpis">
           <article><div className="kpi-icon purple"><Building2 /></div><span>Clientes activos</span><b>8</b><small><TrendingUp /> +2 este mes</small></article>
@@ -173,7 +217,7 @@ function AdminPanel({ user }) {
           <article className="performance-card"><div className="card-heading"><div><span>Rendimiento general</span><h2>Alcance de campañas</h2></div><button>Últimos 30 días <ChevronDown /></button></div><div className="performance-total"><b>184.2K</b><span>+18.4%</span></div><div className="chart-bars">{[32,46,42,60,55,73,68,87,81,94,88,100].map((height, index) => <i key={index} style={{ "--bar": `${height}%` }}></i>)}</div><div className="chart-labels"><span>1 Ago</span><span>10 Ago</span><span>20 Ago</span><span>30 Ago</span></div></article>
           <article className="activity-card"><div className="card-heading"><div><span>En tiempo real</span><h2>Actividad reciente</h2></div><button>Ver todo</button></div><ul><li><i className="activity-dot green"></i><div><b>Contenido aprobado</b><span>Manabiche · Hace 12 min</span></div></li><li><i className="activity-dot purple"></i><div><b>Nuevo cliente añadido</b><span>Restaurante Marea · Hace 1 h</span></div></li><li><i className="activity-dot blue"></i><div><b>Campaña programada</b><span>Lanzamiento septiembre · Hace 3 h</span></div></li></ul></article>
         </div>
-      </div>
+      </div>}
     </section>
 
     {menuOpen && <button className="admin-overlay" onClick={() => setMenuOpen(false)} aria-label="Cerrar navegación"></button>}
@@ -182,9 +226,11 @@ function AdminPanel({ user }) {
       <div className="sidebar-profile">
         <div className="sidebar-profile-head"><Logo /></div>
       </div>
-      <div className="sidebar-empty"><span>Panel administrativo</span><p>Los módulos se añadirán paso a paso.</p></div>
+      <div className="sidebar-empty"><span>Panel administrativo</span><p>Gestiona los accesos de tu plataforma.</p></div>
+      <nav className="admin-modules" aria-label="Módulos administrativos"><button className={section === "users" ? "active" : ""} onClick={() => openSection("users")}><Users /><span>Usuarios</span><small>{users.filter((item) => item.role === "client").length}</small></button></nav>
       <button className="sidebar-logout" onClick={logout}><LogOut /> Cerrar sesión</button>
     </aside>
+    {userModal && <UserModal user={userModal.user} onClose={() => setUserModal(null)} onSaved={saveUser} />}
   </main>;
 }
 

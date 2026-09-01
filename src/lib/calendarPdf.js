@@ -1,8 +1,8 @@
 const GREEN = [32, 180, 134];
-const ORANGE = [255, 90, 54];
-const INK = [33, 26, 24];
-const MUTED = [117, 105, 101];
-const PAPER = [255, 249, 243];
+const ORANGE = [49, 91, 255];
+const INK = [23, 32, 51];
+const MUTED = [102, 112, 133];
+const PAPER = [247, 249, 255];
 
 function text(doc, value, x, y, options = {}) {
   doc.setFont("helvetica", options.bold ? "bold" : "normal");

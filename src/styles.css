@@ -353,6 +353,13 @@ body, .admin-shell, .admin-shell.admin-dark, .role-portal { color: var(--ink); b
 .pdf-empty { border-color: #EDCABC; color: var(--ink); background: #fff; }.pdf-preview { border-color: var(--soft-line); background: #F3E8E1; }.pdf-preview > header { border-color: var(--soft-line); background: #fff; }.pdf-preview > header span { color: var(--ink); }
 .structure-module input:not(.period-picker), .structure-module textarea, .key-dates { border-color: var(--soft-line); color: var(--ink); background: #FFFCF9; }
 .app-toast { border-color: var(--soft-line); color: var(--ink); background: #fffffff5; }
+.calendar-presentation > header, .week-presentation > header, .calendar-view-switch button.active { background: linear-gradient(135deg, #315BFF, #6547E8 64%, #26AEEA); }
+.admin-sidebar, .portal-sidebar { box-shadow: 12px 0 45px #294A950d; }.admin-topbar, .admin-dark .admin-topbar, .portal-workspace > header { background: #FAFCFFef; }
+.users-search, .users-table-row.table-head, .admin-dark .users-search, .admin-dark .users-table-row.table-head { background: #F7F9FF; }
+.plan-summary > article, .plan-summary > div { background: #FBFCFF; }.calendar-days > i { background: #F0F4FF; }
+.calendar-days article > b { background: #EEF2FF; }.publication-media, .content-detail, .client-comment { background: #F2F5FF; }
+.calendar-empty, .portal-empty-state, .daily-empty, .pdf-empty { border-color: #C9D5F2; }.pdf-preview { background: #E6EBF5; box-shadow: 0 20px 55px #294A9518; }
+.structure-module input:not(.period-picker), .structure-module textarea, .key-dates { background: #FBFCFF; }
 .loading-screen, .maintenance-page { color: var(--ink); background: radial-gradient(circle at 70% 20%, #9B6CFF20, transparent 28%), linear-gradient(145deg, #FFF9F3, #FFDCCB); }
 .loading-screen .loader { border-color: #FFD3C6; border-top-color: var(--coral); }
 .users-heading > button, .users-empty button, .portal-empty-state button, .approvals > button { color: #fff; background: linear-gradient(135deg, var(--coral), #FF7B3F); box-shadow: 0 12px 25px #FF5A3625; }
@@ -360,6 +367,35 @@ body, .admin-shell, .admin-shell.admin-dark, .role-portal { color: var(--ink); b
 .publication-modal-backdrop { background: #3B2118a8; }.publication-modal input:focus, .publication-modal textarea:focus { border-color: var(--coral); box-shadow: 0 0 0 4px #FF5A3612; }
 .media-upload > svg { color: var(--coral); }.media-preview { background: #FFF3EC; }
 .calendar-platforms > i.platform-facebook, .calendar-platforms > i.platform-linkedin { color: var(--creative); }.calendar-platforms > i.platform-tiktok { color: var(--positive); }
+
+/* Profundidad azul e índigo */
+::selection { background: #315BFF; }
+.visual-panel { background: radial-gradient(circle at 14% 82%, #26C6F74a, transparent 34%), radial-gradient(circle at 84% 22%, #7758E83d, transparent 32%), linear-gradient(145deg, #F4F8FF, #DCE8FF 56%, #D9D3FF); }
+.visual-panel::before { background: radial-gradient(circle at 76% 25%, #315BFF2c, transparent 37%); }
+.rings i { border-color: #315BFF25; }.security-pill { border-color: #315BFF25; box-shadow: 0 8px 30px #315BFF14; }.private-label { background: #EEF3FF; }
+.brand img { filter: drop-shadow(0 10px 18px #315BFF26); }.visual-panel blockquote { box-shadow: 0 18px 40px #315BFF12; }
+.form-panel, .auth-page, .maintenance-page { background: radial-gradient(circle at 100% 0, #26C6F720, transparent 30%), radial-gradient(circle at 0 100%, #7758E815, transparent 28%), var(--canvas); }
+.login-card, .auth-card { box-shadow: 0 30px 80px #294A9518; }
+.input-shell:focus-within, input:focus, textarea:focus, select:focus, .publication-modal input:focus, .publication-modal textarea:focus { box-shadow: 0 0 0 4px #315BFF15; }
+.submit-button, .save-user, .primary-action, .calendar-toolbar .primary-action, .calendar-empty .primary-action, .portal-welcome > button, .manager-clients > header > button, .publication-modal form > footer .save-publication, .company-dialog-submit, .pdf-download, .structure-module form > footer button, .users-heading > button, .users-empty button, .portal-empty-state button, .approvals > button { background: linear-gradient(135deg, #315BFF, #6547E8 62%, #26AEEA) !important; box-shadow: 0 12px 28px #315BFF2b !important; }
+.admin-sidebar, .portal-sidebar { box-shadow: 12px 0 45px #294A950d; }.admin-topbar, .admin-dark .admin-topbar, .portal-workspace > header { background: #FAFCFFef; box-shadow: 0 8px 28px #294A950a; }
+.sidebar-empty, .portal-company { background: #F0F4FF; }.admin-modules button:hover, .portal-sidebar nav button:hover { background: #EEF3FF; }.admin-modules button.active, .portal-sidebar nav button.active { border-color: #315BFF40; color: #2447C7; background: linear-gradient(90deg, #E7EEFF, #F2F0FF); }
+.topbar-avatar, .portal-profile > i, .manager-client-grid article > i, .user-cell > i, .company-users i { background: linear-gradient(135deg, #315BFF, #7758E8); }
+.account-menu-group button:hover, .admin-dark .account-menu-group button:hover { background: #F0F4FF; }.account-menu-group button.selected, .admin-dark .account-menu-group button.selected { border-color: #C7D4FF; color: #2447C7; background: #EAF0FF; }
+.admin-kpis article, .admin-dark .admin-kpis article, .users-summary article, .admin-dark .users-summary article, .users-table-card, .admin-dark .users-table-card, .publication-card, .manager-client-grid article, .portal-real-overview > button, .portal-integrity, .real-data-note, .company-management-grid > article, .pdf-controls, .structure-module form { box-shadow: 0 12px 34px #294A950d; }
+.admin-kpis article:hover, .users-summary article:hover, .portal-real-overview > button:hover, .manager-client-grid article:hover, .company-management-grid > article:hover { border-color: #B9C8F4; box-shadow: 0 18px 38px #315BFF14; }
+.kpi-icon.blue, .kpi-icon.orange { color: #315BFF; background: #EAF0FF; }
+.users-search, .users-table-row.table-head, .admin-dark .users-search, .admin-dark .users-table-row.table-head, .user-modal header > button, .user-modal footer button, .publication-modal header > button, .publication-modal footer > button:first-child { background: #F7F9FF; }
+.users-table-row > button:hover, .publication-card > footer button:hover, .calendar-toolbar button:hover { border-color: #B9C8F4; color: #315BFF; background: #EFF3FF; }
+.generated-password .generate-button, .preview-toggle.active, .pdf-generate, .key-dates .add-key-date { border-color: #D2C9FA; color: #6042CF; background: #F1EEFF; }
+.media-upload, .company-logo-preview { border-color: #C9D5F2; background: #F7F9FF; }.company-logo-field:hover .company-logo-preview { background: #EDF2FF; }
+.format-options button.selected { color: #2447C7; background: #EAF0FF; }.calendar-presentation, .week-presentation { box-shadow: 0 18px 45px #294A9513; }.calendar-presentation > header, .week-presentation > header, .calendar-view-switch button.active { background: linear-gradient(135deg, #315BFF, #6547E8 64%, #26AEEA); }
+.plan-summary > article, .plan-summary > div { background: #FBFCFF; }.calendar-days > i { background: #F0F4FF; }.calendar-days article > b { background: #EEF2FF; }
+.calendar-key-date { color: #2447C7; background: repeating-linear-gradient(135deg, #EAF0FF, #EAF0FF 7px, #E3E9FF 7px, #E3E9FF 14px); }
+.publication-media, .content-detail, .client-comment { background: #F2F5FF; }.platform-tags span { color: #2447C7; background: #EAF0FF; }
+.company-management-grid header button { border-color: #C7D4FF; color: #2447C7; background: #EAF0FF; }
+.pdf-preview { background: #E6EBF5; box-shadow: 0 20px 55px #294A9518; }.pdf-empty, .calendar-empty, .portal-empty-state, .daily-empty { border-color: #C9D5F2; }
+.app-dialog-backdrop, .company-dialog-backdrop, .user-modal-backdrop, .publication-modal-backdrop, .content-preview-backdrop { background: #111C3AA8; }.app-toast, .app-dialog, .company-dialog { box-shadow: 0 24px 65px #18316A24; }
 
 /* Interacciones y mensajes globales */
 :where(button, a, input, textarea, select) { transition: border-color .18s ease, background-color .18s ease, color .18s ease, box-shadow .18s ease, opacity .18s ease, transform .18s ease, filter .18s ease; }
@@ -394,17 +430,17 @@ button:disabled { cursor: not-allowed; filter: saturate(.65); opacity: .58; }
 @media (max-width: 560px) { .app-dialog-backdrop { padding: 12px; align-items: end; }.app-dialog { padding: 20px; border-radius: 18px; }.app-toast-region { top: 12px; right: 16px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
 
-/* Identidad FOCUGEX 2026 — coral mandarina */
+/* Identidad FOCUGEX 2026 — azul eléctrico */
 :root {
-  --coral: #FF5A36;
-  --mandarin: #FFB547;
-  --canvas: #FFF9F3;
+  --coral: #315BFF;
+  --mandarin: #26C6F7;
+  --canvas: #F5F8FF;
   --surface: #FFFFFF;
-  --ink: #211A18;
-  --subtle: #756965;
-  --soft-line: #F0DDD3;
+  --ink: #172033;
+  --subtle: #667085;
+  --soft-line: #DDE5F4;
   --positive: #20B486;
-  --creative: #9B6CFF;
+  --creative: #7758E8;
   --navy: var(--ink); --blue: var(--coral); --violet: var(--creative); --cyan: var(--positive);
   --text: var(--ink); --muted: var(--subtle); --line: var(--soft-line);
 }
@@ -658,6 +694,12 @@ body, .admin-shell, .admin-shell.admin-dark, .role-portal { color: var(--ink); b
 .calendar-days > article, .calendar-days > i { border-color: var(--soft-line); background: #fff; }.calendar-days > i { background: #FFF4ED; }
 .calendar-days article > button.calendar-content-card { color: var(--ink); background: linear-gradient(135deg, var(--format-bg), #fff); }.calendar-content-card > strong, .publication-body h3 { color: var(--ink); }.publication-body > p { color: var(--subtle); }
 .calendar-empty, .portal-empty-state, .daily-empty, .pdf-empty { border-color: #EDCABC; color: var(--ink); background: #fff; }
-.pdf-preview { border-color: var(--soft-line); background: #F3E8E1; }.pdf-preview > header { border-color: var(--soft-line); background: #fff; }.pdf-preview > header span { color: var(--ink); }
-.structure-module input:not(.period-picker), .structure-module textarea, .key-dates { border-color: var(--soft-line); color: var(--ink); background: #FFFCF9; }
+.pdf-preview { border-color: var(--soft-line); background: #E6EBF5; box-shadow: 0 20px 55px #294A9518; }.pdf-preview > header { border-color: var(--soft-line); background: #fff; }.pdf-preview > header span { color: var(--ink); }
+.structure-module input:not(.period-picker), .structure-module textarea, .key-dates { border-color: var(--soft-line); color: var(--ink); background: #FBFCFF; }
 .app-toast { border-color: var(--soft-line); color: var(--ink); background: #fffffff5; }
+.calendar-presentation > header, .week-presentation > header, .calendar-view-switch button.active { background: linear-gradient(135deg, #315BFF, #6547E8 64%, #26AEEA); }
+.admin-sidebar, .portal-sidebar { box-shadow: 12px 0 45px #294A950d; }.admin-topbar, .admin-dark .admin-topbar, .portal-workspace > header { background: #FAFCFFef; }
+.users-search, .users-table-row.table-head, .admin-dark .users-search, .admin-dark .users-table-row.table-head { background: #F7F9FF; }
+.plan-summary > article, .plan-summary > div { background: #FBFCFF; }.calendar-days > i { background: #F0F4FF; }
+.calendar-days article > b { background: #EEF2FF; }.publication-media, .content-detail, .client-comment { background: #F2F5FF; }
+.calendar-empty, .portal-empty-state, .daily-empty, .pdf-empty { border-color: #C9D5F2; }

@@ -17,7 +17,7 @@ export async function initializeDatabase() {
       name VARCHAR(120) NOT NULL,
       email VARCHAR(255) NOT NULL UNIQUE,
       password_hash VARCHAR(255) NOT NULL,
-      role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'manager', 'client')),
+      role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'manager', 'collaborator', 'client')),
       active BOOLEAN NOT NULL DEFAULT TRUE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -29,7 +29,7 @@ export async function initializeDatabase() {
     ALTER TABLE users ADD COLUMN IF NOT EXISTS agency_name VARCHAR(160);
     UPDATE users SET agency_name = company_name WHERE role = 'manager' AND agency_name IS NULL;
     ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
-    ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'manager', 'client'));
+    ALTER TABLE users ADD CONSTRAINT users_role_check CHECK (role IN ('admin', 'manager', 'collaborator', 'client'));
 
     CREATE TABLE IF NOT EXISTS activity_logs (
       id BIGSERIAL PRIMARY KEY,

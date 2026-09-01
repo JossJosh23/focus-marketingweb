@@ -5,6 +5,6 @@ export function goTo(path) {
 
 export function pathForRole(role) {
   if (role === "admin") return "/admin";
-  if (role === "manager") return "/manager";
+  if (role === "manager" || role === "collaborator") return "/manager";
   return "/client";
 }

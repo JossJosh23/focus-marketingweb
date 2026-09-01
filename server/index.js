@@ -71,11 +71,16 @@ function requireManager(req, res, next) {
   next();
 }
 
-const rolePath = (role) => role === "admin" ? "/admin" : role === "manager" ? "/manager" : "/client";
+function requireMarketing(req, res, next) {
+  if (!['manager', 'collaborator'].includes(req.user.role)) return res.status(403).json({ error: "Acceso exclusivo para el equipo de marketing." });
+  next();
+}
+
+const rolePath = (role) => role === "admin" ? "/admin" : ['manager', 'collaborator'].includes(role) ? "/manager" : "/client";
 
 async function companyForRequest(req) {
   if (req.user.role === "client") return req.user.company_name || "";
-  if (req.user.role !== "manager") return "";
+  if (!['manager', 'collaborator'].includes(req.user.role)) return "";
   const requested = String(req.get("x-focugex-company") || "").trim();
   const result = await pool.query(`SELECT c.name FROM user_companies uc JOIN companies c ON c.id = uc.company_id
     WHERE uc.user_id = $1 AND ($2 = '' OR LOWER(c.name) = LOWER($2)) ORDER BY c.name LIMIT 1`, [req.user.id, requested]);
@@ -91,6 +96,9 @@ async function assignableCompany(client, managerId, name) {
   }
   const created = await client.query("INSERT INTO companies (name) VALUES ($1) RETURNING id, name", [name]);
   await client.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2)", [managerId, created.rows[0].id]);
+  await client.query(`INSERT INTO user_companies (user_id, company_id)
+    SELECT collaborator.id, $2 FROM users owner JOIN users collaborator ON LOWER(collaborator.agency_name) = LOWER(owner.agency_name) AND collaborator.role = 'collaborator'
+    WHERE owner.id = $1 ON CONFLICT DO NOTHING`, [managerId, created.rows[0].id]);
   return created.rows[0];
 }
 
@@ -187,12 +195,32 @@ app.delete("/api/auth/sessions/others", authenticate, async (req, res) => {
   res.status(204).end();
 });
 
-app.get("/api/manager/companies", authenticate, requireManager, async (req, res) => {
+app.get("/api/manager/companies", authenticate, requireMarketing, async (req, res) => {
   const result = await pool.query(`SELECT c.id, c.name, COUNT(u.id)::int AS clients
     FROM user_companies uc JOIN companies c ON c.id = uc.company_id
     LEFT JOIN users u ON LOWER(u.company_name) = LOWER(c.name) AND u.role = 'client'
     WHERE uc.user_id = $1 GROUP BY c.id, c.name ORDER BY c.name`, [req.user.id]);
   res.json({ companies: result.rows });
+});
+
+app.get("/api/manager/collaborators", authenticate, requireMarketing, async (req, res) => {
+  const result = await pool.query("SELECT id, name, username, email, active, last_login_at FROM users WHERE role = 'collaborator' AND LOWER(agency_name) = LOWER($1) ORDER BY created_at DESC", [req.user.agency_name || ""]);
+  res.json({ collaborators: result.rows });
+});
+
+app.post("/api/manager/collaborators", authenticate, requireManager, async (req, res) => {
+  const name = String(req.body.name || "").trim();
+  const username = String(req.body.username || "").trim().toLowerCase();
+  const email = String(req.body.email || "").trim().toLowerCase();
+  const password = String(req.body.password || "");
+  if (!req.user.agency_name || !name || !/^[a-z0-9._-]{3,40}$/.test(username) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !strongPassword(password)) return res.status(400).json({ error: "Completa los datos y usa una contraseña segura." });
+  try {
+    const passwordHash = await bcrypt.hash(password, 12);
+    const result = await pool.query("INSERT INTO users (name, username, email, agency_name, password_hash, role) VALUES ($1,$2,$3,$4,$5,'collaborator') RETURNING id, name, username, email, active, last_login_at", [name, username, email, req.user.agency_name, passwordHash]);
+    await pool.query(`INSERT INTO user_companies (user_id, company_id) SELECT $1, company_id FROM user_companies WHERE user_id = $2 ON CONFLICT DO NOTHING`, [result.rows[0].id, req.user.id]);
+    await logActivity(req.user.id, "collaborator.created", "user", result.rows[0].id, { agency: req.user.agency_name });
+    res.status(201).json({ collaborator: result.rows[0] });
+  } catch (error) { if (error.code === "23505") return res.status(409).json({ error: "Ya existe una cuenta con ese correo o usuario." }); throw error; }
 });
 
 app.post("/api/manager/companies", authenticate, requireManager, async (req, res) => {
@@ -207,14 +235,14 @@ app.post("/api/manager/companies", authenticate, requireManager, async (req, res
   } catch (error) { await client.query("ROLLBACK"); if (error.status) return res.status(error.status).json({ error: error.message }); throw error; } finally { client.release(); }
 });
 
-app.get("/api/manager/clients", authenticate, requireManager, async (req, res) => {
+app.get("/api/manager/clients", authenticate, requireMarketing, async (req, res) => {
   const result = await pool.query(`SELECT u.id, u.name, u.username, u.email, u.company_name, u.active, u.last_login_at
     FROM users u JOIN companies c ON LOWER(c.name) = LOWER(u.company_name) JOIN user_companies uc ON uc.company_id = c.id
     WHERE uc.user_id = $1 AND u.role = 'client' ORDER BY u.created_at DESC`, [req.user.id]);
   res.json({ clients: result.rows });
 });
 
-app.post("/api/manager/clients", authenticate, requireManager, async (req, res) => {
+app.post("/api/manager/clients", authenticate, requireMarketing, async (req, res) => {
   const name = String(req.body.name || "").trim();
   const username = String(req.body.username || "").trim().toLowerCase();
   const email = String(req.body.email || "").trim().toLowerCase();
@@ -256,7 +284,7 @@ app.patch("/api/calendar/publications/:id/review", authenticate, async (req, res
   res.json({ review: result.rows[0] });
 });
 
-app.put("/api/calendar/publications/:id", authenticate, requireManager, async (req, res) => {
+app.put("/api/calendar/publications/:id", authenticate, requireMarketing, async (req, res) => {
   const company = await companyForRequest(req);
   const id = String(req.params.id || "");
   const date = String(req.body.date || "");
@@ -284,7 +312,7 @@ app.put("/api/calendar/publications/:id", authenticate, requireManager, async (r
   res.json({ publication: result.rows[0] });
 });
 
-app.delete("/api/calendar/publications/:id", authenticate, requireManager, async (req, res) => {
+app.delete("/api/calendar/publications/:id", authenticate, requireMarketing, async (req, res) => {
   const company = await companyForRequest(req);
   const result = await pool.query("DELETE FROM calendar_publications WHERE id = $1 AND LOWER(company_name) = LOWER($2)", [req.params.id, company]);
   if (!result.rowCount) return res.status(404).json({ error: "Publicación no encontrada." });
@@ -336,13 +364,13 @@ app.post("/api/admin/users", authenticate, requireAdmin, async (req, res) => {
   const companyName = String(req.body.companyName || "").trim();
   const password = String(req.body.password || "");
   const role = String(req.body.role || "client");
-  if (!["manager", "client"].includes(role)) return res.status(400).json({ error: "Selecciona un rol válido para el usuario." });
+  if (!["manager", "collaborator", "client"].includes(role)) return res.status(400).json({ error: "Selecciona un rol válido para el usuario." });
   if (!name || !username || !email || !companyName || !strongPassword(password)) return res.status(400).json({ error: "Todos los campos son obligatorios y la contraseña debe tener 10 caracteres, una mayúscula y un número." });
   if (!/^[a-z0-9._-]{3,40}$/.test(username)) return res.status(400).json({ error: "El usuario debe tener entre 3 y 40 caracteres y usar solamente letras, números, punto, guion o guion bajo." });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "Ingresa un correo electrónico válido." });
   try {
     const passwordHash = await bcrypt.hash(password, 12);
-    const result = await pool.query("INSERT INTO users (name, username, email, company_name, agency_name, password_hash, role) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, name, username, email, company_name, agency_name, role, active, created_at, last_login_at", [name, username, email, role === "client" ? companyName : null, role === "manager" ? companyName : null, passwordHash, role]);
+    const result = await pool.query("INSERT INTO users (name, username, email, company_name, agency_name, password_hash, role) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, name, username, email, company_name, agency_name, role, active, created_at, last_login_at", [name, username, email, role === "client" ? companyName : null, role !== "client" ? companyName : null, passwordHash, role]);
     if (role === "client") { const company = await pool.query("INSERT INTO companies (name) VALUES ($1) ON CONFLICT (LOWER(name)) DO UPDATE SET name = EXCLUDED.name RETURNING id", [companyName]); await pool.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [result.rows[0].id, company.rows[0].id]); }
     await logActivity(req.user.id, "user.created", "user", result.rows[0].id, { role });
     res.status(201).json({ user: result.rows[0] });
@@ -361,14 +389,14 @@ app.patch("/api/admin/users/:id", authenticate, requireAdmin, async (req, res) =
   const password = String(req.body.password || "");
   const active = req.body.active !== false;
   const role = String(req.body.role || "client");
-  if (!["manager", "client"].includes(role)) return res.status(400).json({ error: "Selecciona un rol válido para el usuario." });
+  if (!["manager", "collaborator", "client"].includes(role)) return res.status(400).json({ error: "Selecciona un rol válido para el usuario." });
   if (!Number.isInteger(id) || !name || !username || !email || !companyName) return res.status(400).json({ error: "Los datos del usuario están incompletos." });
   if (!/^[a-z0-9._-]{3,40}$/.test(username) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "El correo o nombre de usuario no es válido." });
   if (password && !strongPassword(password)) return res.status(400).json({ error: "La contraseña nueva debe tener 10 caracteres, una mayúscula y un número." });
   try {
     const passwordHash = password ? await bcrypt.hash(password, 12) : null;
     const result = await pool.query(`UPDATE users SET name = $1, username = $2, email = $3, company_name = CASE WHEN $7 = 'client' THEN $4 ELSE NULL END,
-      agency_name = CASE WHEN $7 = 'manager' THEN $4 ELSE NULL END, active = $5, password_hash = COALESCE($6, password_hash), role = $7, updated_at = NOW()
+      agency_name = CASE WHEN $7 IN ('manager', 'collaborator') THEN $4 ELSE NULL END, active = $5, password_hash = COALESCE($6, password_hash), role = $7, updated_at = NOW()
       WHERE id = $8 AND role <> 'admin'
       RETURNING id, name, username, email, company_name, agency_name, role, active, created_at, last_login_at`, [name, username, email, companyName, active, passwordHash, role, id]);
     if (!result.rowCount) return res.status(404).json({ error: "Usuario no encontrado." });

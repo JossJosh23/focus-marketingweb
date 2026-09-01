@@ -1,8 +1,8 @@
-const GREEN = [7, 105, 59];
-const ORANGE = [239, 132, 31];
-const INK = [27, 42, 34];
-const MUTED = [105, 119, 111];
-const PAPER = [247, 249, 247];
+const GREEN = [32, 180, 134];
+const ORANGE = [255, 90, 54];
+const INK = [33, 26, 24];
+const MUTED = [117, 105, 101];
+const PAPER = [255, 249, 243];
 
 function text(doc, value, x, y, options = {}) {
   doc.setFont("helvetica", options.bold ? "bold" : "normal");
@@ -218,7 +218,7 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
     const hiddenCount = calendarEntries.filter((item) => item.date === dayKey).length - entries.length;
     if (hiddenCount > 0) text(doc, `+${hiddenCount} más`, x + columnWidth - 3, y + rowHeight - 4, { bold: true, size: 5.5, color: MUTED, align: "right", width: 18, maxLines: 1 });
   }
-  [[GREEN, "Post"], [[35, 104, 167], "Reel"], [ORANGE, "Historia"], [[211, 58, 58], "Fecha clave"], [MUTED, "Pendiente"]].forEach(([color, label], index) => { const x = 20 + index * 42; doc.setFillColor(...color); doc.circle(x, 185, 1.2, "F"); text(doc, label, x + 3, 187, { bold: true, size: 6.5, color, width: 34, maxLines: 1 }); });
+  [[GREEN, "Post"], [[155, 108, 255], "Reel"], [[255, 181, 71], "Historia"], [ORANGE, "Fecha clave"], [MUTED, "Pendiente"]].forEach(([color, label], index) => { const x = 20 + index * 42; doc.setFillColor(...color); doc.circle(x, 185, 1.2, "F"); text(doc, label, x + 3, 187, { bold: true, size: 6.5, color, width: 34, maxLines: 1 }); });
   pageFooter(doc, period, nextPageNumber + publications.length);
 
   return doc;

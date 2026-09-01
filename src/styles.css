@@ -326,6 +326,41 @@ input:focus { border-color: #787af4; background: white; box-shadow: 0 0 0 4px #5
   .company-switcher { min-width: 145px; }.company-switcher > svg, .company-switcher small { display: none; }.portal-header-actions { gap: 7px; }
 }
 
+/* Garantía de cascada: superficies claras sobre los estilos históricos. */
+body, .admin-shell, .admin-shell.admin-dark, .role-portal { color: var(--ink); background: var(--canvas); }
+.admin-sidebar, .portal-sidebar { border-color: var(--soft-line); color: var(--ink); background: #fff; box-shadow: 12px 0 45px #71341c0d; }
+.admin-topbar, .admin-dark .admin-topbar, .portal-workspace > header { border-color: var(--soft-line); color: var(--ink); background: #fffaf7ef; }
+.admin-dashboard, .admin-dark .admin-dashboard, .users-module, .admin-dark .users-module, .portal-content { color: var(--ink); }
+.dashboard-heading h1, .users-heading h1, .portal-welcome h1, .calendar-toolbar h2, .manager-clients h2, .pdf-module > header h2, .structure-module h2 { color: var(--ink); }
+.dashboard-heading p, .admin-dark .dashboard-heading p, .users-heading p, .portal-welcome p, .calendar-toolbar p, .manager-clients header p, .pdf-module > header p, .structure-module > header p { color: var(--subtle); }
+.admin-kpis article, .admin-dark .admin-kpis article, .users-summary article, .admin-dark .users-summary article, .users-table-card, .admin-dark .users-table-card, .publication-card, .manager-client-grid article, .portal-real-overview > button, .portal-integrity, .real-data-note, .company-management-grid > article, .pdf-controls, .structure-module form { border-color: var(--soft-line); color: var(--ink); background: #fff; box-shadow: 0 12px 34px #71341c0d; }
+.users-search, .users-table-row.table-head, .admin-dark .users-search, .admin-dark .users-table-row.table-head { border-color: var(--soft-line); color: var(--subtle); background: #FFF8F4; }
+.users-table-card > header, .users-table-row, .admin-dark .users-table-card > header, .admin-dark .users-table-row { border-color: var(--soft-line); }
+.user-cell b, .admin-dark .user-cell b, .manager-client-grid b, .admin-kpis article > b, .users-summary b { color: var(--ink); }
+.user-modal, .admin-dark .user-modal, .publication-modal, .company-dialog, .app-dialog { border-color: var(--soft-line); color: var(--ink); background: #fff; }
+.user-modal > header, .user-modal footer, .publication-modal > header, .publication-modal form > footer, .company-dialog > header, .admin-dark .user-modal > header, .admin-dark .user-modal footer { border-color: var(--soft-line); background: #fff; }
+.user-modal label, .admin-dark .user-modal label, .publication-modal label, .publication-modal legend, .company-dialog label { color: var(--ink); }
+.user-modal input, .user-modal select, .publication-modal input, .publication-modal textarea, .company-dialog input, .admin-dark .user-modal input, .admin-dark .user-modal select, .generated-password { border-color: var(--soft-line); color: var(--ink); background: #FFFCF9; }
+.calendar-toolbar button { border-color: var(--soft-line); color: var(--subtle); background: #fff; }
+.period-picker { border-color: var(--soft-line); color: var(--ink); color-scheme: light; background: #fff; }
+.calendar-presentation, .week-presentation { border-color: var(--soft-line); color: var(--ink); background: #fff; }
+.calendar-presentation > header, .week-presentation > header { color: #fff; background: linear-gradient(135deg, var(--coral), #FF7E40 70%, var(--mandarin)); }
+.plan-summary > article, .plan-summary > div { border-color: var(--soft-line); background: #FFFDFC; }.plan-summary article b { color: var(--ink); }.plan-summary article span, .plan-summary p, .plan-summary ul { color: var(--subtle); }
+.calendar-days > article, .calendar-days > i { border-color: var(--soft-line); background: #fff; }.calendar-days > i { background: #FFF4ED; }
+.calendar-days article > button.calendar-content-card { color: var(--ink); background: linear-gradient(135deg, var(--format-bg), #fff); }.calendar-content-card > strong { color: var(--ink); }
+.publication-card { background: #fff; }.publication-body h3 { color: var(--ink); }.publication-body > p { color: var(--subtle); }
+.calendar-empty, .portal-empty-state, .daily-empty { border-color: #EDCABC; color: var(--ink); background: #fff; }
+.pdf-empty { border-color: #EDCABC; color: var(--ink); background: #fff; }.pdf-preview { border-color: var(--soft-line); background: #F3E8E1; }.pdf-preview > header { border-color: var(--soft-line); background: #fff; }.pdf-preview > header span { color: var(--ink); }
+.structure-module input:not(.period-picker), .structure-module textarea, .key-dates { border-color: var(--soft-line); color: var(--ink); background: #FFFCF9; }
+.app-toast { border-color: var(--soft-line); color: var(--ink); background: #fffffff5; }
+.loading-screen, .maintenance-page { color: var(--ink); background: radial-gradient(circle at 70% 20%, #9B6CFF20, transparent 28%), linear-gradient(145deg, #FFF9F3, #FFDCCB); }
+.loading-screen .loader { border-color: #FFD3C6; border-top-color: var(--coral); }
+.users-heading > button, .users-empty button, .portal-empty-state button, .approvals > button { color: #fff; background: linear-gradient(135deg, var(--coral), #FF7B3F); box-shadow: 0 12px 25px #FF5A3625; }
+.approval-preview { background: linear-gradient(135deg, #FFF0E8, #F5F0FF); }.approval-preview > svg { color: var(--creative); }
+.publication-modal-backdrop { background: #3B2118a8; }.publication-modal input:focus, .publication-modal textarea:focus { border-color: var(--coral); box-shadow: 0 0 0 4px #FF5A3612; }
+.media-upload > svg { color: var(--coral); }.media-preview { background: #FFF3EC; }
+.calendar-platforms > i.platform-facebook, .calendar-platforms > i.platform-linkedin { color: var(--creative); }.calendar-platforms > i.platform-tiktok { color: var(--positive); }
+
 /* Interacciones y mensajes globales */
 :where(button, a, input, textarea, select) { transition: border-color .18s ease, background-color .18s ease, color .18s ease, box-shadow .18s ease, opacity .18s ease, transform .18s ease, filter .18s ease; }
 button { cursor: pointer; }
@@ -358,6 +393,114 @@ button:disabled { cursor: not-allowed; filter: saturate(.65); opacity: .58; }
 .app-toast span { font-size: 12px; font-weight: 700; line-height: 1.45; }
 @media (max-width: 560px) { .app-dialog-backdrop { padding: 12px; align-items: end; }.app-dialog { padding: 20px; border-radius: 18px; }.app-toast-region { top: 12px; right: 16px; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
+
+/* Identidad FOCUGEX 2026 — coral mandarina */
+:root {
+  --coral: #FF5A36;
+  --mandarin: #FFB547;
+  --canvas: #FFF9F3;
+  --surface: #FFFFFF;
+  --ink: #211A18;
+  --subtle: #756965;
+  --soft-line: #F0DDD3;
+  --positive: #20B486;
+  --creative: #9B6CFF;
+  --navy: var(--ink); --blue: var(--coral); --violet: var(--creative); --cyan: var(--positive);
+  --text: var(--ink); --muted: var(--subtle); --line: var(--soft-line);
+}
+html { color-scheme: light; }
+body { color: var(--ink); background: var(--canvas); }
+::selection { color: #fff; background: var(--coral); }
+.eyebrow { color: var(--coral); }
+
+/* Acceso */
+.visual-panel { color: var(--ink); background: radial-gradient(circle at 14% 82%, #FFB54770, transparent 34%), radial-gradient(circle at 84% 22%, #9B6CFF2e, transparent 30%), linear-gradient(145deg, #fff3e9, #ffd8c9 58%, #ffc99d); }
+.visual-panel::before { background: radial-gradient(circle at 78% 25%, #FF5A3630, transparent 36%); }
+.aurora.one { background: var(--coral); opacity: .18; }.aurora.two { background: var(--creative); opacity: .15; }
+.rings i { border-color: #FF5A3625; }.rings i:nth-child(2), .rings i:nth-child(3) { background: #ffffff42; }
+.security-pill { border-color: #FF5A3630; color: var(--subtle); background: #ffffff8f; box-shadow: 0 8px 30px #AD4E2420; }
+.private-label { color: var(--coral); background: #fff8f0b8; }
+.brand { color: var(--ink); }.brand i, .visual-content h1 em { color: var(--coral); }.brand img { filter: drop-shadow(0 10px 18px #FF5A3628); }
+.visual-content > p { color: var(--subtle); }
+.visual-panel blockquote { border-color: #ffffff8c; border-left-color: var(--coral); color: var(--ink); background: #ffffff8a; box-shadow: 0 18px 40px #8D41251a; }.visual-panel blockquote span { color: var(--subtle); }
+.form-panel, .auth-page, .maintenance-page { color: var(--ink); background: radial-gradient(circle at 100% 0, #FFB54728, transparent 30%), radial-gradient(circle at 0 100%, #9B6CFF12, transparent 28%), var(--canvas); }
+.login-card, .auth-card { border-color: var(--soft-line); color: var(--ink); background: #ffffffee; box-shadow: 0 30px 80px #74381d18; }
+.lead, .auth-card > p { color: var(--subtle); }
+.input-shell, input, textarea, select, .auth-card input { border-color: var(--soft-line); color: var(--ink); background: #FFFCF9; }
+.input-shell input { background: transparent; }.input-shell:focus-within, input:focus, textarea:focus, select:focus { border-color: var(--coral); color: var(--ink); background: #fff; box-shadow: 0 0 0 4px #FF5A3614; }
+.remember { color: var(--subtle); }.remember span { border-color: #DFC7BB; background: #fff; }.remember input:checked + span { border-color: var(--coral); background: var(--coral); }
+.connection-status { color: var(--subtle); background: #F8EEE8; }.connection-status.online { color: #087C5A; background: #E9F9F3; }.connection-status.online span { background: var(--positive); }
+.submit-button, .save-user, .primary-action, .calendar-toolbar .primary-action, .calendar-empty .primary-action, .portal-welcome > button, .manager-clients > header > button, .publication-modal form > footer .save-publication, .company-dialog-submit, .pdf-download, .structure-module form > footer button { color: #fff !important; background: linear-gradient(135deg, var(--coral), #FF7B3F) !important; box-shadow: 0 12px 26px #FF5A362b !important; }
+.secure-note { border-color: #FFD6C5; color: #B93E24; background: #FFF1E9; }.secure-note span { color: var(--subtle); }
+
+/* Estructura de paneles */
+.admin-shell, .admin-shell.admin-dark, .role-portal { color: var(--ink); background: var(--canvas); }
+.admin-sidebar, .portal-sidebar { border-right: 1px solid var(--soft-line); color: var(--ink); background: #fff; box-shadow: 12px 0 45px #71341c0d; }
+.admin-sidebar::before { border-color: var(--coral); }
+.sidebar-empty, .portal-company { border-color: var(--soft-line); color: var(--ink); background: #FFF5EE; }
+.admin-modules button, .portal-sidebar nav button, .portal-logout { color: var(--subtle); }
+.admin-modules button:hover, .portal-sidebar nav button:hover { color: var(--coral); background: #FFF1E9; }
+.admin-modules button.active, .portal-sidebar nav button.active { border-color: #FF5A3645; color: #B93820; background: linear-gradient(90deg, #FFE7DC, #FFF5EE); box-shadow: inset 3px 0 var(--coral); }
+.portal-role, .portal-company small { color: var(--subtle); }.portal-company b { color: var(--ink); }
+.admin-topbar, .admin-dark .admin-topbar, .portal-workspace > header { border-color: var(--soft-line); color: var(--ink); background: #fffaf7eF; box-shadow: 0 8px 28px #71341c0a; }
+.admin-breadcrumb span, .portal-workspace > header small { color: var(--subtle); }.admin-breadcrumb b, .portal-workspace > header b { color: var(--ink); }
+.topbar-profile, .admin-dark .topbar-profile, .company-switcher { border-color: var(--soft-line); color: var(--ink); background: #fff; }
+.topbar-profile-copy b, .admin-dark .topbar-profile-copy b { color: var(--ink); }.topbar-profile-copy span, .admin-dark .topbar-profile > small { color: var(--subtle); }.admin-dark .topbar-profile > small { background: #FFF0E8; }
+.company-switcher select { color: var(--ink); background: transparent; }.company-switcher > svg { color: var(--coral); }
+.topbar-avatar, .portal-profile > i, .manager-client-grid article > i, .user-cell > i, .company-users i { color: #fff; background: linear-gradient(135deg, var(--coral), var(--mandarin)); }
+.account-menu, .admin-dark .account-menu { border-color: var(--soft-line); color: var(--ink); background: #fff; box-shadow: 0 24px 55px #71341c20; }.account-menu::before, .admin-dark .account-menu::before { border-color: var(--soft-line); background: #fff; }
+.account-menu-group { border-color: var(--soft-line) !important; }.account-menu-group button, .admin-dark .account-menu-group button, .account-logout, .admin-dark .account-logout { color: var(--subtle); }.account-menu-group button:hover, .admin-dark .account-menu-group button:hover { color: var(--coral); background: #FFF3EC; }.account-menu-group button.selected, .admin-dark .account-menu-group button.selected { border-color: #FFD0BF; color: #B93E24; background: #FFF0E8; }.account-menu-group svg, .admin-dark .account-menu-group svg { color: var(--coral) !important; }
+.admin-dashboard, .admin-dark .admin-dashboard, .users-module, .admin-dark .users-module, .portal-content { color: var(--ink); }
+.dashboard-heading h1, .users-heading h1, .portal-welcome h1, .calendar-toolbar h2, .manager-clients h2, .pdf-module > header h2, .structure-module h2 { color: var(--ink); }
+.dashboard-heading p, .admin-dark .dashboard-heading p, .users-heading p, .portal-welcome p, .calendar-toolbar p, .manager-clients header p, .pdf-module > header p, .structure-module > header p { color: var(--subtle); }
+
+/* Tarjetas, tablas y formularios */
+.admin-kpis article, .admin-dark .admin-kpis article, .users-summary article, .admin-dark .users-summary article, .users-table-card, .admin-dark .users-table-card, .publication-card, .manager-client-grid article, .portal-real-overview > button, .portal-integrity, .real-data-note, .company-management-grid > article, .pdf-controls, .structure-module form { border-color: var(--soft-line); color: var(--ink); background: #fff; box-shadow: 0 12px 34px #71341c0d; }
+.admin-kpis article:hover, .users-summary article:hover, .portal-real-overview > button:hover, .manager-client-grid article:hover, .company-management-grid > article:hover { border-color: #FFC8B6; box-shadow: 0 18px 38px #9B452016; transform: translateY(-2px); }
+.admin-kpis article > span, .admin-kpis article > small, .users-summary span { color: var(--subtle); }.admin-kpis article > b, .users-summary b { color: var(--ink); }
+.kpi-icon.purple { color: var(--creative); background: #F2ECFF; }.kpi-icon.blue, .kpi-icon.orange { color: var(--coral); background: #FFF0E9; }.kpi-icon.cyan { color: var(--positive); background: #EAF9F4; }
+.users-table-card > header, .users-table-row, .admin-dark .users-table-card > header, .admin-dark .users-table-row { border-color: var(--soft-line); }
+.users-search, .users-table-row.table-head, .admin-dark .users-search, .admin-dark .users-table-row.table-head { border-color: var(--soft-line); color: var(--subtle); background: #FFF8F4; }
+.users-search input, .admin-dark .users-search input { color: var(--ink); background: transparent; }.users-table-row { color: var(--subtle); }.user-cell b, .admin-dark .user-cell b, .manager-client-grid b { color: var(--ink); }.manager-client-grid span { color: var(--subtle); }.manager-client-grid small { color: var(--coral); }
+.users-table-row > button, .admin-dark .users-table-row > button, .publication-card > footer button { border-color: var(--soft-line); color: var(--subtle); background: #fff; }.users-table-row > button:hover, .publication-card > footer button:hover { border-color: #FFBCA8; color: var(--coral); background: #FFF3EC; }
+.status-pill.active, .company-users em.active { color: #087C5A; background: #E7F8F2; }.status-pill.inactive { color: #B13A31; background: #FFF0EE; }
+.user-modal, .admin-dark .user-modal, .publication-modal, .company-dialog, .app-dialog { border-color: var(--soft-line); color: var(--ink); background: #fff; box-shadow: 0 35px 90px #71341c28; }
+.user-modal > header, .user-modal footer, .publication-modal > header, .publication-modal form > footer, .company-dialog > header, .admin-dark .user-modal > header, .admin-dark .user-modal footer { border-color: var(--soft-line); background: #fff; }
+.user-modal label, .admin-dark .user-modal label, .publication-modal label, .publication-modal legend, .company-dialog label { color: var(--ink); }
+.user-modal input, .user-modal select, .publication-modal input, .publication-modal textarea, .company-dialog input, .admin-dark .user-modal input, .admin-dark .user-modal select, .generated-password { border-color: var(--soft-line); color: var(--ink); background: #FFFCF9; }
+.user-modal header > button, .user-modal footer button, .publication-modal header > button, .publication-modal footer > button:first-child, .company-dialog-close, .company-dialog footer button, .admin-dark .user-modal header > button, .admin-dark .user-modal footer button { border-color: var(--soft-line); color: var(--subtle); background: #FFF8F4; }
+.generated-password .generate-button { color: var(--creative); background: #F2ECFF; }
+.media-upload, .company-logo-preview { border-color: #EDCABC; color: var(--coral); background: #FFF8F4; }.company-logo-field:hover .company-logo-preview { border-color: var(--coral); background: #FFF1E9; }
+.format-options button { border-color: var(--soft-line); color: var(--subtle); background: #fff; }.format-options button.selected { border-color: var(--coral); color: #B93E24; background: #FFF0E8; }.platform-options label { border-color: var(--soft-line); color: var(--ink); background: #fff; }.platform-options input:checked + span { border-color: var(--coral); background: var(--coral); }
+
+/* Calendario y contenidos */
+.calendar-toolbar button { border-color: var(--soft-line); color: var(--subtle); background: #fff; }.calendar-toolbar button:hover { border-color: #FFC3B0; color: var(--coral); background: #FFF4EE; }.preview-toggle.active { border-color: #DCCBFF; color: #7041D3; background: #F3EEFF; }
+.period-picker { border-color: var(--soft-line); color: var(--ink); color-scheme: light; background: #fff; box-shadow: 0 8px 24px #71341c0d; }.period-picker:hover, .period-picker:focus { border-color: var(--coral); box-shadow: 0 0 0 4px #FF5A3612; }
+.calendar-presentation, .week-presentation { border-color: var(--soft-line); color: var(--ink); background: #fff; box-shadow: 0 18px 45px #71341c13; }
+.calendar-presentation > header, .week-presentation > header { color: #fff; background: linear-gradient(135deg, var(--coral), #FF7E40 70%, var(--mandarin)); }
+.plan-summary > article, .plan-summary > div { border-color: var(--soft-line); background: #FFFDFC; }.plan-summary small { color: var(--coral); }.plan-summary article b { color: var(--ink); }.plan-summary article span, .plan-summary p, .plan-summary ul { color: var(--subtle); }
+.weekdays span { color: var(--subtle); }.calendar-days > article, .calendar-days > i { border-color: var(--soft-line); background: #fff; }.calendar-days > i { background: #FFF4ED; }.calendar-days > article.has-content { border-color: #F2C8B8; box-shadow: inset 0 1px #fff, 0 8px 22px #71341c10; }.calendar-days article > b { color: var(--subtle); background: #FFF1EA; }
+.calendar-content-card.format-post { --format-color: #20B486; --format-bg: #EAF9F4; }.calendar-content-card.format-reel { --format-color: #9B6CFF; --format-bg: #F1ECFF; }.calendar-content-card.format-historia { --format-color: #E99013; --format-bg: #FFF4DF; }
+.calendar-days article > button.calendar-content-card { color: var(--ink); background: linear-gradient(135deg, var(--format-bg), #fff); box-shadow: 0 7px 17px #71341c0e; }.calendar-content-card > strong { color: var(--ink); }.calendar-card-meta, .calendar-platforms > small, .calendar-status-label { color: var(--subtle) !important; }.calendar-platforms > i { border-color: var(--soft-line); background: #fff; }
+.calendar-key-date { border-color: var(--coral); color: #B93E24; background: repeating-linear-gradient(135deg, #FFF0E8, #FFF0E8 7px, #FFE7DC 7px, #FFE7DC 14px); }.calendar-key-date small { color: var(--coral); }
+.calendar-view-switch { border-color: var(--soft-line); background: #fff; }.calendar-view-switch button { color: var(--subtle); }.calendar-view-switch button.active { color: #fff; background: linear-gradient(135deg, var(--coral), #FF7E40); }
+.publication-card { background: #fff; }.publication-media { color: var(--subtle); background: linear-gradient(135deg, #FFF1EA, #FFF8F4); }.publication-body h3 { color: var(--ink); }.publication-body > p { color: var(--subtle); }.publication-date { color: var(--coral); }.content-detail { background: #FFF7F2; }.content-detail small { color: var(--coral); }.content-detail span { color: var(--subtle); }.platform-tags span { color: #B93E24; background: #FFF0E8; }
+.approval-state { color: #A56A00; background: #FFF4DF; }.approval-state.approved { color: #087C5A; background: #E7F8F2; }.approval-state.changes_requested { color: #B13A31; background: #FFF0EE; }.client-comment { border-left-color: var(--coral); color: var(--subtle); background: #FFF4EE; }
+.calendar-empty, .portal-empty-state, .daily-empty { border-color: #EDCABC; color: var(--ink); background: #fff; }.calendar-empty p, .portal-empty-state p, .daily-empty p { color: var(--subtle); }.calendar-empty > svg, .portal-empty-state > svg, .daily-empty > svg { color: var(--coral); }
+
+/* Empresas, PDF y estructura */
+.company-management-grid > article > header { border-color: var(--soft-line); }.company-management-grid header > svg { color: var(--coral); }.company-management-grid header b { color: var(--ink); }.company-management-grid header span, .company-users small, .company-users > p { color: var(--subtle); }.company-management-grid header button { border-color: #FFD0BF; color: #B93E24; background: #FFF1E9; }.company-users > div { border-color: var(--soft-line); }
+.pdf-controls label > span, .structure-module form > label > span, .key-dates legend { color: var(--ink); }.pdf-generate { border-color: #DCCBFF; color: #7041D3; background: #F3EEFF; }.pdf-generate:hover:not(:disabled) { border-color: var(--creative); background: #EBE2FF; }.pdf-empty { border-color: #EDCABC; color: var(--ink); background: radial-gradient(circle at 50% 45%, #FFB54715, transparent 35%), #fff; }.pdf-empty > svg { color: var(--coral); background: #FFF0E8; }.pdf-empty p { color: var(--subtle); }.pdf-preview { border-color: var(--soft-line); background: #F3E8E1; box-shadow: 0 20px 55px #71341c18; }.pdf-preview > header { border-color: var(--soft-line); background: #fff; }.pdf-preview > header span { color: var(--ink); }.pdf-preview > header span svg { color: var(--coral); }.pdf-preview > header small { color: var(--subtle); }
+.structure-module form input:not(.period-picker), .structure-module form textarea { border-color: var(--soft-line); color: var(--ink); background: #FFFCF9; }.structure-module input:focus, .structure-module textarea:focus { border-color: var(--coral); box-shadow: 0 0 0 4px #FF5A3614; }.key-dates { border-color: var(--soft-line); background: #FFF8F4; }.key-dates > p { color: var(--subtle); }.key-dates > div button { border-color: #FFD0C3; color: #C4442C; background: #FFF0EB; }.key-dates .add-key-date { border-color: #DCCBFF; color: #7041D3; background: #F3EEFF; }
+
+/* Diálogos y notificaciones */
+.app-dialog-backdrop, .company-dialog-backdrop, .user-modal-backdrop, .publication-modal-backdrop, .content-preview-backdrop { background: #3B2118a8; backdrop-filter: blur(10px); }
+.app-dialog header > span { color: var(--coral); }.app-dialog h2 { color: var(--ink); }.app-dialog header p { color: var(--subtle); }.app-dialog-content label { color: var(--ink); }.app-dialog-content textarea { border-color: var(--soft-line); color: var(--ink); background: #FFFCF9; }.app-dialog-cancel { border-color: var(--soft-line); color: var(--subtle); background: #FFF8F4; }.app-dialog-confirm { color: #fff; background: linear-gradient(135deg, var(--coral), #FF7B3F); }.app-toast { border-color: var(--soft-line); color: var(--ink); background: #fffffff5; box-shadow: 0 18px 45px #71341c20; }.app-toast i { color: #fff; background: var(--positive); }.app-toast.info i { color: #fff; background: var(--creative); }
+
+@media (max-width: 800px) {
+  .admin-sidebar, .portal-sidebar { box-shadow: 8px 0 28px #71341c12; }
+  .calendar-presentation > header { padding: 22px 18px; }
+}
 
 /* Sistema visual oscuro: mayor contraste, tipografía legible y acentos cálidos. */
 :root { --navy: #171411; --blue: #e58a3a; --violet: #d5a15f; --cyan: #69bd83; --text: #f2eee8; --muted: #aaa198; --line: #3a342e; }
@@ -491,3 +634,30 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   .plan-summary { grid-template-columns: 1fr; }
   .plan-summary > article:last-of-type, .plan-summary > div { grid-column: auto; }
 }
+
+/* Tema claro: cierre de cascada */
+body, .admin-shell, .admin-shell.admin-dark, .role-portal { color: var(--ink); background: var(--canvas); }
+.admin-sidebar, .portal-sidebar { border-color: var(--soft-line); color: var(--ink); background: #fff; box-shadow: 12px 0 45px #71341c0d; }
+.admin-topbar, .admin-dark .admin-topbar, .portal-workspace > header { border-color: var(--soft-line); color: var(--ink); background: #fffaf7ef; }
+.admin-dashboard, .admin-dark .admin-dashboard, .users-module, .admin-dark .users-module, .portal-content { color: var(--ink); }
+.dashboard-heading h1, .users-heading h1, .portal-welcome h1, .calendar-toolbar h2, .manager-clients h2, .pdf-module > header h2, .structure-module h2 { color: var(--ink); }
+.dashboard-heading p, .admin-dark .dashboard-heading p, .users-heading p, .portal-welcome p, .calendar-toolbar p, .manager-clients header p, .pdf-module > header p, .structure-module > header p { color: var(--subtle); }
+.admin-kpis article, .admin-dark .admin-kpis article, .users-summary article, .admin-dark .users-summary article, .users-table-card, .admin-dark .users-table-card, .publication-card, .manager-client-grid article, .portal-real-overview > button, .portal-integrity, .real-data-note, .company-management-grid > article, .pdf-controls, .structure-module form { border-color: var(--soft-line); color: var(--ink); background: #fff; box-shadow: 0 12px 34px #71341c0d; }
+.users-search, .users-table-row.table-head, .admin-dark .users-search, .admin-dark .users-table-row.table-head { border-color: var(--soft-line); color: var(--subtle); background: #FFF8F4; }
+.users-table-card > header, .users-table-row, .admin-dark .users-table-card > header, .admin-dark .users-table-row { border-color: var(--soft-line); }
+.user-cell b, .admin-dark .user-cell b, .manager-client-grid b, .admin-kpis article > b, .users-summary b { color: var(--ink); }
+.user-modal, .admin-dark .user-modal, .publication-modal, .company-dialog, .app-dialog { border-color: var(--soft-line); color: var(--ink); background: #fff; }
+.user-modal > header, .user-modal footer, .publication-modal > header, .publication-modal form > footer, .company-dialog > header, .admin-dark .user-modal > header, .admin-dark .user-modal footer { border-color: var(--soft-line); background: #fff; }
+.user-modal label, .admin-dark .user-modal label, .publication-modal label, .publication-modal legend, .company-dialog label { color: var(--ink); }
+.user-modal input, .user-modal select, .publication-modal input, .publication-modal textarea, .company-dialog input, .admin-dark .user-modal input, .admin-dark .user-modal select, .generated-password { border-color: var(--soft-line); color: var(--ink); background: #FFFCF9; }
+.calendar-toolbar button, .users-table-row > button, .admin-dark .users-table-row > button, .publication-card > footer button { border-color: var(--soft-line); color: var(--subtle); background: #fff; }
+.period-picker { border-color: var(--soft-line); color: var(--ink); color-scheme: light; background: #fff; }
+.calendar-presentation, .week-presentation { border-color: var(--soft-line); color: var(--ink); background: #fff; }
+.calendar-presentation > header, .week-presentation > header { color: #fff; background: linear-gradient(135deg, var(--coral), #FF7E40 70%, var(--mandarin)); }
+.plan-summary > article, .plan-summary > div { border-color: var(--soft-line); background: #FFFDFC; }.plan-summary article b { color: var(--ink); }.plan-summary article span, .plan-summary p, .plan-summary ul { color: var(--subtle); }
+.calendar-days > article, .calendar-days > i { border-color: var(--soft-line); background: #fff; }.calendar-days > i { background: #FFF4ED; }
+.calendar-days article > button.calendar-content-card { color: var(--ink); background: linear-gradient(135deg, var(--format-bg), #fff); }.calendar-content-card > strong, .publication-body h3 { color: var(--ink); }.publication-body > p { color: var(--subtle); }
+.calendar-empty, .portal-empty-state, .daily-empty, .pdf-empty { border-color: #EDCABC; color: var(--ink); background: #fff; }
+.pdf-preview { border-color: var(--soft-line); background: #F3E8E1; }.pdf-preview > header { border-color: var(--soft-line); background: #fff; }.pdf-preview > header span { color: var(--ink); }
+.structure-module input:not(.period-picker), .structure-module textarea, .key-dates { border-color: var(--soft-line); color: var(--ink); background: #FFFCF9; }
+.app-toast { border-color: var(--soft-line); color: var(--ink); background: #fffffff5; }

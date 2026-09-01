@@ -141,6 +141,24 @@ app.delete("/api/auth/sessions/others", authenticate, async (req, res) => {
   res.status(204).end();
 });
 
+app.get("/", async (req, res, next) => {
+  const token = req.cookies.focugex_session;
+  if (!token) return next();
+  try {
+    const payload = jwt.verify(token, jwtSecret, { issuer: "focugex" });
+    const result = await pool.query(`SELECT u.role
+      FROM users u JOIN auth_sessions s ON s.user_id = u.id
+      WHERE u.id = $1 AND s.id = $2 AND u.active = TRUE
+        AND s.revoked_at IS NULL AND s.expires_at > NOW()`, [payload.sub, payload.jti]);
+    if (!result.rowCount) return next();
+    res.setHeader("Cache-Control", "no-store");
+    return res.redirect(302, result.rows[0].role === "admin" ? "/admin" : "/client");
+  } catch {
+    res.clearCookie("focugex_session", baseCookieOptions);
+    return next();
+  }
+});
+
 app.get("/api/admin/users", authenticate, requireAdmin, async (_req, res) => {
   const result = await pool.query("SELECT id, name, email, role, active, created_at, last_login_at FROM users ORDER BY created_at DESC");
   res.json({ users: result.rows });

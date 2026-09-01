@@ -27,10 +27,12 @@ function MaintenanceScreen({ retry }) {
 function VisualPanel() {
   function moveRings(event) {
     const panel = event.currentTarget.getBoundingClientRect();
-    event.currentTarget.style.setProperty("--pointer-x", `${(event.clientX - panel.left) / panel.width * 14 - 7}px`);
-    event.currentTarget.style.setProperty("--pointer-y", `${(event.clientY - panel.top) / panel.height * 14 - 7}px`);
+    event.currentTarget.style.setProperty("--focus-x", `${event.clientX - panel.left}px`);
+    event.currentTarget.style.setProperty("--focus-y", `${event.clientY - panel.top}px`);
+    event.currentTarget.dataset.focusActive = "true";
   }
-  return <section className="visual-panel" onPointerMove={moveRings}>
+  function clearFocus(event) { delete event.currentTarget.dataset.focusActive; }
+  return <section className="visual-panel" onPointerMove={moveRings} onPointerLeave={clearFocus}>
     <div className="visual-content"><Logo /><h1>Tu marketing,<br />en buenas manos.</h1><p>Planifica, revisa y entiende todo lo que hacemos para hacer crecer tu negocio.</p>
     </div>
   </section>;

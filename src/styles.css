@@ -71,10 +71,13 @@ input:focus { border-color: #787af4; background: white; box-shadow: 0 0 0 4px #5
 .field-error { margin-top: 7px; display: flex; align-items: center; gap: 6px; color: #b42318; font-size: 9px; }
 .field-error svg { width: 13px; }
 .form-options { margin: 18px 0 24px; display: flex; justify-content: space-between; align-items: center; }
-.remember { margin: 0; display: flex; align-items: center; gap: 7px; color: #596277; font-size: 9px; font-weight: 500; }
-.remember input { display: none; }
-.remember span { width: 17px; height: 17px; display: grid; place-items: center; border-radius: 5px; background: var(--blue); color: white; }
-.remember svg { width: 11px; }
+.remember { position: relative; margin: 0; display: flex; align-items: center; gap: 7px; color: #596277; font-size: 9px; font-weight: 500; cursor: pointer; user-select: none; }
+.remember input { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; opacity: 0; }
+.remember span { width: 17px; height: 17px; display: grid; place-items: center; border: 1px solid #c9cfdd; border-radius: 5px; background: white; color: white; transition: background-color .2s, border-color .2s, box-shadow .2s; }
+.remember svg { width: 11px; opacity: 0; transform: scale(.6); transition: opacity .15s, transform .15s; }
+.remember input:checked + span { border-color: var(--blue); background: var(--blue); }
+.remember input:checked + span svg { opacity: 1; transform: scale(1); }
+.remember input:focus-visible + span { outline: 3px solid #55d4ff80; outline-offset: 3px; }
 .form-options > button { border: 0; background: transparent; color: var(--blue); font-size: 9px; }
 .submit-button { width: 100%; min-height: 54px; border: 0; border-radius: 12px; padding: 0 18px; display: flex; justify-content: center; align-items: center; gap: 15px; color: white; font-weight: 800; font-size: 12px; background: linear-gradient(135deg, #575ced, #7b4def); box-shadow: 0 13px 30px #5b5cf038; transition: .2s; }
 .submit-button:hover { transform: translateY(-2px); box-shadow: 0 17px 36px #5b5cf047; }

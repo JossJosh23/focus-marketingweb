@@ -275,7 +275,7 @@ app.post("/api/manager/clients", authenticate, requireMarketing, async (req, res
 app.get("/api/calendar/publications", authenticate, async (req, res) => {
   const company = await companyForRequest(req);
   if (!company) return res.json({ publications: [] });
-  const result = await pool.query(`SELECT id, publication_date AS date, publication_time AS time, topic, copy, format, platforms, objective,
+  const result = await pool.query(`SELECT id, TO_CHAR(publication_date, 'YYYY-MM-DD') AS date, TO_CHAR(publication_time, 'HH24:MI') AS time, topic, copy, format, platforms, objective,
     distribution_type AS "distributionType", production_reference AS "productionReference",
     media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName", approval_status AS "approvalStatus", client_comment AS "clientComment", reviewed_at AS "reviewedAt"
     FROM calendar_publications WHERE LOWER(company_name) = LOWER($1)
@@ -348,7 +348,7 @@ app.put("/api/calendar/publications/:id", authenticate, requireMarketing, async 
       media_data = EXCLUDED.media_data, media_type = EXCLUDED.media_type, media_name = EXCLUDED.media_name, objective = $13,
       distribution_type = $14, production_reference = $15, updated_at = NOW()
     WHERE LOWER(calendar_publications.company_name) = LOWER(EXCLUDED.company_name)
-    RETURNING id, publication_date AS date, publication_time AS time, topic, copy, format, platforms,
+    RETURNING id, TO_CHAR(publication_date, 'YYYY-MM-DD') AS date, TO_CHAR(publication_time, 'HH24:MI') AS time, topic, copy, format, platforms,
       media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName", objective, distribution_type AS "distributionType",
       production_reference AS "productionReference", approval_status AS "approvalStatus", client_comment AS "clientComment", reviewed_at AS "reviewedAt"`, [id, company, req.user.id, date, time, topic, copy, format, platforms, mediaUrl || null, mediaType, mediaName, objective, distributionType, productionReference]);
   if (!result.rowCount) return res.status(403).json({ error: "No puedes modificar publicaciones de otra empresa." });

@@ -1733,7 +1733,7 @@ function WeekPresentation({ items, selectedDate, onSelectContent }) {
               {entries.map((item) => (
                 <button
                   type="button"
-                  className={item.distributionType || "organic"}
+                  className={`${item.distributionType || "organic"} format-${item.format}`}
                   onClick={() => onSelectContent(item)}
                   key={item.id}
                 >

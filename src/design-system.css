@@ -250,3 +250,444 @@ select:disabled {
     scroll-behavior: auto;
   }
 }
+
+/* Matriz semántica aplicada a componentes históricos. */
+.admin-sidebar,
+.portal-sidebar {
+  border-color: var(--fg-border) !important;
+  color: var(--fg-ink) !important;
+  background: #fff !important;
+  box-shadow: 10px 0 34px rgb(39 70 127 / 7%) !important;
+}
+.admin-sidebar::before {
+  border-color: var(--fg-primary) !important;
+}
+.admin-modules button,
+.portal-sidebar nav button,
+.portal-logout,
+.sidebar-logout {
+  color: var(--fg-muted) !important;
+  background: transparent !important;
+}
+.admin-modules button:hover,
+.portal-sidebar nav button:hover,
+.portal-logout:hover,
+.sidebar-logout:hover {
+  color: var(--fg-primary) !important;
+  background: var(--fg-primary-soft) !important;
+}
+.admin-modules button.active,
+.portal-sidebar nav button.active {
+  border-color: #bdcaf5 !important;
+  color: #2447c7 !important;
+  background: #edf2ff !important;
+  box-shadow: inset 3px 0 var(--fg-primary) !important;
+}
+.sidebar-empty,
+.portal-company {
+  border-color: #cbd6e8 !important;
+  color: var(--fg-ink) !important;
+  background: #f4f7fd !important;
+}
+.portal-company small,
+.portal-role {
+  color: var(--fg-muted) !important;
+}
+.topbar-profile,
+.company-switcher,
+.account-menu {
+  border-color: var(--fg-border) !important;
+  color: var(--fg-ink) !important;
+  background: #fff !important;
+}
+.company-switcher select {
+  color: var(--fg-ink) !important;
+  background: transparent !important;
+}
+.company-switcher > svg {
+  color: var(--fg-primary) !important;
+}
+
+/* Formularios y modales. */
+.user-modal,
+.publication-modal,
+.company-dialog,
+.app-dialog {
+  border-color: var(--fg-border) !important;
+  color: var(--fg-ink) !important;
+  background: #fff !important;
+  box-shadow: 0 28px 80px rgb(23 32 51 / 18%) !important;
+}
+.user-modal > header,
+.user-modal footer,
+.publication-modal > header,
+.publication-modal form > footer,
+.company-dialog > header {
+  border-color: var(--fg-border) !important;
+  color: var(--fg-ink) !important;
+  background: var(--fg-surface-subtle) !important;
+}
+.user-modal label,
+.publication-modal label,
+.publication-modal legend,
+.company-dialog label,
+.app-dialog-content label {
+  color: #344054 !important;
+}
+.user-modal input,
+.user-modal select,
+.publication-modal input,
+.publication-modal textarea,
+.company-dialog input,
+.app-dialog-content textarea,
+.structure-module input:not(.period-picker),
+.structure-module textarea {
+  border-color: #cdd7e6 !important;
+  color: var(--fg-ink) !important;
+  background: #fff !important;
+}
+.generated-password,
+.media-upload,
+.company-logo-preview {
+  border-color: #cbd6e8 !important;
+  color: var(--fg-muted) !important;
+  background: #f8faff !important;
+}
+.generated-password .generate-button {
+  color: var(--fg-primary) !important;
+  background: var(--fg-primary-soft) !important;
+}
+.media-upload > svg,
+.company-logo-preview > svg {
+  color: var(--fg-primary) !important;
+}
+.company-logo-field > small {
+  color: var(--fg-muted) !important;
+}
+.company-logo-field:hover .company-logo-preview {
+  border-color: var(--fg-primary) !important;
+  background: var(--fg-primary-soft) !important;
+}
+.format-options button,
+.platform-options label {
+  border-color: var(--fg-border) !important;
+  color: var(--fg-muted) !important;
+  background: #fff !important;
+}
+.format-options button:hover {
+  border-color: #aebde0 !important;
+  background: #f7f9ff !important;
+}
+.format-options button.selected {
+  border-color: var(--fg-primary) !important;
+  color: #2447c7 !important;
+  background: var(--fg-primary-soft) !important;
+}
+.platform-options input:checked + span {
+  border-color: var(--fg-primary) !important;
+  background: var(--fg-primary) !important;
+}
+
+/* Diálogos de empresa y confirmaciones. */
+.company-dialog-backdrop,
+.publication-modal-backdrop,
+.content-preview-backdrop {
+  background: rgb(15 23 42 / 58%) !important;
+  backdrop-filter: blur(7px);
+}
+.company-dialog-icon {
+  color: #fff !important;
+  background: var(--fg-primary) !important;
+}
+.company-dialog header span {
+  color: var(--fg-primary) !important;
+}
+.company-dialog h2 {
+  color: var(--fg-ink) !important;
+}
+.company-dialog form > p,
+.company-notice-body p {
+  color: var(--fg-muted) !important;
+}
+.company-dialog-close,
+.company-dialog footer button:not(.company-dialog-submit),
+.app-dialog-cancel {
+  border-color: var(--fg-border) !important;
+  color: var(--fg-muted) !important;
+  background: #fff !important;
+}
+.company-dialog-close:hover,
+.company-dialog footer button:not(.company-dialog-submit):hover,
+.app-dialog-cancel:hover {
+  border-color: #aebde0 !important;
+  color: var(--fg-primary) !important;
+  background: var(--fg-primary-soft) !important;
+}
+.company-dialog-submit,
+.company-notice-body button,
+.app-dialog:not(.danger) .app-dialog-confirm {
+  color: #fff !important;
+  background: var(--fg-primary) !important;
+}
+.company-notice .company-dialog-icon,
+.app-dialog.danger header > span {
+  color: #fff !important;
+  background: var(--fg-danger) !important;
+}
+.app-dialog.danger .app-dialog-confirm {
+  color: #fff !important;
+  background: var(--fg-danger) !important;
+}
+
+/* Selectores y controles secundarios. */
+.period-picker {
+  border-color: #cdd7e6 !important;
+  border-radius: var(--fg-radius-sm) !important;
+  color: var(--fg-ink) !important;
+  color-scheme: light !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+.period-picker:hover {
+  border-color: #aebde0 !important;
+  transform: none !important;
+}
+.preview-toggle.active,
+.calendar-view-switch button.active {
+  border-color: var(--fg-primary) !important;
+  color: #fff !important;
+  background: var(--fg-primary) !important;
+}
+.calendar-view-switch {
+  border-color: var(--fg-border) !important;
+  background: #fff !important;
+}
+.calendar-view-switch button {
+  color: var(--fg-muted) !important;
+}
+
+/* Estados vacíos y carga. */
+.calendar-empty,
+.portal-empty-state,
+.daily-empty,
+.pdf-empty,
+.calendar-loading {
+  border-color: #cbd6e8 !important;
+  color: var(--fg-ink) !important;
+  background: #fff !important;
+}
+.calendar-empty p,
+.portal-empty-state p,
+.daily-empty p,
+.pdf-empty p {
+  color: var(--fg-muted) !important;
+}
+.calendar-empty > svg,
+.portal-empty-state > svg,
+.daily-empty > svg,
+.pdf-empty > svg {
+  color: var(--fg-primary) !important;
+  background: var(--fg-primary-soft) !important;
+}
+
+/* Vista semanal. Post verde, reel índigo y pauta ámbar. */
+.week-presentation {
+  border-color: var(--fg-border) !important;
+  color: var(--fg-ink) !important;
+  background: #fff !important;
+}
+.week-presentation > header {
+  color: #fff !important;
+  background: #183b79 !important;
+}
+.week-presentation > div > article {
+  border-color: var(--fg-border) !important;
+  background: #fff;
+}
+.week-presentation article > header small,
+.week-presentation article > p {
+  color: var(--fg-muted) !important;
+}
+.week-presentation article > button {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border: 0;
+  border-left: 3px solid var(--fg-success) !important;
+  border-radius: var(--fg-radius-sm);
+  display: block;
+  text-align: left;
+  border-color: var(--fg-success) !important;
+  color: var(--fg-ink) !important;
+  background: #edf9f4 !important;
+}
+.week-presentation article > button:hover {
+  filter: brightness(0.98);
+  transform: translateY(-1px);
+}
+.week-presentation article > button.format-reel {
+  border-color: var(--fg-indigo) !important;
+  background: #f4f0ff !important;
+}
+.week-presentation article > button.format-historia,
+.week-presentation article > button.paid {
+  border-color: var(--fg-warning) !important;
+  background: #fff7e8 !important;
+}
+.week-presentation article > button span,
+.week-presentation article > button b,
+.week-presentation article > button small {
+  display: block;
+}
+.week-presentation article > button span {
+  color: var(--fg-muted) !important;
+  font-size: 9px;
+  text-transform: uppercase;
+}
+.week-presentation article > button b {
+  margin-top: 5px;
+  color: var(--fg-ink);
+  font-size: 11px;
+}
+.week-presentation article > button small {
+  margin-top: 6px;
+  color: var(--fg-muted) !important;
+}
+
+/* Vista previa de contenido: marco neutro; la pieza conserva sus colores. */
+.content-preview-modal {
+  border-color: var(--fg-border) !important;
+  background: #eef2f7 !important;
+  box-shadow: 0 30px 90px rgb(15 23 42 / 28%) !important;
+}
+.content-preview-close {
+  border-color: var(--fg-border) !important;
+  color: var(--fg-muted) !important;
+  background: #fff !important;
+}
+.content-preview-close:hover {
+  border-color: #aebde0 !important;
+  color: var(--fg-primary) !important;
+}
+.content-preview-actions {
+  border-color: var(--fg-border) !important;
+  background: #fff !important;
+}
+.content-preview-actions button {
+  border-color: var(--fg-border) !important;
+  color: var(--fg-muted) !important;
+  background: #fff !important;
+}
+.content-preview-actions button:hover {
+  border-color: #aebde0 !important;
+  color: var(--fg-primary) !important;
+}
+.content-preview-actions .approve-publication,
+.client-review-actions .approve-publication {
+  border-color: var(--fg-success) !important;
+  color: #fff !important;
+  background: var(--fg-success) !important;
+}
+
+/* PDF y estructura mensual. Los documentos mantienen la identidad del cliente. */
+.pdf-module > header h2,
+.structure-module h2 {
+  color: var(--fg-ink) !important;
+}
+.pdf-module > header p,
+.structure-module > header p {
+  color: var(--fg-muted) !important;
+}
+.pdf-controls,
+.structure-module form {
+  border-color: var(--fg-border) !important;
+  background: #fff !important;
+  box-shadow: var(--fg-shadow-sm) !important;
+}
+.pdf-controls label > span,
+.structure-module form > label > span,
+.key-dates legend {
+  color: #344054 !important;
+}
+.pdf-preview {
+  border-color: var(--fg-border) !important;
+  background: #e8edf5 !important;
+  box-shadow: var(--fg-shadow-md) !important;
+}
+.pdf-preview > header {
+  border-color: var(--fg-border) !important;
+  background: #fff !important;
+}
+.pdf-preview > header span {
+  color: var(--fg-ink) !important;
+}
+.pdf-preview > header span svg {
+  color: var(--fg-primary) !important;
+}
+.pdf-preview > header small {
+  color: var(--fg-muted) !important;
+}
+.key-dates {
+  border-color: var(--fg-border) !important;
+  background: var(--fg-surface-subtle) !important;
+}
+.key-dates > p {
+  color: var(--fg-muted) !important;
+}
+.key-dates > div button {
+  border-color: #efcbc8 !important;
+  color: var(--fg-danger) !important;
+  background: #fff7f6 !important;
+}
+.key-dates .add-key-date {
+  border-color: #bfcdf5 !important;
+  color: var(--fg-primary) !important;
+  background: var(--fg-primary-soft) !important;
+}
+.structure-module form > footer {
+  border-color: var(--fg-border) !important;
+}
+.structure-module form > footer > span {
+  color: var(--fg-danger) !important;
+}
+.structure-module form > footer > span.success {
+  color: var(--fg-success) !important;
+}
+
+/* Estados semánticos compartidos. */
+.status-pill.active,
+.approval-state.approved,
+.company-users em.active {
+  color: #087453 !important;
+  background: #e8f7f1 !important;
+}
+.approval-state {
+  color: #8a5a08 !important;
+  background: #fff4dc !important;
+}
+.approval-state.changes_requested {
+  color: #a3342d !important;
+  background: #fff0ee !important;
+}
+.client-comment {
+  border-left-color: var(--fg-danger) !important;
+  color: var(--fg-muted) !important;
+  background: #fff6f4 !important;
+}
+
+/* Los colores de plataforma son identificadores funcionales, no decoración global. */
+.calendar-platforms > i.platform-instagram {
+  color: #c13584 !important;
+}
+.calendar-platforms > i.platform-facebook {
+  color: #1877f2 !important;
+}
+.calendar-platforms > i.platform-tiktok {
+  color: #172033 !important;
+}
+.calendar-platforms > i.platform-linkedin {
+  color: #0a66c2 !important;
+}
+.calendar-platforms > i.platform-youtube {
+  color: #ff0000 !important;
+}

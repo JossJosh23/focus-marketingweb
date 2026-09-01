@@ -277,6 +277,26 @@ app.patch("/api/manager/companies/:id", authenticate, requireManager, async (req
   finally { client.release(); }
 });
 
+app.delete("/api/manager/companies/:id", authenticate, requireManager, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) return res.status(400).json({ error: "La empresa seleccionada no es válida." });
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const current = await client.query(`SELECT c.id, c.name FROM companies c JOIN user_companies uc ON uc.company_id = c.id WHERE c.id = $1 AND uc.user_id = $2 FOR UPDATE OF c`, [id, req.user.id]);
+    if (!current.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ error: "No tienes acceso para eliminar esta empresa." }); }
+    const company = current.rows[0];
+    await client.query("DELETE FROM calendar_publications WHERE LOWER(company_name) = LOWER($1)", [company.name]);
+    await client.query("DELETE FROM content_plans WHERE LOWER(company_name) = LOWER($1)", [company.name]);
+    await client.query("DELETE FROM users WHERE role = 'client' AND LOWER(company_name) = LOWER($1)", [company.name]);
+    await client.query("DELETE FROM companies WHERE id = $1", [id]);
+    await client.query("COMMIT");
+    logActivity(req.user.id, "company.deleted", "company", id, { name: company.name }).catch(console.error);
+    res.status(204).end();
+  } catch (error) { await client.query("ROLLBACK"); throw error; }
+  finally { client.release(); }
+});
+
 app.get("/api/company/current", authenticate, async (req, res) => {
   const company = await companyForRequest(req);
   if (!company) return res.status(404).json({ error: "No hay una empresa disponible." });

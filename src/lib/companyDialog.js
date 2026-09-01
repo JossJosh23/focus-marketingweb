@@ -1,20 +1,21 @@
-export function requestCompanyName() {
+export function requestCompanyName(initial = null) {
   return new Promise((resolve) => {
+    const editing = Boolean(initial);
     const backdrop = document.createElement("div");
     backdrop.className = "company-dialog-backdrop";
     backdrop.innerHTML = `
       <section class="company-dialog" role="dialog" aria-modal="true" aria-labelledby="company-dialog-title">
         <header>
           <div class="company-dialog-icon" aria-hidden="true">+</div>
-          <div><span>NUEVA EMPRESA</span><h2 id="company-dialog-title">Agregar empresa</h2></div>
+          <div><span>${editing ? "EDITAR EMPRESA" : "NUEVA EMPRESA"}</span><h2 id="company-dialog-title">${editing ? "Actualizar empresa" : "Agregar empresa"}</h2></div>
           <button type="button" class="company-dialog-close" aria-label="Cerrar">×</button>
         </header>
         <form>
-          <p>Crea el espacio de una marca para gestionar su calendario, contenido y usuarios cliente.</p>
+          <p>${editing ? "Actualiza el nombre o reemplaza el logo. Los clientes y cronogramas seguirán vinculados." : "Crea el espacio de una marca para gestionar su calendario, contenido y usuarios cliente."}</p>
           <label>Nombre de la empresa<input name="companyName" maxlength="160" autocomplete="organization" placeholder="Ej. Manabiche" required /></label>
-          <label class="company-logo-field">Logo de la empresa <small>PNG o JPG · máximo 2 MB</small><input name="companyLogo" type="file" accept="image/png,image/jpeg" required /><span class="company-logo-preview"><b>Seleccionar logo</b></span></label>
+          <label class="company-logo-field">Logo de la empresa <small>PNG o JPG · máximo 2 MB</small><input name="companyLogo" type="file" accept="image/png,image/jpeg" ${editing ? "" : "required"} /><span class="company-logo-preview"><b>${editing ? "Reemplazar logo" : "Seleccionar logo"}</b></span></label>
           <small class="company-dialog-error" role="alert"></small>
-          <footer><button type="button" class="company-dialog-cancel">Cancelar</button><button class="company-dialog-submit">Crear empresa</button></footer>
+          <footer><button type="button" class="company-dialog-cancel">Cancelar</button><button class="company-dialog-submit">${editing ? "Guardar cambios" : "Crear empresa"}</button></footer>
         </form>
       </section>`;
     document.body.appendChild(backdrop);
@@ -22,7 +23,9 @@ export function requestCompanyName() {
     const logoInput = backdrop.querySelector('[name="companyLogo"]');
     const logoPreview = backdrop.querySelector(".company-logo-preview");
     const error = backdrop.querySelector(".company-dialog-error");
-    let logoData = "";
+    input.value = initial?.name || "";
+    let logoData = initial?.logoData || "";
+    if (logoData) { const image = document.createElement("img"); image.src = logoData; image.alt = "Logo actual"; const name = document.createElement("b"); name.textContent = "Logo actual"; logoPreview.replaceChildren(image, name); }
     let finished = false;
     function close(value = null) { if (finished) return; finished = true; document.removeEventListener("keydown", onKeyDown); backdrop.remove(); resolve(value); }
     function onKeyDown(event) { if (event.key === "Escape") close(); }

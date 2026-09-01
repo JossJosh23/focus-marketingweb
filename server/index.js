@@ -248,6 +248,30 @@ app.post("/api/manager/companies", authenticate, requireManager, async (req, res
   } catch (error) { await client.query("ROLLBACK"); if (error.status) return res.status(error.status).json({ error: error.message }); throw error; } finally { client.release(); }
 });
 
+app.patch("/api/manager/companies/:id", authenticate, requireManager, async (req, res) => {
+  const name = String(req.body.name || "").trim();
+  const logoData = String(req.body.logoData || "");
+  if (name.length < 2 || name.length > 160) return res.status(400).json({ error: "Ingresa un nombre de empresa válido." });
+  if (logoData && (!/^data:image\/(png|jpeg);base64,[a-z0-9+/=]+$/i.test(logoData) || logoData.length > 3_000_000)) return res.status(400).json({ error: "El logo debe ser PNG o JPG y no superar 2 MB." });
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
+    const current = await client.query(`SELECT c.id, c.name, c.logo_data FROM companies c JOIN user_companies uc ON uc.company_id = c.id WHERE c.id = $1 AND uc.user_id = $2 FOR UPDATE OF c`, [req.params.id, req.user.id]);
+    if (!current.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ error: "No tienes acceso para editar esta empresa." }); }
+    const duplicate = await client.query("SELECT 1 FROM companies WHERE LOWER(name) = LOWER($1) AND id <> $2", [name, req.params.id]);
+    if (duplicate.rowCount) { await client.query("ROLLBACK"); return res.status(409).json({ error: "Ya existe otra empresa con ese nombre." }); }
+    const oldName = current.rows[0].name;
+    await client.query("UPDATE users SET company_name = $1, updated_at = NOW() WHERE role = 'client' AND LOWER(company_name) = LOWER($2)", [name, oldName]);
+    await client.query("UPDATE calendar_publications SET company_name = $1, updated_at = NOW() WHERE LOWER(company_name) = LOWER($2)", [name, oldName]);
+    await client.query("UPDATE content_plans SET company_name = $1, updated_at = NOW() WHERE LOWER(company_name) = LOWER($2)", [name, oldName]);
+    const updated = await client.query(`UPDATE companies SET name = $1, logo_data = $2 WHERE id = $3 RETURNING id, name, logo_data AS "logoData"`, [name, logoData || current.rows[0].logo_data, req.params.id]);
+    await client.query("COMMIT");
+    await logActivity(req.user.id, "company.updated", "company", req.params.id, { previousName: oldName, name });
+    res.json({ company: updated.rows[0] });
+  } catch (error) { await client.query("ROLLBACK"); throw error; }
+  finally { client.release(); }
+});
+
 app.get("/api/company/current", authenticate, async (req, res) => {
   const company = await companyForRequest(req);
   if (!company) return res.status(404).json({ error: "No hay una empresa disponible." });

@@ -167,13 +167,13 @@ input:focus { border-color: #787af4; background: white; box-shadow: 0 0 0 4px #5
 .topbar-profile-copy b { color: #252a3d; font-size: 9px; }.topbar-profile-copy span { color: #98a2b3; font-size: 7px; }
 .topbar-profile > small { padding: 4px 6px; border-radius: 7px; color: #667085; background: #f0f1f4; font-size: 6px; font-weight: 800; letter-spacing: .4px; }
 .profile-chevron { width: 13px; color: #98a2b3; transition: transform .2s; }.topbar-profile.active .profile-chevron { transform: rotate(180deg); }
-.account-menu { width: 255px; padding: 8px; border: 1px solid #292e39; border-radius: 14px; position: absolute; right: 0; top: 59px; color: #d9dde5; background: linear-gradient(180deg, #151820, #101319); box-shadow: 0 24px 55px #080a1266, 0 0 0 1px #ffffff05 inset; animation: account-menu-in .22s cubic-bezier(.22, 1, .36, 1); }
-.account-menu::before { content: ""; width: 10px; height: 10px; border-left: 1px solid #292e39; border-top: 1px solid #292e39; position: absolute; right: 23px; top: -6px; background: #151820; transform: rotate(45deg); }
-.account-menu-group { padding: 7px 0; border-bottom: 1px solid #252a34; display: flex; flex-direction: column; gap: 3px; }.account-menu-group.primary { padding-top: 0; }.account-menu-group.secondary { border-bottom: 0; }
-.account-menu-group button, .account-logout { width: 100%; min-height: 40px; padding: 0 11px; border: 1px solid transparent; border-radius: 9px; display: flex; align-items: center; gap: 10px; color: #adb5c3; background: transparent; font-size: 8px; font-weight: 600; text-align: left; transition: .18s; }.account-menu-group button:hover { color: white; background: #1c212a; transform: translateX(2px); }.account-menu-group button.selected { border-color: #3f4654; color: white; background: linear-gradient(90deg, #242933, #1e232c); }.account-menu-group svg, .account-logout svg { width: 15px; color: #8d96a6; }.account-menu-group button.selected svg { color: #68d5ff; }.account-menu-group button > span { flex: 1; }
+.account-menu { width: 255px; padding: 8px; border: 1px solid #dfe3ec; border-radius: 14px; position: absolute; right: 0; top: 59px; color: #303548; background: linear-gradient(180deg, #fff, #fafbfe); box-shadow: 0 24px 55px #18204b24, 0 0 0 1px #ffffff inset; animation: account-menu-in .22s cubic-bezier(.22, 1, .36, 1); }
+.account-menu::before { content: ""; width: 10px; height: 10px; border-left: 1px solid #dfe3ec; border-top: 1px solid #dfe3ec; position: absolute; right: 23px; top: -6px; background: white; transform: rotate(45deg); }
+.account-menu-group { padding: 7px 0; border-bottom: 1px solid #e8eaf0; display: flex; flex-direction: column; gap: 3px; }.account-menu-group.primary { padding-top: 0; }.account-menu-group.secondary { border-bottom: 0; }
+.account-menu-group button, .account-logout { width: 100%; min-height: 40px; padding: 0 11px; border: 1px solid transparent; border-radius: 9px; display: flex; align-items: center; gap: 10px; color: #646c7e; background: transparent; font-size: 8px; font-weight: 600; text-align: left; transition: .18s; }.account-menu-group button:hover { color: #262b3d; background: #f0f2f7; transform: translateX(2px); }.account-menu-group button.selected { border-color: #d8ddea; color: #252a3c; background: linear-gradient(90deg, #f1f3f8, #f7f8fb); }.account-menu-group svg, .account-logout svg { width: 15px; color: #7c8598; }.account-menu-group button.selected svg { color: #3478db; }.account-menu-group button > span { flex: 1; }
 .theme-switch { width: 29px; height: 16px; padding: 2px; border-radius: 10px; display: flex; justify-content: flex-start; background: #353b47; transition: .2s; }.theme-switch em { width: 12px; height: 12px; border-radius: 50%; background: white; box-shadow: 0 1px 4px #0005; transition: .2s; }.theme-switch.on { justify-content: flex-end; background: #665bea; }
-.account-menu-label { padding: 13px 11px 4px; display: block; color: #626b7a; font-size: 6px; font-weight: 800; letter-spacing: 1.2px; }
-.account-logout { margin-top: 3px; border-top: 1px solid #242832; border-radius: 0 0 9px 9px; color: #d9dde5; }.account-logout:hover { color: #ff8f88; background: #2a1b1d; }
+.account-menu-label { padding: 13px 11px 4px; display: block; color: #9aa2b1; font-size: 6px; font-weight: 800; letter-spacing: 1.2px; }
+.account-logout { margin-top: 3px; border-top: 1px solid #e8eaf0; border-radius: 0 0 9px 9px; color: #4e5668; }.account-logout:hover { color: #d92d20; background: #fff1f1; }
 .mobile-menu { display: none; }
 .admin-dashboard { padding: 35px; animation: form-in .45s ease-out; }
 .dashboard-heading { margin-bottom: 28px; display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; }
@@ -233,6 +233,15 @@ input:focus { border-color: #787af4; background: white; box-shadow: 0 0 0 4px #5
 .admin-dark .admin-topbar { border-color: #252a35; color: #edf0f6; background: #131720e8; }
 .admin-dark .admin-search, .admin-dark .notification-button, .admin-dark .topbar-profile { border-color: #292e39; color: #dce1ea; background: #191d26; }
 .admin-dark .topbar-profile-copy b { color: #eef1f6; }.admin-dark .topbar-profile > small { color: #b9c0cc; background: #2a2f39; }
+.admin-dark .account-menu { border-color: #292e39; color: #d9dde5; background: linear-gradient(180deg, #151820, #101319); box-shadow: 0 24px 55px #080a1266, 0 0 0 1px #ffffff05 inset; }
+.admin-dark .account-menu::before { border-color: #292e39; background: #151820; }
+.admin-dark .account-menu-group { border-color: #252a34; }
+.admin-dark .account-menu-group button, .admin-dark .account-logout { color: #adb5c3; }
+.admin-dark .account-menu-group button:hover { color: white; background: #1c212a; }
+.admin-dark .account-menu-group button.selected { border-color: #3f4654; color: white; background: linear-gradient(90deg, #242933, #1e232c); }
+.admin-dark .account-menu-group svg, .admin-dark .account-logout svg { color: #8d96a6; }.admin-dark .account-menu-group button.selected svg { color: #68d5ff; }
+.admin-dark .account-menu-label { color: #626b7a; }
+.admin-dark .account-logout { border-color: #242832; color: #d9dde5; }.admin-dark .account-logout:hover { color: #ff8f88; background: #2a1b1d; }
 .admin-dark .admin-dashboard { color: #edf0f6; }.admin-dark .dashboard-heading p { color: #8f98aa; }
 .admin-dark .admin-kpis article, .admin-dark .performance-card, .admin-dark .activity-card { border-color: #252b36; background: #171b23; box-shadow: none; }
 .admin-dark .card-heading button { border-color: #303642; color: #aeb5c2; background: #1d222c; }.admin-dark .activity-card li { border-color: #292e38; }.admin-dark .chart-bars { border-color: #303640; background: repeating-linear-gradient(to bottom, #282e38 0 1px, transparent 1px 52px); }

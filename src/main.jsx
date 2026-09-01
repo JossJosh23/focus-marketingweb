@@ -1,23 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { AlertTriangle, ArrowLeft, ArrowRight, BarChart3, Bell, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, CircleCheck, ClipboardCheck, Copy, Dices, Eye, EyeOff, FileImage, FileText, HelpCircle, Image, Laptop, LayoutDashboard, LockKeyhole, LogOut, Mail, Menu, MessageSquare, Moon, Pencil, Plus, RefreshCw, Save, Search, Settings, ShieldCheck, Smartphone, Sparkles, Trash2, TrendingUp, Upload, UserPlus, UserRound, Users, UserX, Video, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, Copy, Dices, Eye, EyeOff, FileImage, Image, LayoutDashboard, LockKeyhole, LogOut, Mail, Menu, Pencil, Plus, RefreshCw, Save, Search, ShieldCheck, Smartphone, Trash2, Upload, UserPlus, UserRound, Users, Video, X } from "lucide-react";
+import { Logo } from "./components/Logo.jsx";
+import { api } from "./lib/api.js";
+import { goTo, pathForRole } from "./lib/navigation.js";
 import "./styles.css";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-function Logo() { return <div className="brand"><img src="/logo-focugex.png" alt="" /><b>FOCU<i>GEX</i></b></div>; }
-function goTo(path) { window.history.pushState({}, "", path); window.dispatchEvent(new PopStateEvent("popstate")); }
-function pathForRole(role) { return role === "admin" ? "/admin" : role === "manager" ? "/manager" : "/client"; }
-
-async function api(path, options = {}) {
-  const response = await fetch(path, { credentials: "include", ...options });
-  const result = response.status === 204 ? {} : await response.json().catch(() => ({}));
-  if (!response.ok) {
-    if (response.status === 429) throw new Error("Demasiados intentos. Espera 15 minutos antes de intentarlo nuevamente.");
-    if (response.status >= 500) throw new Error("El servidor tuvo un problema temporal. Inténtalo nuevamente.");
-    throw new Error(result.error || "No fue posible completar la solicitud.");
-  }
-  return result;
-}
 
 function LoadingScreen({ text = "Verificando tu sesión segura…" }) {
   return <main className="loading-screen"><Logo /><div className="loader"></div><p>{text}</p></main>;
@@ -42,9 +31,7 @@ function VisualPanel() {
     <div className="aurora one"></div><div className="aurora two"></div><div className="rings"><i></i><i></i><i></i></div>
     <div className="security-pill"><span></span> Plataforma privada · Conexión cifrada</div>
     <div className="visual-content"><Logo /><div className="private-label"><ShieldCheck /> ESPACIO PRIVADO</div><h1>Tu marketing,<br /><em>en buenas manos.</em></h1><p>Planifica, revisa y entiende todo lo que hacemos para hacer crecer tu negocio.</p>
-      <div className="impact-metrics"><div><TrendingUp /><b>+24%</b><span>Alcance</span></div><div><Sparkles /><b>12</b><span>Campañas</span></div><div><CheckCircle2 /><b>98%</b><span>Aprobado</span></div></div>
     </div>
-    <blockquote>“Ahora sabemos qué se publica, cuándo y por qué.”<span>— Cliente de FOCUGEX</span></blockquote>
   </section>;
 }
 
@@ -157,7 +144,6 @@ function AdminPanel({ user }) {
   const [section, setSection] = useState("dashboard");
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("focugex_admin_theme") === "dark");
   const [users, setUsers] = useState([]);
   const [userModal, setUserModal] = useState(null);
   const profileMenuRef = useRef(null);
@@ -177,19 +163,16 @@ function AdminPanel({ user }) {
     document.addEventListener("keydown", closeWithEscape);
     return () => { document.removeEventListener("mousedown", closeProfileMenu); document.removeEventListener("keydown", closeWithEscape); };
   }, []);
-  useEffect(() => { localStorage.setItem("focugex_admin_theme", darkMode ? "dark" : "light"); }, [darkMode]);
   async function logout() { await api("/api/auth/logout", { method: "POST" }); window.location.assign("/"); }
   function openSection(nextSection) { setSection(nextSection); setMenuOpen(false); setProfileMenuOpen(false); }
   function saveUser(savedUser) { setUsers((current) => current.some((item) => item.id === savedUser.id) ? current.map((item) => item.id === savedUser.id ? savedUser : item) : [savedUser, ...current]); setUserModal(null); }
 
-  return <main className={`admin-shell ${darkMode ? "admin-dark" : ""}`}>
+  return <main className="admin-shell admin-dark">
     <section className="admin-workspace">
       <header className="admin-topbar">
         <button className="mobile-menu" onClick={() => setMenuOpen(true)} aria-label="Abrir navegación"><Menu /></button>
-        <div className="admin-breadcrumb"><span>Panel administrativo</span><b>{section === "users" ? "Usuarios" : "Vista principal"}</b></div>
+        <div className="admin-breadcrumb"><span>Panel administrativo</span><b>{section === "users" ? "Usuarios" : "Resumen"}</b></div>
         <div className="topbar-actions">
-          <label className="admin-search"><Search /><input placeholder="Buscar en FOCUGEX" aria-label="Buscar" /></label>
-          <button className="notification-button" aria-label="Notificaciones"><Bell /><i></i></button>
           <div className="topbar-profile-wrap" ref={profileMenuRef}>
             <button className={`topbar-profile ${profileMenuOpen ? "active" : ""}`} onClick={() => setProfileMenuOpen(!profileMenuOpen)} aria-expanded={profileMenuOpen} aria-haspopup="menu">
               <div className="topbar-avatar">{initials}<i></i></div>
@@ -197,9 +180,7 @@ function AdminPanel({ user }) {
               <small>ADMIN</small><ChevronDown className="profile-chevron" />
             </button>
             {profileMenuOpen && <div className="account-menu" role="menu">
-              <div className="account-menu-group primary"><button role="menuitem" onClick={() => openSection("dashboard")}><LayoutDashboard /><span>Panel principal</span></button><button role="menuitem"><Settings /><span>Configuración</span></button><button role="menuitem" onClick={() => setDarkMode(!darkMode)}><Moon /><span>Modo oscuro</span><i className={`theme-switch ${darkMode ? "on" : ""}`}><em></em></i></button></div>
-              <span className="account-menu-label">CUENTA</span>
-              <div className="account-menu-group secondary"><button role="menuitem"><UserRound /><span>Mi perfil</span></button><button role="menuitem"><ShieldCheck /><span>Seguridad y sesiones</span></button><button role="menuitem"><HelpCircle /><span>Centro de ayuda</span></button></div>
+              <div className="account-menu-group primary"><button role="menuitem" onClick={() => openSection("dashboard")}><LayoutDashboard /><span>Resumen</span></button><button role="menuitem" onClick={() => openSection("users")}><Users /><span>Usuarios</span></button></div>
               <button className="account-logout" role="menuitem" onClick={logout}><LogOut /> Cerrar sesión</button>
             </div>}
           </div>
@@ -207,17 +188,14 @@ function AdminPanel({ user }) {
       </header>
 
       {section === "users" ? <UsersModule users={users} onCreate={() => setUserModal({ mode: "create" })} onEdit={(selectedUser) => setUserModal({ mode: "edit", user: selectedUser })} /> : <div className="admin-dashboard">
-        <div className="dashboard-heading"><div><span className="eyebrow">CENTRO DE OPERACIONES</span><h1>Buenos días, {user.name.split(" ")[0]}</h1><p>Aquí tienes una vista clara de lo que está pasando en FOCUGEX.</p></div><button><Plus /> Nueva campaña</button></div>
+        <div className="dashboard-heading"><div><span className="eyebrow">RESUMEN REAL</span><h1>Hola, {user.name.split(" ")[0]}</h1><p>Estos datos provienen de las cuentas registradas en la plataforma.</p></div></div>
         <div className="admin-kpis">
-          <article><div className="kpi-icon purple"><Building2 /></div><span>Clientes activos</span><b>8</b><small><TrendingUp /> +2 este mes</small></article>
-          <article><div className="kpi-icon blue"><Users /></div><span>Usuarios registrados</span><b>{users.length || "—"}</b><small><CheckCircle2 /> Base sincronizada</small></article>
-          <article><div className="kpi-icon cyan"><CalendarDays /></div><span>Publicaciones</span><b>24</b><small>Programadas este mes</small></article>
-          <article><div className="kpi-icon orange"><CircleCheck /></div><span>Por aprobar</span><b>3</b><small>Requieren atención</small></article>
+          <article><div className="kpi-icon purple"><Users /></div><span>Cuentas administradas</span><b>{users.filter((item) => item.role !== "admin").length}</b><small>Gestores y clientes</small></article>
+          <article><div className="kpi-icon blue"><UserRound /></div><span>Gestores</span><b>{users.filter((item) => item.role === "manager").length}</b><small>Responsables de marketing</small></article>
+          <article><div className="kpi-icon cyan"><Building2 /></div><span>Clientes</span><b>{users.filter((item) => item.role === "client").length}</b><small>Cuentas de visualización</small></article>
+          <article><div className="kpi-icon orange"><ShieldCheck /></div><span>Cuentas activas</span><b>{users.filter((item) => item.role !== "admin" && item.active).length}</b><small>Con acceso habilitado</small></article>
         </div>
-        <div className="dashboard-grid">
-          <article className="performance-card"><div className="card-heading"><div><span>Rendimiento general</span><h2>Alcance de campañas</h2></div><button>Últimos 30 días <ChevronDown /></button></div><div className="performance-total"><b>184.2K</b><span>+18.4%</span></div><div className="chart-bars">{[32,46,42,60,55,73,68,87,81,94,88,100].map((height, index) => <i key={index} style={{ "--bar": `${height}%` }}></i>)}</div><div className="chart-labels"><span>1 Ago</span><span>10 Ago</span><span>20 Ago</span><span>30 Ago</span></div></article>
-          <article className="activity-card"><div className="card-heading"><div><span>En tiempo real</span><h2>Actividad reciente</h2></div><button>Ver todo</button></div><ul><li><i className="activity-dot green"></i><div><b>Contenido aprobado</b><span>Manabiche · Hace 12 min</span></div></li><li><i className="activity-dot purple"></i><div><b>Nuevo cliente añadido</b><span>Restaurante Marea · Hace 1 h</span></div></li><li><i className="activity-dot blue"></i><div><b>Campaña programada</b><span>Lanzamiento septiembre · Hace 3 h</span></div></li></ul></article>
-        </div>
+        <section className="real-data-note"><ShieldCheck /><div><h2>Panel sin datos simulados</h2><p>Las métricas de campañas, alcance y aprobaciones aparecerán cuando sus módulos tengan fuentes de datos reales.</p></div></section>
       </div>}
     </section>
 
@@ -228,7 +206,7 @@ function AdminPanel({ user }) {
         <div className="sidebar-profile-head"><Logo /></div>
       </div>
       <div className="sidebar-empty"><span>Panel administrativo</span><p>Gestiona los accesos de tu plataforma.</p></div>
-      <nav className="admin-modules" aria-label="Módulos administrativos"><button className={section === "users" ? "active" : ""} onClick={() => openSection("users")}><Users /><span>Usuarios</span><small>{users.filter((item) => item.role !== "admin").length}</small></button></nav>
+      <nav className="admin-modules" aria-label="Módulos administrativos"><button className={section === "dashboard" ? "active" : ""} onClick={() => openSection("dashboard")}><LayoutDashboard /><span>Resumen</span></button><button className={section === "users" ? "active" : ""} onClick={() => openSection("users")}><Users /><span>Usuarios</span><small>{users.filter((item) => item.role !== "admin").length}</small></button></nav>
       <button className="sidebar-logout" onClick={logout}><LogOut /> Cerrar sesión</button>
     </aside>
     {userModal && <UserModal user={userModal.user} onClose={() => setUserModal(null)} onSaved={saveUser} />}
@@ -238,8 +216,6 @@ function AdminPanel({ user }) {
 const portalModules = [
   { id: "overview", label: "Resumen", icon: LayoutDashboard },
   { id: "calendar", label: "Calendario", icon: CalendarDays },
-  { id: "materials", label: "Materiales", icon: FileText },
-  { id: "reports", label: "Informes", icon: BarChart3 },
 ];
 
 const emptyPublication = { date: "", time: "", topic: "", copy: "", format: "post", platforms: [], mediaUrl: "", mediaType: "", mediaName: "" };
@@ -277,7 +253,7 @@ function ManagerClients({ companies, clients, onCreated }) {
   const [saving, setSaving] = useState(false);
   function update(field, value) { setForm((current) => ({ ...current, [field]: value })); }
   async function submit(event) { event.preventDefault(); setSaving(true); setError(""); try { const result = await api("/api/manager/clients", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) }); onCreated(result); setOpen(false); setForm({ name: "", username: "", email: "", companyName: result.company.name, password: "" }); } catch (requestError) { setError(requestError.message); } finally { setSaving(false); } }
-  return <section className="manager-clients"><header><div><span className="eyebrow">GESTIÓN DE ACCESOS</span><h2>Clientes</h2><p>Crea cuentas y asigna cada cliente a la empresa que le corresponde.</p></div><button onClick={() => setOpen(true)}><UserPlus /> Nuevo cliente</button></header><div className="manager-client-grid">{clients.map((client) => <article key={client.id}><i>{client.name.split(" ").map((part) => part[0]).slice(0, 2).join("")}</i><div><b>{client.name}</b><span>{client.email}</span><small><Building2 />{client.company_name}</small></div><em className={client.active ? "active" : ""}>{client.active ? "Activo" : "Suspendido"}</em></article>)}</div>{!clients.length && <div className="calendar-empty"><Users /><h3>No tienes clientes todavía</h3><p>Crea la primera cuenta y asígnala a una empresa.</p></div>}{open && <div className="publication-modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setOpen(false)}><section className="publication-modal client-create-modal"><header><div><span className="eyebrow">NUEVO ACCESO</span><h2>Crear cliente</h2></div><button onClick={() => setOpen(false)}><X /></button></header><form onSubmit={submit}><div className="publication-form-grid"><label>Nombre completo<input value={form.name} onChange={(e) => update("name", e.target.value)} required /></label><label>Nombre de usuario<input value={form.username} onChange={(e) => update("username", e.target.value.toLowerCase().replace(/\s/g, ""))} required /></label><label>Correo electrónico<input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} required /></label><label>Contraseña<input type="text" minLength="10" value={form.password} onChange={(e) => update("password", e.target.value)} required /></label><label className="wide">Empresa<input list="manager-companies" value={form.companyName} onChange={(e) => update("companyName", e.target.value)} placeholder="Selecciona o escribe una empresa nueva" required /><datalist id="manager-companies">{companies.map((company) => <option value={company.name} key={company.id} />)}</datalist><small>Puedes seleccionar una existente o escribir una nueva.</small></label></div>{error && <div className="calendar-error"><AlertTriangle />{error}</div>}<footer><button type="button" onClick={() => setOpen(false)}>Cancelar</button><button className="save-publication" disabled={saving}><UserPlus />{saving ? "Creando…" : "Crear cliente"}</button></footer></form></section></div>}</section>;
+  return <section className="manager-clients"><header><div><span className="eyebrow">GESTIÓN DE ACCESOS</span><h2>Clientes</h2><p>Crea cuentas y asigna cada cliente a la empresa que le corresponde.</p></div><button onClick={() => setOpen(true)}><UserPlus /> Nuevo cliente</button></header><div className="manager-client-grid">{clients.map((client) => <article key={client.id}><i>{client.name.split(" ").map((part) => part[0]).slice(0, 2).join("")}</i><div><b>{client.name}</b><span>{client.email}</span><small><Building2 />{client.company_name}</small></div><em className={client.active ? "active" : ""}>{client.active ? "Activo" : "Suspendido"}</em></article>)}</div>{!clients.length && <div className="calendar-empty"><Users /><h3>No tienes clientes todavía</h3><p>Crea la primera cuenta y asígnala a una empresa.</p></div>}{open && <div className="publication-modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && setOpen(false)}><section className="publication-modal client-create-modal"><header><div><span className="eyebrow">NUEVO ACCESO</span><h2>Crear cliente</h2></div><button onClick={() => setOpen(false)}><X /></button></header><form onSubmit={submit}><div className="publication-form-grid"><label>Nombre completo<input value={form.name} onChange={(e) => update("name", e.target.value)} required /></label><label>Nombre de usuario<input value={form.username} onChange={(e) => update("username", e.target.value.toLowerCase().replace(/\s/g, ""))} required /></label><label>Correo electrónico<input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} required /></label><label>Contraseña<input type="password" minLength="10" value={form.password} onChange={(e) => update("password", e.target.value)} placeholder="10 caracteres, mayúscula y número" required /></label><label className="wide">Empresa<input list="manager-companies" value={form.companyName} onChange={(e) => update("companyName", e.target.value)} placeholder="Selecciona o escribe una empresa nueva" required /><datalist id="manager-companies">{companies.map((company) => <option value={company.name} key={company.id} />)}</datalist><small>Puedes seleccionar una existente o escribir una nueva.</small></label></div>{error && <div className="calendar-error"><AlertTriangle />{error}</div>}<footer><button type="button" onClick={() => setOpen(false)}>Cancelar</button><button className="save-publication" disabled={saving}><UserPlus />{saving ? "Creando…" : "Crear cliente"}</button></footer></form></section></div>}</section>;
 }
 
 function RolePortal({ user }) {
@@ -296,10 +272,9 @@ function RolePortal({ user }) {
     <section className="portal-workspace"><header><div><small>{manager ? "OPERACIÓN DE MARKETING" : "SEGUIMIENTO DE MARKETING"}</small><b>{modules.find((item) => item.id === section)?.label}</b></div><div className="portal-header-actions">{manager && <label className="company-switcher"><Building2 /><span><small>EMPRESA ACTIVA</small><select value={activeCompany} onChange={(e) => setActiveCompany(e.target.value)}>{companies.map((company) => <option key={company.id} value={company.name}>{company.name}</option>)}</select></span></label>}<div className="portal-profile"><i>{user.name.split(" ").map((part) => part[0]).slice(0, 2).join("")}</i><span><b>{user.name}</b><small>{manager ? "Gestor" : "Cliente"}</small></span></div></div></header>
       <div className="portal-content">
         <div className="portal-welcome"><div><span className="eyebrow">{manager ? "CENTRO DE GESTIÓN" : "TODO EN UN SOLO LUGAR"}</span><h1>Hola, {firstName}</h1><p>{manager ? "Organiza el contenido, los cronogramas y las entregas de tus clientes." : "Revisa el avance, los próximos contenidos y los resultados de tu marca."}</p></div>{manager && section === "overview" && <button onClick={() => setSection("calendar")}><Plus /> Nuevo contenido</button>}</div>
-        {section === "overview" && <><div className="portal-stats"><article><CalendarDays /><span>Próximas publicaciones<b>8</b><small>Durante este mes</small></span></article><article><ClipboardCheck /><span>{manager ? "Pendientes de revisión" : "Por aprobar"}<b>3</b><small>Requieren atención</small></span></article><article><TrendingUp /><span>Alcance del mes<b>24.8K</b><small className="positive">+18% frente al mes anterior</small></span></article></div><div className="portal-grid"><article className="portal-card"><header><div><small>PRÓXIMAMENTE</small><h2>Calendario de contenidos</h2></div><button onClick={() => setSection("calendar")}>Ver calendario</button></header><ul className="schedule-list"><li><i>03<span>SEP</span></i><div><b>Historia · Inicio de mes</b><span>Instagram · 10:00</span></div><em className="ready">Listo</em></li><li><i>05<span>SEP</span></i><div><b>Reel · Presentación de producto</b><span>Instagram y TikTok · 18:30</span></div><em>En revisión</em></li><li><i>08<span>SEP</span></i><div><b>Carrusel educativo</b><span>Instagram · 12:00</span></div><em className="draft">Borrador</em></li></ul></article><article className="portal-card approvals"><header><div><small>{manager ? "ACTIVIDAD" : "TU PARTICIPACIÓN"}</small><h2>{manager ? "Últimas entregas" : "Material por aprobar"}</h2></div></header><div className="approval-preview"><FileText /><div><b>Campaña de septiembre</b><span>5 piezas · Actualizado hoy</span></div></div><p>{manager ? "El material está preparado para enviarlo al cliente." : "Tenemos nuevo material esperando tu revisión."}</p><button>{manager ? "Enviar a revisión" : "Revisar y aprobar"}<ArrowRight /></button></article></div></>}
+        {section === "overview" && <section className="portal-real-overview"><button onClick={() => setSection("calendar")}><CalendarDays /><span><small>CONTENIDO COMPARTIDO</small><b>Abrir calendario editorial</b><p>{manager ? "Crea y organiza las publicaciones de la empresa activa." : "Consulta las publicaciones compartidas por tu gestor."}</p></span><ArrowRight /></button>{manager && <button onClick={() => setSection("clients")}><Users /><span><small>GESTIÓN DE ACCESOS</small><b>Administrar clientes</b><p>Crea clientes y asígnalos a la empresa correspondiente.</p></span><ArrowRight /></button>}<div className="portal-integrity"><ShieldCheck /><span><b>Información real y aislada por empresa</b><p>Solo se muestran datos guardados en la plataforma para {activeCompany || user.company_name || "tu empresa"}.</p></span></div></section>}
         {section === "calendar" && <CalendarModule manager={manager} company={manager ? activeCompany : user.company_name} />}
         {section === "clients" && <ManagerClients companies={companies} clients={clients} onCreated={clientCreated} />}
-        {["materials", "reports"].includes(section) && <section className="portal-empty-state">{section === "materials" ? <FileText /> : <BarChart3 />}<h2>{section === "materials" ? "Biblioteca de materiales" : "Informes y resultados"}</h2><p>{manager ? "Este módulo está listo para recibir y administrar la información de los clientes." : "Aquí podrás consultar toda la información que el equipo comparta contigo."}</p>{manager && <button><Plus /> Agregar información</button>}</section>}
       </div>
     </section>
   </main>;

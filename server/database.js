@@ -88,6 +88,9 @@ export async function initializeDatabase() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS calendar_publications_company_idx ON calendar_publications(LOWER(company_name), publication_date, publication_time);
+
+    DELETE FROM auth_sessions WHERE expires_at <= NOW() OR revoked_at < NOW() - INTERVAL '30 days';
+    DELETE FROM password_reset_tokens WHERE expires_at <= NOW() OR used_at < NOW() - INTERVAL '7 days';
   `);
 
   const email = process.env.ADMIN_EMAIL?.trim().toLowerCase();

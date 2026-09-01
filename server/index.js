@@ -29,6 +29,7 @@ const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 10, standardHe
 const resetLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 5, standardHeaders: true, legacyHeaders: false });
 const baseCookieOptions = { httpOnly: true, secure: production, sameSite: "lax", path: "/" };
 const hash = (value) => crypto.createHash("sha256").update(value).digest("hex");
+const strongPassword = (value) => value.length >= 10 && /[A-Z]/.test(value) && /[0-9]/.test(value);
 
 function deviceInfo(req) {
   const agent = req.get("user-agent") || "Dispositivo desconocido";
@@ -77,6 +78,18 @@ async function companyForRequest(req) {
   const result = await pool.query(`SELECT c.name FROM user_companies uc JOIN companies c ON c.id = uc.company_id
     WHERE uc.user_id = $1 AND ($2 = '' OR LOWER(c.name) = LOWER($2)) ORDER BY c.name LIMIT 1`, [req.user.id, requested]);
   return result.rows[0]?.name || "";
+}
+
+async function assignableCompany(client, managerId, name) {
+  const existing = await client.query("SELECT id, name FROM companies WHERE LOWER(name) = LOWER($1) FOR UPDATE", [name]);
+  if (existing.rowCount) {
+    const access = await client.query("SELECT 1 FROM user_companies WHERE user_id = $1 AND company_id = $2", [managerId, existing.rows[0].id]);
+    if (!access.rowCount) { const error = new Error("No tienes acceso a esa empresa."); error.status = 403; throw error; }
+    return existing.rows[0];
+  }
+  const created = await client.query("INSERT INTO companies (name) VALUES ($1) RETURNING id, name", [name]);
+  await client.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2)", [managerId, created.rows[0].id]);
+  return created.rows[0];
 }
 
 app.get("/health", async (_req, res) => {
@@ -131,7 +144,7 @@ app.post("/api/auth/forgot-password", resetLimiter, async (req, res) => {
 app.post("/api/auth/reset-password", resetLimiter, async (req, res) => {
   const token = String(req.body.token || "");
   const password = String(req.body.password || "");
-  if (password.length < 10) return res.status(400).json({ error: "La contraseña debe tener al menos 10 caracteres." });
+  if (!strongPassword(password)) return res.status(400).json({ error: "La contraseña debe tener 10 caracteres, una mayúscula y un número." });
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -171,11 +184,10 @@ app.post("/api/manager/companies", authenticate, requireManager, async (req, res
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const company = await client.query("INSERT INTO companies (name) VALUES ($1) ON CONFLICT (LOWER(name)) DO UPDATE SET name = EXCLUDED.name RETURNING id, name", [name]);
-    await client.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [req.user.id, company.rows[0].id]);
+    const company = await assignableCompany(client, req.user.id, name);
     await client.query("COMMIT");
-    res.status(201).json({ company: { ...company.rows[0], clients: 0 } });
-  } catch (error) { await client.query("ROLLBACK"); throw error; } finally { client.release(); }
+    res.status(201).json({ company: { ...company, clients: 0 } });
+  } catch (error) { await client.query("ROLLBACK"); if (error.status) return res.status(error.status).json({ error: error.message }); throw error; } finally { client.release(); }
 });
 
 app.get("/api/manager/clients", authenticate, requireManager, async (req, res) => {
@@ -191,18 +203,17 @@ app.post("/api/manager/clients", authenticate, requireManager, async (req, res) 
   const email = String(req.body.email || "").trim().toLowerCase();
   const companyName = String(req.body.companyName || "").trim();
   const password = String(req.body.password || "");
-  if (!name || !/^[a-z0-9._-]{3,40}$/.test(username) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !companyName || password.length < 10) return res.status(400).json({ error: "Completa los datos y usa una contraseña de al menos 10 caracteres." });
+  if (!name || !/^[a-z0-9._-]{3,40}$/.test(username) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !companyName || !strongPassword(password)) return res.status(400).json({ error: "Completa los datos y usa una contraseña con 10 caracteres, una mayúscula y un número." });
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    const company = await client.query("INSERT INTO companies (name) VALUES ($1) ON CONFLICT (LOWER(name)) DO UPDATE SET name = EXCLUDED.name RETURNING id, name", [companyName]);
-    await client.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [req.user.id, company.rows[0].id]);
+    const company = await assignableCompany(client, req.user.id, companyName);
     const passwordHash = await bcrypt.hash(password, 12);
-    const result = await client.query("INSERT INTO users (name, username, email, company_name, password_hash, role) VALUES ($1,$2,$3,$4,$5,'client') RETURNING id, name, username, email, company_name, active, last_login_at", [name, username, email, company.rows[0].name, passwordHash]);
-    await client.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2)", [result.rows[0].id, company.rows[0].id]);
+    const result = await client.query("INSERT INTO users (name, username, email, company_name, password_hash, role) VALUES ($1,$2,$3,$4,$5,'client') RETURNING id, name, username, email, company_name, active, last_login_at", [name, username, email, company.name, passwordHash]);
+    await client.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2)", [result.rows[0].id, company.id]);
     await client.query("COMMIT");
-    res.status(201).json({ client: result.rows[0], company: company.rows[0] });
-  } catch (error) { await client.query("ROLLBACK"); if (error.code === "23505") return res.status(409).json({ error: "Ya existe una cuenta con ese correo o usuario." }); throw error; } finally { client.release(); }
+    res.status(201).json({ client: result.rows[0], company });
+  } catch (error) { await client.query("ROLLBACK"); if (error.status) return res.status(error.status).json({ error: error.message }); if (error.code === "23505") return res.status(409).json({ error: "Ya existe una cuenta con ese correo o usuario." }); throw error; } finally { client.release(); }
 });
 
 app.get("/api/calendar/publications", authenticate, async (req, res) => {
@@ -227,8 +238,9 @@ app.put("/api/calendar/publications/:id", authenticate, requireManager, async (r
   const mediaUrl = String(req.body.mediaUrl || "");
   const mediaType = ["image", "video"].includes(req.body.mediaType) ? req.body.mediaType : null;
   const mediaName = String(req.body.mediaName || "").slice(0, 255) || null;
-  if (!company || !/^[0-9a-f-]{36}$/i.test(id) || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !topic || !["post", "reel", "historia"].includes(format)) return res.status(400).json({ error: "Los datos de la publicación están incompletos." });
-  if (mediaUrl && !mediaUrl.startsWith("data:image/") && !mediaUrl.startsWith("data:video/")) return res.status(400).json({ error: "El archivo multimedia no es válido." });
+  const allowedPlatforms = ["Instagram", "Facebook", "TikTok", "LinkedIn", "YouTube"];
+  if (!company || !/^[0-9a-f-]{36}$/i.test(id) || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !topic || topic.length > 200 || copy.length > 10000 || !["post", "reel", "historia"].includes(format) || platforms.some((item) => !allowedPlatforms.includes(item))) return res.status(400).json({ error: "Los datos de la publicación no son válidos." });
+  if (mediaUrl && (!/^data:(image\/(jpeg|png|webp|gif)|video\/(mp4|webm|quicktime));base64,/.test(mediaUrl) || mediaUrl.length > 14_000_000)) return res.status(400).json({ error: "El archivo multimedia no es válido o supera los 10 MB." });
   const result = await pool.query(`INSERT INTO calendar_publications (id, company_name, created_by, publication_date, publication_time, topic, copy, format, platforms, media_data, media_type, media_name)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
     ON CONFLICT (id) DO UPDATE SET publication_date = EXCLUDED.publication_date, publication_time = EXCLUDED.publication_time,
@@ -279,7 +291,7 @@ app.post("/api/admin/users", authenticate, requireAdmin, async (req, res) => {
   const password = String(req.body.password || "");
   const role = String(req.body.role || "client");
   if (!["manager", "client"].includes(role)) return res.status(400).json({ error: "Selecciona un rol válido para el usuario." });
-  if (!name || !username || !email || !companyName || password.length < 10) return res.status(400).json({ error: "Todos los campos son obligatorios y la contraseña debe tener al menos 10 caracteres." });
+  if (!name || !username || !email || !companyName || !strongPassword(password)) return res.status(400).json({ error: "Todos los campos son obligatorios y la contraseña debe tener 10 caracteres, una mayúscula y un número." });
   if (!/^[a-z0-9._-]{3,40}$/.test(username)) return res.status(400).json({ error: "El usuario debe tener entre 3 y 40 caracteres y usar solamente letras, números, punto, guion o guion bajo." });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "Ingresa un correo electrónico válido." });
   try {
@@ -306,7 +318,7 @@ app.patch("/api/admin/users/:id", authenticate, requireAdmin, async (req, res) =
   if (!["manager", "client"].includes(role)) return res.status(400).json({ error: "Selecciona un rol válido para el usuario." });
   if (!Number.isInteger(id) || !name || !username || !email || !companyName) return res.status(400).json({ error: "Los datos del usuario están incompletos." });
   if (!/^[a-z0-9._-]{3,40}$/.test(username) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "El correo o nombre de usuario no es válido." });
-  if (password && password.length < 10) return res.status(400).json({ error: "La contraseña nueva debe tener al menos 10 caracteres." });
+  if (password && !strongPassword(password)) return res.status(400).json({ error: "La contraseña nueva debe tener 10 caracteres, una mayúscula y un número." });
   try {
     const passwordHash = password ? await bcrypt.hash(password, 12) : null;
     const result = await pool.query(`UPDATE users SET name = $1, username = $2, email = $3, company_name = $4, active = $5,

@@ -217,12 +217,12 @@ function AdminPanel({ user }) {
       </header>
 
       {section === "users" ? <UsersModule users={users} onCreate={() => setUserModal({ mode: "create" })} onEdit={(selectedUser) => setUserModal({ mode: "edit", user: selectedUser })} onDelete={deleteUser} /> : section === "activity" ? <ActivityModule activities={activities} /> : <div className="admin-dashboard">
-        <div className="dashboard-heading"><div><span className="eyebrow">RESUMEN REAL</span><h1>Hola, {user.name.split(" ")[0]}</h1><p>Estos datos provienen de las cuentas registradas en la plataforma.</p></div></div>
+        <div className="dashboard-heading"><div><span className="dashboard-intro">Resumen de la plataforma</span><h1>Hola, {user.name.split(" ")[0]}</h1><p>Estos datos provienen de las cuentas registradas en la plataforma.</p></div></div>
         <div className="admin-kpis">
-          <article><div className="kpi-icon purple"><Users /></div><span>Cuentas administradas</span><b>{users.filter((item) => item.role !== "admin").length}</b><small>Gestores y clientes</small></article>
-          <article><div className="kpi-icon blue"><UserRound /></div><span>Gestores</span><b>{users.filter((item) => item.role === "manager").length}</b><small>Responsables de marketing</small></article>
-          <article><div className="kpi-icon cyan"><Building2 /></div><span>Clientes</span><b>{users.filter((item) => item.role === "client").length}</b><small>Cuentas de visualización</small></article>
-          <article><div className="kpi-icon orange"><ShieldCheck /></div><span>Cuentas activas</span><b>{users.filter((item) => item.role !== "admin" && item.active).length}</b><small>Con acceso habilitado</small></article>
+          <article className="kpi-primary"><div className="kpi-icon purple"><Users /></div><span>Cuentas administradas</span><b>{users.filter((item) => item.role !== "admin").length}</b><small>Gestores y clientes registrados</small></article>
+          <article className="kpi-managers"><div className="kpi-icon blue"><UserRound /></div><span>Gestores</span><b>{users.filter((item) => item.role === "manager").length}</b><small>Responsables de marketing</small></article>
+          <article className="kpi-clients"><div className="kpi-icon cyan"><Building2 /></div><span>Clientes</span><b>{users.filter((item) => item.role === "client").length}</b><small>Cuentas de visualización</small></article>
+          <article className="kpi-active"><div className="kpi-icon orange"><ShieldCheck /></div><span>Cuentas activas</span><b>{users.filter((item) => item.role !== "admin" && item.active).length}</b><small>Con acceso habilitado</small></article>
         </div>
         <section className="real-data-note"><ShieldCheck /><div><h2>Panel sin datos simulados</h2><p>Las métricas de campañas, alcance y aprobaciones aparecerán cuando sus módulos tengan fuentes de datos reales.</p></div></section>
       </div>}

@@ -91,7 +91,17 @@ async function assignableCompany(client, managerId, name) {
   const existing = await client.query("SELECT id, name FROM companies WHERE LOWER(name) = LOWER($1) FOR UPDATE", [name]);
   if (existing.rowCount) {
     const access = await client.query("SELECT 1 FROM user_companies WHERE user_id = $1 AND company_id = $2", [managerId, existing.rows[0].id]);
-    if (!access.rowCount) { const error = new Error("No tienes acceso a esa empresa."); error.status = 403; throw error; }
+    if (!access.rowCount) {
+      const ownership = await client.query(`SELECT u.agency_name FROM user_companies uc JOIN users u ON u.id = uc.user_id
+        WHERE uc.company_id = $1 AND u.role IN ('manager', 'collaborator') LIMIT 1`, [existing.rows[0].id]);
+      const manager = await client.query("SELECT agency_name FROM users WHERE id = $1", [managerId]);
+      const sameAgency = ownership.rowCount && manager.rowCount && ownership.rows[0].agency_name?.toLowerCase() === manager.rows[0].agency_name?.toLowerCase();
+      if (ownership.rowCount && !sameAgency) { const error = new Error("Esta empresa ya está administrada por otra agencia."); error.status = 403; throw error; }
+      await client.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [managerId, existing.rows[0].id]);
+      await client.query(`INSERT INTO user_companies (user_id, company_id)
+        SELECT collaborator.id, $2 FROM users owner JOIN users collaborator ON LOWER(collaborator.agency_name) = LOWER(owner.agency_name) AND collaborator.role = 'collaborator'
+        WHERE owner.id = $1 ON CONFLICT DO NOTHING`, [managerId, existing.rows[0].id]);
+    }
     return existing.rows[0];
   }
   const created = await client.query("INSERT INTO companies (name) VALUES ($1) RETURNING id, name", [name]);

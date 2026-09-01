@@ -326,6 +326,39 @@ input:focus { border-color: #787af4; background: white; box-shadow: 0 0 0 4px #5
   .company-switcher { min-width: 145px; }.company-switcher > svg, .company-switcher small { display: none; }.portal-header-actions { gap: 7px; }
 }
 
+/* Interacciones y mensajes globales */
+:where(button, a, input, textarea, select) { transition: border-color .18s ease, background-color .18s ease, color .18s ease, box-shadow .18s ease, opacity .18s ease, transform .18s ease, filter .18s ease; }
+button { cursor: pointer; }
+button:not(:disabled):hover { filter: brightness(1.08); }
+button:not(:disabled):active { transform: translateY(1px); }
+:where(button, a, input, textarea, select):focus-visible { outline: 2px solid #f09a4e; outline-offset: 3px; }
+button:disabled { cursor: not-allowed; filter: saturate(.65); opacity: .58; }
+
+.app-dialog-backdrop { position: fixed; inset: 0; z-index: 1200; padding: 20px; display: grid; place-items: center; background: #080706c7; backdrop-filter: blur(10px); opacity: 0; transition: opacity .18s ease; }
+.app-dialog-backdrop.visible { opacity: 1; }
+.app-dialog { width: min(100%, 470px); padding: 24px; border: 1px solid #493d33; border-radius: 20px; color: #f4eee7; background: radial-gradient(circle at 100% 0, #60371535, transparent 40%), #1d1a17; box-shadow: 0 28px 80px #0009, inset 0 1px #ffffff0a; transform: translateY(10px) scale(.985); transition: transform .18s ease; }
+.visible .app-dialog { transform: none; }
+.app-dialog header > span { color: #e98d42; font-size: 10px; font-weight: 900; letter-spacing: 1.4px; }
+.app-dialog h2 { margin: 9px 0 7px; font-size: 24px; letter-spacing: -.5px; }
+.app-dialog header p { margin: 0; color: #b6aba1; font-size: 13px; line-height: 1.6; }
+.app-dialog-content { margin-top: 18px; }
+.app-dialog-content label { display: grid; gap: 8px; color: #d9cfc6; font-size: 12px; font-weight: 700; }
+.app-dialog-content textarea { width: 100%; padding: 13px 14px; border: 1px solid #4a4037; border-radius: 12px; resize: vertical; color: #f4eee7; background: #13110f; font: inherit; line-height: 1.5; }
+.app-dialog footer { margin-top: 22px; display: flex; justify-content: flex-end; gap: 10px; }
+.app-dialog footer button { min-height: 42px; padding: 0 16px; border-radius: 11px; font-size: 12px; font-weight: 800; }
+.app-dialog-cancel { border: 1px solid #4b423a; color: #d7ccc3; background: #25211d; }
+.app-dialog-confirm { border: 0; color: #1c1108; background: linear-gradient(135deg, #f0a154, #d77b34); box-shadow: 0 8px 22px #c66c2829; }
+.app-dialog.danger .app-dialog-confirm { color: #fff; background: linear-gradient(135deg, #d96359, #a93934); }
+.app-toast-region { position: fixed; z-index: 1300; top: 20px; right: 20px; width: min(390px, calc(100vw - 32px)); display: grid; gap: 9px; pointer-events: none; }
+.app-toast { padding: 13px 15px; border: 1px solid #4a4037; border-radius: 13px; display: flex; align-items: center; gap: 11px; color: #ece5de; background: #211d19f2; box-shadow: 0 18px 45px #0007; opacity: 0; transform: translateX(18px); transition: opacity .22s ease, transform .22s ease; backdrop-filter: blur(12px); }
+.app-toast.visible { opacity: 1; transform: none; }
+.app-toast i { width: 25px; height: 25px; border-radius: 8px; display: grid; place-items: center; color: #102018; background: #6ac78b; font-size: 13px; font-style: normal; font-weight: 900; }
+.app-toast.error i { color: #fff; background: #d85d55; }
+.app-toast.info i { color: #191108; background: #e5984d; }
+.app-toast span { font-size: 12px; font-weight: 700; line-height: 1.45; }
+@media (max-width: 560px) { .app-dialog-backdrop { padding: 12px; align-items: end; }.app-dialog { padding: 20px; border-radius: 18px; }.app-toast-region { top: 12px; right: 16px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
+
 /* Sistema visual oscuro: mayor contraste, tipografía legible y acentos cálidos. */
 :root { --navy: #171411; --blue: #e58a3a; --violet: #d5a15f; --cyan: #69bd83; --text: #f2eee8; --muted: #aaa198; --line: #3a342e; }
 body { color: #eee9e2; background: #12100e; font-size: 15px; }

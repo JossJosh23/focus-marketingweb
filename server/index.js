@@ -31,6 +31,11 @@ const registerLimiter = rateLimit({ windowMs: 60 * 60 * 1000, limit: 5, standard
 const baseCookieOptions = { httpOnly: true, secure: production, sameSite: "lax", path: "/" };
 const hash = (value) => crypto.createHash("sha256").update(value).digest("hex");
 const strongPassword = (value) => value.length >= 10 && /[A-Z]/.test(value) && /[0-9]/.test(value);
+const validIsoDate = (value) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
+};
 const logActivity = (actorId, action, targetType, targetId, details = {}) => pool.query("INSERT INTO activity_logs (actor_id, action, target_type, target_id, details) VALUES ($1,$2,$3,$4,$5)", [actorId, action, targetType, String(targetId || ""), details]);
 
 function deviceInfo(req) {
@@ -345,7 +350,7 @@ app.put("/api/calendar/plan", authenticate, requireMarketing, async (req, res) =
   const mainLinesCount = Number(req.body.mainLinesCount || 0);
   const publicationIntervalDays = Number(req.body.publicationIntervalDays || 0);
   const keyDates = Array.isArray(req.body.keyDates) ? req.body.keyDates.map((item) => ({ date: String(item.date || ""), title: String(item.title || "").trim(), description: String(item.description || "").trim() })) : [];
-  const validKeyDates = keyDates.length <= 40 && keyDates.every((item) => item.date.startsWith(`${period}-`) && /^\d{4}-\d{2}-\d{2}$/.test(item.date) && item.title.length <= 200 && item.description.length <= 500);
+  const validKeyDates = keyDates.length <= 40 && keyDates.every((item) => item.date.startsWith(`${period}-`) && validIsoDate(item.date) && item.title.length <= 200 && item.description.length <= 500);
   if (!company || !/^\d{4}-\d{2}$/.test(period) || !Number.isInteger(postsPerWeek) || postsPerWeek < 0 || postsPerWeek > 30 || !Number.isInteger(videosPerMonth) || videosPerMonth < 0 || videosPerMonth > 100 || !Number.isInteger(mainLinesCount) || mainLinesCount < 0 || mainLinesCount > 100 || !Number.isInteger(publicationIntervalDays) || publicationIntervalDays < 0 || publicationIntervalDays > 31 || !validKeyDates || strategySummary.length > 5000 || mainLines.length > 5000 || [postsDetail, videosDetail, videoBoostDetail, videoSchedule].some((value) => value.length > 500)) return res.status(400).json({ error: "La configuración mensual no es válida." });
   const result = await pool.query(`INSERT INTO content_plans (company_name, period, strategy_summary, posts_per_week, videos_per_month, video_schedule, main_lines, posts_detail, videos_detail, video_boost_detail, main_lines_count, publication_interval_days, key_dates, updated_by)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) ON CONFLICT (LOWER(company_name), period) DO UPDATE SET strategy_summary = EXCLUDED.strategy_summary,
@@ -364,7 +369,7 @@ app.patch("/api/calendar/publications/:id/review", authenticate, async (req, res
   const comment = String(req.body.comment || "").trim();
   if (!['approved', 'changes_requested'].includes(status) || (status === 'changes_requested' && !comment) || comment.length > 3000) return res.status(400).json({ error: "Selecciona una respuesta válida y explica los cambios solicitados." });
   const result = await pool.query(`UPDATE calendar_publications SET approval_status = $1, client_comment = $2, reviewed_at = NOW(), updated_at = NOW()
-    WHERE id = $3 AND LOWER(company_name) = LOWER($4) RETURNING approval_status AS "approvalStatus", client_comment AS "clientComment", reviewed_at AS "reviewedAt"`, [status, comment, req.params.id, req.user.company_name || ""]);
+    WHERE id = $3 AND LOWER(company_name) = LOWER($4) AND is_draft_slot = FALSE RETURNING approval_status AS "approvalStatus", client_comment AS "clientComment", reviewed_at AS "reviewedAt"`, [status, comment, req.params.id, req.user.company_name || ""]);
   if (!result.rowCount) return res.status(404).json({ error: "Publicación no encontrada." });
   await logActivity(req.user.id, `publication.${status}`, "publication", req.params.id, { company: req.user.company_name });
   res.json({ review: result.rows[0] });
@@ -414,7 +419,7 @@ app.put("/api/calendar/publications/:id", authenticate, requireMarketing, async 
   const mediaType = ["image", "video"].includes(req.body.mediaType) ? req.body.mediaType : null;
   const mediaName = String(req.body.mediaName || "").slice(0, 255) || null;
   const allowedPlatforms = ["Instagram", "Facebook", "TikTok", "LinkedIn", "YouTube"];
-  if (!company || !/^[0-9a-f-]{36}$/i.test(id) || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !topic || topic.length > 200 || copy.length > 10000 || objective.length > 500 || productionReference.length > 5000 || !['organic', 'paid'].includes(distributionType) || !["post", "reel", "historia"].includes(format) || platforms.some((item) => !allowedPlatforms.includes(item))) return res.status(400).json({ error: "Los datos de la publicación no son válidos." });
+  if (!company || !/^[0-9a-f-]{36}$/i.test(id) || !validIsoDate(date) || !topic || topic.length > 200 || copy.length > 10000 || objective.length > 500 || productionReference.length > 5000 || !['organic', 'paid'].includes(distributionType) || !["post", "reel", "historia"].includes(format) || platforms.some((item) => !allowedPlatforms.includes(item))) return res.status(400).json({ error: "Los datos de la publicación no son válidos." });
   if (mediaUrl && (!/^data:(image\/(jpeg|png|webp|gif)|video\/(mp4|webm|quicktime));base64,/.test(mediaUrl) || mediaUrl.length > 14_000_000)) return res.status(400).json({ error: "El archivo multimedia no es válido o supera los 10 MB." });
   const result = await pool.query(`INSERT INTO calendar_publications (id, company_name, created_by, publication_date, publication_time, topic, copy, format, platforms, media_data, media_type, media_name, objective, distribution_type, production_reference)
     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
@@ -487,16 +492,20 @@ app.post("/api/admin/users", authenticate, requireAdmin, async (req, res) => {
   if (!name || !username || !email || !companyName || !strongPassword(password)) return res.status(400).json({ error: "Todos los campos son obligatorios y la contraseña debe tener 10 caracteres, una mayúscula y un número." });
   if (!/^[a-z0-9._-]{3,40}$/.test(username)) return res.status(400).json({ error: "El usuario debe tener entre 3 y 40 caracteres y usar solamente letras, números, punto, guion o guion bajo." });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "Ingresa un correo electrónico válido." });
+  const client = await pool.connect();
   try {
     const passwordHash = await bcrypt.hash(password, 12);
-    const result = await pool.query("INSERT INTO users (name, username, email, company_name, agency_name, password_hash, role) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, name, username, email, company_name, agency_name, role, active, created_at, last_login_at", [name, username, email, role === "client" ? companyName : null, role !== "client" ? companyName : null, passwordHash, role]);
-    if (role === "client") { const company = await pool.query("INSERT INTO companies (name) VALUES ($1) ON CONFLICT (LOWER(name)) DO UPDATE SET name = EXCLUDED.name RETURNING id", [companyName]); await pool.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [result.rows[0].id, company.rows[0].id]); }
-    await logActivity(req.user.id, "user.created", "user", result.rows[0].id, { role });
+    await client.query("BEGIN");
+    const result = await client.query("INSERT INTO users (name, username, email, company_name, agency_name, password_hash, role) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id, name, username, email, company_name, agency_name, role, active, created_at, last_login_at", [name, username, email, role === "client" ? companyName : null, role !== "client" ? companyName : null, passwordHash, role]);
+    if (role === "client") { const company = await client.query("INSERT INTO companies (name) VALUES ($1) ON CONFLICT (LOWER(name)) DO UPDATE SET name = EXCLUDED.name RETURNING id", [companyName]); await client.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [result.rows[0].id, company.rows[0].id]); }
+    await client.query("COMMIT");
+    logActivity(req.user.id, "user.created", "user", result.rows[0].id, { role }).catch(console.error);
     res.status(201).json({ user: result.rows[0] });
   } catch (error) {
+    await client.query("ROLLBACK");
     if (error.code === "23505") return res.status(409).json({ error: "Ya existe una cuenta con ese correo o nombre de usuario." });
     throw error;
-  }
+  } finally { client.release(); }
 });
 
 app.patch("/api/admin/users/:id", authenticate, requireAdmin, async (req, res) => {
@@ -512,21 +521,27 @@ app.patch("/api/admin/users/:id", authenticate, requireAdmin, async (req, res) =
   if (!Number.isInteger(id) || !name || !username || !email || !companyName) return res.status(400).json({ error: "Los datos del usuario están incompletos." });
   if (!/^[a-z0-9._-]{3,40}$/.test(username) || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "El correo o nombre de usuario no es válido." });
   if (password && !strongPassword(password)) return res.status(400).json({ error: "La contraseña nueva debe tener 10 caracteres, una mayúscula y un número." });
+  const client = await pool.connect();
   try {
     const passwordHash = password ? await bcrypt.hash(password, 12) : null;
-    const result = await pool.query(`UPDATE users SET name = $1, username = $2, email = $3, company_name = CASE WHEN $7 = 'client' THEN $4 ELSE NULL END,
+    await client.query("BEGIN");
+    const previous = await client.query("SELECT role FROM users WHERE id = $1 AND role <> 'admin' FOR UPDATE", [id]);
+    if (!previous.rowCount) { await client.query("ROLLBACK"); return res.status(404).json({ error: "Usuario no encontrado." }); }
+    const result = await client.query(`UPDATE users SET name = $1, username = $2, email = $3, company_name = CASE WHEN $7 = 'client' THEN $4 ELSE NULL END,
       agency_name = CASE WHEN $7 IN ('manager', 'collaborator') THEN $4 ELSE NULL END, active = $5, password_hash = COALESCE($6, password_hash), role = $7, updated_at = NOW()
       WHERE id = $8 AND role <> 'admin'
       RETURNING id, name, username, email, company_name, agency_name, role, active, created_at, last_login_at`, [name, username, email, companyName, active, passwordHash, role, id]);
-    if (!result.rowCount) return res.status(404).json({ error: "Usuario no encontrado." });
-    if (role === "client") { const company = await pool.query("INSERT INTO companies (name) VALUES ($1) ON CONFLICT (LOWER(name)) DO UPDATE SET name = EXCLUDED.name RETURNING id", [companyName]); await pool.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2) ON CONFLICT DO NOTHING", [id, company.rows[0].id]); }
-    await logActivity(req.user.id, "user.updated", "user", id, { role, active });
-    if (!active || passwordHash) await pool.query("UPDATE auth_sessions SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL", [id]);
+    if (role === "client") { await client.query("DELETE FROM user_companies WHERE user_id = $1", [id]); const company = await client.query("INSERT INTO companies (name) VALUES ($1) ON CONFLICT (LOWER(name)) DO UPDATE SET name = EXCLUDED.name RETURNING id", [companyName]); await client.query("INSERT INTO user_companies (user_id, company_id) VALUES ($1, $2)", [id, company.rows[0].id]); }
+    else if (previous.rows[0].role === "client") await client.query("DELETE FROM user_companies WHERE user_id = $1", [id]);
+    if (!active || passwordHash) await client.query("UPDATE auth_sessions SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL", [id]);
+    await client.query("COMMIT");
+    logActivity(req.user.id, "user.updated", "user", id, { role, active }).catch(console.error);
     res.json({ user: result.rows[0] });
   } catch (error) {
+    await client.query("ROLLBACK");
     if (error.code === "23505") return res.status(409).json({ error: "Ya existe una cuenta con ese correo o nombre de usuario." });
     throw error;
-  }
+  } finally { client.release(); }
 });
 
 app.use(express.static(distPath, {

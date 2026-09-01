@@ -58,7 +58,7 @@ function statusLabel(item) {
   return "PENDIENTE";
 }
 
-export async function createCalendarPdf({ company, logoData, period, plan, publications }) {
+export async function createCalendarPdf({ company, logoData, period, plan, publications, calendarItems = publications }) {
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
   const date = new Date(`${period}-01T12:00:00`);
@@ -193,6 +193,33 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
     }
     pageFooter(doc, period, nextPageNumber + index);
   });
+
+  doc.addPage("a4", "landscape");
+  doc.setFillColor(...PAPER); doc.rect(0, 0, 297, 210, "F");
+  text(doc, `Así queda ${periodLabel}`, 18, 22, { bold: true, size: 18, width: 205, maxLines: 1 });
+  text(doc, "Las publicaciones, fechas clave y espacios abiertos del mes en una sola vista.", 18, 32, { size: 8.5, color: MUTED, width: 205, maxLines: 1 });
+  doc.setDrawColor(...ORANGE); doc.setLineWidth(1); doc.line(18, 38, 40, 38);
+  if (logoData) { try { addContainedImage(doc, logoData, 244, 9, 37, 24); } catch { text(doc, company, 281, 21, { bold: true, size: 12, color: GREEN, align: "right", width: 55 }); } }
+  else text(doc, company, 281, 21, { bold: true, size: 12, color: GREEN, align: "right", width: 55 });
+  const calendarX = 18; const calendarWidth = 261; const columnWidth = calendarWidth / 7; const weekdayY = 46;
+  ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"].forEach((day, index) => { doc.setFillColor(...GREEN); doc.roundedRect(calendarX + index * columnWidth + .7, weekdayY, columnWidth - 1.4, 10, 2, 2, "F"); text(doc, day, calendarX + index * columnWidth + columnWidth / 2, weekdayY + 6.5, { bold: true, size: 7, color: [255, 255, 255], align: "center", width: columnWidth - 4, maxLines: 1 }); });
+  const firstOffset = (new Date(date.getFullYear(), date.getMonth(), 1).getDay() + 6) % 7;
+  const monthDays = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  const rowCount = Math.ceil((firstOffset + monthDays) / 7); const gridY = 58; const gridHeight = 120; const rowHeight = gridHeight / rowCount;
+  const calendarEntries = [...calendarItems];
+  keyDates.forEach((item) => { if (!calendarEntries.some((entry) => entry.date === item.date && entry.topic?.toLowerCase() === item.title.toLowerCase())) calendarEntries.push({ date: item.date, topic: item.title, format: "institucional", isKeyDate: true }); });
+  for (let cell = 0; cell < rowCount * 7; cell += 1) {
+    const day = cell - firstOffset + 1; const column = cell % 7; const row = Math.floor(cell / 7); const x = calendarX + column * columnWidth; const y = gridY + row * rowHeight;
+    doc.setFillColor(day >= 1 && day <= monthDays ? 255 : 243, day >= 1 && day <= monthDays ? 255 : 246, day >= 1 && day <= monthDays ? 255 : 244); doc.setDrawColor(209, 220, 214); doc.setLineWidth(.25); doc.roundedRect(x + .7, y, columnWidth - 1.4, rowHeight - 1.3, 2, 2, "FD");
+    if (day < 1 || day > monthDays) continue;
+    text(doc, day, x + 3, y + 5, { bold: true, size: 7.5, width: 10, maxLines: 1 });
+    const dayKey = `${period}-${String(day).padStart(2, "0")}`; const entries = calendarEntries.filter((item) => item.date === dayKey).slice(0, 2);
+    entries.forEach((item, entryIndex) => { const entryY = y + 10 + entryIndex * 8; const entryColor = item.isDraftSlot ? MUTED : item.isKeyDate ? [211, 58, 58] : item.format === "reel" ? [35, 104, 167] : item.format === "historia" ? ORANGE : GREEN; text(doc, item.isDraftSlot ? "PENDIENTE" : item.isKeyDate ? "FECHA CLAVE" : String(item.format || "POST").toUpperCase(), x + 3, entryY, { bold: true, size: 5.5, color: entryColor, width: columnWidth - 6, maxLines: 1 }); text(doc, item.topic || "Espacio abierto", x + 3, entryY + 4, { bold: true, size: 6.2, width: columnWidth - 6, maxLines: 1 }); });
+    const hiddenCount = calendarEntries.filter((item) => item.date === dayKey).length - entries.length;
+    if (hiddenCount > 0) text(doc, `+${hiddenCount} más`, x + columnWidth - 3, y + rowHeight - 4, { bold: true, size: 5.5, color: MUTED, align: "right", width: 18, maxLines: 1 });
+  }
+  [[GREEN, "Post"], [[35, 104, 167], "Reel"], [ORANGE, "Historia"], [[211, 58, 58], "Fecha clave"], [MUTED, "Pendiente"]].forEach(([color, label], index) => { const x = 20 + index * 42; doc.setFillColor(...color); doc.circle(x, 185, 1.2, "F"); text(doc, label, x + 3, 187, { bold: true, size: 6.5, color, width: 34, maxLines: 1 }); });
+  pageFooter(doc, period, nextPageNumber + publications.length);
 
   return doc;
 }

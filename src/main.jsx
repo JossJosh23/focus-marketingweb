@@ -31,9 +31,7 @@ function VisualPanel() {
     event.currentTarget.style.setProperty("--pointer-y", `${(event.clientY - panel.top) / panel.height * 14 - 7}px`);
   }
   return <section className="visual-panel" onPointerMove={moveRings}>
-    <div className="aurora one"></div><div className="aurora two"></div><div className="rings"><i></i><i></i><i></i></div>
-    <div className="security-pill"><span></span> Plataforma privada · Conexión cifrada</div>
-    <div className="visual-content"><Logo /><div className="private-label"><ShieldCheck /> ESPACIO PRIVADO</div><h1>Tu marketing,<br /><em>en buenas manos.</em></h1><p>Planifica, revisa y entiende todo lo que hacemos para hacer crecer tu negocio.</p>
+    <div className="visual-content"><Logo /><h1>Tu marketing,<br />en buenas manos.</h1><p>Planifica, revisa y entiende todo lo que hacemos para hacer crecer tu negocio.</p>
     </div>
   </section>;
 }
@@ -73,17 +71,17 @@ function Login() {
 
   return <main className="login-page"><VisualPanel /><section className="form-panel"><div className="login-card">
     <form onSubmit={submit} noValidate>
-      <div className={`connection-status ${connection}`}><span></span>{connection === "online" ? "Sistema disponible" : "Comprobando conexión"}</div>
-      <span className="eyebrow">BIENVENIDO DE NUEVO</span><h2>Inicia sesión</h2><p className="lead">Ingresa tus datos; te llevaremos automáticamente a tu espacio.</p>
+      <div className={`connection-status ${connection}`}>{connection === "online" ? "Sistema disponible" : "Comprobando conexión"}</div>
+      <span className="login-kicker">Bienvenido de nuevo</span><h2>Inicia sesión</h2><p className="lead">Ingresa tus datos; te llevaremos automáticamente a tu espacio.</p>
       <label>Correo electrónico<div className={`input-shell ${emailError ? "invalid" : ""}`}><Mail /><input name="email" type="email" autoComplete="email" required placeholder="correo@empresa.com" onChange={() => setEmailError("")} /></div></label>
       {emailError && <div className="field-error"><AlertTriangle />{emailError}</div>}
       <label>Contraseña<div className="input-shell password-field"><LockKeyhole /><input name="password" type={showPassword ? "text" : "password"} autoComplete="current-password" minLength="10" required placeholder="Ingresa tu contraseña" onKeyDown={(e) => setCapsLock(e.getModifierState("CapsLock"))} onKeyUp={(e) => setCapsLock(e.getModifierState("CapsLock"))} onBlur={() => setCapsLock(false)} /><button type="button" onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}>{showPassword ? <EyeOff /> : <Eye />}</button></div></label>
       {capsLock && <div className="caps-warning"><AlertTriangle /> Bloq Mayús está activado</div>}
       <div className="form-options"><label className="remember"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /><span><Check /></span> Recordarme</label><button type="button" onClick={() => goTo("/forgot-password")}>¿Olvidaste tu contraseña?</button></div>
       <button className="submit-button" type="submit" disabled={Boolean(stage) || connection !== "online"}><span>{stage || "Iniciar sesión"}</span>{stage ? <i className="button-spinner"></i> : <ArrowRight />}</button>
+      <div className="secure-note"><ShieldCheck /><p><b>Acceso protegido</b><span>Conexión cifrada · Contraseña protegida · Sesión privada</span></p></div>
       <button className="register-link" type="button" onClick={() => goTo("/register")}>¿Eres gestor de marketing? Crear una cuenta</button>
       {error && <div className="error-message" role="alert"><AlertTriangle /> {error}</div>}
-      <div className="secure-note"><ShieldCheck /><p><b>Acceso protegido</b><span>Conexión cifrada · Contraseña protegida · Sesión privada</span></p></div>
     </form>
   </div></section></main>;
 }

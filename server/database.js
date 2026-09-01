@@ -101,12 +101,29 @@ export async function initializeDatabase() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
     CREATE INDEX IF NOT EXISTS calendar_publications_company_idx ON calendar_publications(LOWER(company_name), publication_date, publication_time);
+    ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS objective VARCHAR(500) NOT NULL DEFAULT '';
+    ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS distribution_type VARCHAR(20) NOT NULL DEFAULT 'organic';
+    ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS production_reference TEXT NOT NULL DEFAULT '';
     ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS approval_status VARCHAR(30) NOT NULL DEFAULT 'pending';
     ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS client_comment TEXT NOT NULL DEFAULT '';
     ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;
     ALTER TABLE calendar_publications DROP CONSTRAINT IF EXISTS calendar_publications_created_by_fkey;
     ALTER TABLE calendar_publications ALTER COLUMN created_by DROP NOT NULL;
     ALTER TABLE calendar_publications ADD CONSTRAINT calendar_publications_created_by_fkey FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL;
+
+    CREATE TABLE IF NOT EXISTS content_plans (
+      id BIGSERIAL PRIMARY KEY,
+      company_name VARCHAR(160) NOT NULL,
+      period CHAR(7) NOT NULL,
+      strategy_summary TEXT NOT NULL DEFAULT '',
+      posts_per_week SMALLINT NOT NULL DEFAULT 0,
+      videos_per_month SMALLINT NOT NULL DEFAULT 0,
+      video_schedule VARCHAR(200) NOT NULL DEFAULT '',
+      main_lines TEXT NOT NULL DEFAULT '',
+      updated_by BIGINT REFERENCES users(id) ON DELETE SET NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE UNIQUE INDEX IF NOT EXISTS content_plans_company_period_idx ON content_plans(LOWER(company_name), period);
 
     DELETE FROM auth_sessions WHERE expires_at <= NOW() OR revoked_at < NOW() - INTERVAL '30 days';
     DELETE FROM password_reset_tokens WHERE expires_at <= NOW() OR used_at < NOW() - INTERVAL '7 days';

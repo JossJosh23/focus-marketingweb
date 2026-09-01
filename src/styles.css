@@ -703,3 +703,43 @@ body, .admin-shell, .admin-shell.admin-dark, .role-portal { color: var(--ink); b
 .plan-summary > article, .plan-summary > div { background: #FBFCFF; }.calendar-days > i { background: #F0F4FF; }
 .calendar-days article > b { background: #EEF2FF; }.publication-media, .content-detail, .client-comment { background: #F2F5FF; }
 .calendar-empty, .portal-empty-state, .daily-empty, .pdf-empty { border-color: #C9D5F2; }
+
+/* Paleta maestra azul: esta capa reemplaza definitivamente los temas heredados. */
+:root { --navy: #172033; --blue: #315BFF; --violet: #7758E8; --cyan: #26C6F7; --text: #172033; --muted: #667085; --line: #DDE5F4; }
+body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; background: linear-gradient(135deg, #F7F9FF 0%, #F2F6FF 55%, #F6F3FF 100%); }
+.eyebrow, .portal-role, .pdf-module .eyebrow, .structure-module .eyebrow { color: #315BFF !important; }
+.admin-sidebar, .portal-sidebar { border-color: #DDE5F4 !important; color: #172033 !important; background: linear-gradient(180deg, #FFFFFF, #F8FAFF) !important; box-shadow: 12px 0 38px #294A9510 !important; }
+.admin-sidebar .brand, .portal-sidebar .brand { color: #172033 !important; }
+.admin-modules button, .portal-sidebar nav button { border-color: transparent !important; color: #667085 !important; background: transparent !important; }
+.admin-modules button:hover, .portal-sidebar nav button:hover { color: #315BFF !important; background: #EEF3FF !important; }
+.admin-modules button.active, .portal-sidebar nav button.active { border-color: #BFCDFB !important; color: #2447C7 !important; background: linear-gradient(100deg, #E6EDFF, #F0EDFF) !important; box-shadow: inset 3px 0 #315BFF, 0 8px 20px #315BFF10 !important; }
+.sidebar-empty, .portal-company { border-color: #CBD7F5 !important; color: #172033 !important; background: linear-gradient(135deg, #EDF3FF, #F3F0FF) !important; }
+.portal-company > svg, .portal-company small { color: #315BFF !important; }.portal-company b { color: #172033 !important; }
+.portal-logout { color: #667085 !important; }.portal-logout:hover { color: #315BFF !important; background: #EEF3FF !important; }
+.admin-topbar, .admin-dark .admin-topbar, .portal-workspace > header { border-color: #DDE5F4 !important; color: #172033 !important; background: #FFFFFFeb !important; box-shadow: 0 7px 25px #294A950c !important; }
+.topbar-profile, .admin-dark .topbar-profile, .company-switcher { border-color: #DDE5F4 !important; color: #172033 !important; background: #fff !important; }
+.topbar-avatar, .portal-profile > i, .manager-client-grid article > i, .user-cell > i, .company-users i { color: #fff !important; background: linear-gradient(135deg, #315BFF, #7758E8) !important; box-shadow: 0 7px 18px #315BFF25; }
+.portal-content, .admin-dashboard, .users-module { color: #172033 !important; }
+.pdf-module > header h2, .structure-module h2, .calendar-toolbar h2, .manager-clients h2 { color: #172033 !important; }
+.pdf-module > header p, .structure-module > header p, .calendar-toolbar p, .manager-clients header p { color: #667085 !important; }
+.pdf-controls, .structure-module form { border-color: #DDE5F4 !important; background: linear-gradient(145deg, #FFFFFF, #FAFBFF) !important; box-shadow: 0 12px 34px #294A950d !important; }
+.pdf-controls label > span, .structure-module form > label > span, .key-dates legend { color: #475467 !important; }
+.period-picker { border-color: #CDD8F2 !important; color: #172033 !important; background: #fff !important; box-shadow: 0 7px 20px #294A950d !important; }
+.pdf-generate { border: 0 !important; color: #fff !important; background: linear-gradient(135deg, #315BFF, #6547E8 62%, #26AEEA) !important; box-shadow: 0 10px 25px #315BFF2a !important; }
+.pdf-generate:hover:not(:disabled) { color: #fff !important; background: linear-gradient(135deg, #244BE0, #593BD4 62%, #169BD6) !important; box-shadow: 0 14px 30px #315BFF35 !important; }
+.pdf-empty { border-color: #C9D5F2 !important; color: #172033 !important; background: radial-gradient(circle at 50% 45%, #315BFF0d, transparent 34%), #fff !important; }
+.pdf-empty > svg { color: #315BFF !important; background: #EAF0FF !important; }.pdf-empty p { color: #667085 !important; }
+.pdf-preview { border-color: #CDD8F2 !important; background: #E8EDF7 !important; box-shadow: 0 20px 55px #294A9518 !important; }.pdf-preview > header { border-color: #DDE5F4 !important; color: #172033 !important; background: #fff !important; }.pdf-preview > header span { color: #172033 !important; }.pdf-preview > header span svg { color: #315BFF !important; }
+.calendar-toolbar .primary-action, .calendar-empty .primary-action, .submit-button, .save-user, .publication-modal .save-publication, .manager-clients > header > button, .portal-welcome > button, .structure-module form > footer button { border: 0 !important; color: #fff !important; background: linear-gradient(135deg, #315BFF, #6547E8 62%, #26AEEA) !important; box-shadow: 0 10px 25px #315BFF25 !important; }
+.calendar-toolbar button:not(.primary-action), .publication-card > footer button, .users-table-row > button { border-color: #D5DEF2 !important; color: #526078 !important; background: #fff !important; }
+.calendar-toolbar button:not(.primary-action):hover, .publication-card > footer button:hover, .users-table-row > button:hover { border-color: #AFC0F5 !important; color: #315BFF !important; background: #EFF3FF !important; }
+.preview-toggle.active { border-color: #C7BCF5 !important; color: #6042CF !important; background: #F0EDFF !important; }
+.calendar-presentation, .week-presentation, .publication-card, .manager-client-grid article, .company-management-grid > article { border-color: #DDE5F4 !important; color: #172033 !important; background: #fff !important; box-shadow: 0 12px 32px #294A950d !important; }
+.calendar-presentation > header, .week-presentation > header, .calendar-view-switch button.active { color: #fff !important; background: linear-gradient(135deg, #315BFF, #6547E8 65%, #26AEEA) !important; }
+.calendar-days > article, .calendar-days > i { border-color: #DDE5F4 !important; background: #fff !important; }.calendar-days > i { background: #F0F4FF !important; }
+.calendar-days article > button.calendar-content-card { color: #172033 !important; background: linear-gradient(135deg, var(--format-bg), #fff) !important; }.calendar-content-card > strong { color: #172033 !important; }.calendar-platforms > i { border-color: #DDE5F4 !important; background: #fff !important; }
+.user-modal, .publication-modal, .company-dialog, .app-dialog { border-color: #D8E1F3 !important; color: #172033 !important; background: #fff !important; box-shadow: 0 30px 80px #18316A25 !important; }
+.user-modal input, .user-modal select, .publication-modal input, .publication-modal textarea, .company-dialog input, .generated-password, .structure-module input:not(.period-picker), .structure-module textarea { border-color: #D7E0F2 !important; color: #172033 !important; background: #FAFBFF !important; }
+.format-options button, .platform-options label { border-color: #D7E0F2 !important; color: #526078 !important; background: #fff !important; }.format-options button.selected { border-color: #315BFF !important; color: #2447C7 !important; background: #EAF0FF !important; }.platform-options input:checked + span { border-color: #315BFF !important; background: #315BFF !important; }
+.app-dialog-backdrop, .company-dialog-backdrop, .user-modal-backdrop, .publication-modal-backdrop, .content-preview-backdrop { background: #101A38a8 !important; }
+@media (max-width: 430px) { .portal-sidebar nav button.active { box-shadow: inset 0 -3px #315BFF !important; } }

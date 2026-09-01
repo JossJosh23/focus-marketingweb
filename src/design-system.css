@@ -1,0 +1,252 @@
+/* Sistema visual canónico de FOCUGEX. Cargado después de los estilos históricos. */
+:root {
+  --fg-primary: #315bff;
+  --fg-primary-hover: #244be0;
+  --fg-primary-soft: #eef3ff;
+  --fg-indigo: #7758e8;
+  --fg-cyan: #26a6d8;
+  --fg-success: #168b64;
+  --fg-warning: #b97108;
+  --fg-danger: #b42318;
+  --fg-canvas: #f5f7fc;
+  --fg-surface: #fff;
+  --fg-surface-subtle: #f8faff;
+  --fg-ink: #172033;
+  --fg-muted: #667085;
+  --fg-faint: #8490a5;
+  --fg-border: #dce4f2;
+  --fg-border-strong: #bdc9dd;
+  --fg-radius-sm: 6px;
+  --fg-radius-md: 10px;
+  --fg-radius-lg: 14px;
+  --fg-shadow-sm: 0 8px 24px rgb(39 70 127 / 7%);
+  --fg-shadow-md: 0 16px 40px rgb(39 70 127 / 12%);
+
+  /* Alias de compatibilidad mientras se migran los componentes anteriores. */
+  --navy: var(--fg-ink);
+  --blue: var(--fg-primary);
+  --violet: var(--fg-indigo);
+  --cyan: var(--fg-cyan);
+  --text: var(--fg-ink);
+  --muted: var(--fg-muted);
+  --line: var(--fg-border);
+  --coral: var(--fg-primary);
+  --mandarin: var(--fg-cyan);
+  --canvas: var(--fg-canvas);
+  --surface: var(--fg-surface);
+  --ink: var(--fg-ink);
+  --subtle: var(--fg-muted);
+  --soft-line: var(--fg-border);
+  --positive: var(--fg-success);
+  --creative: var(--fg-indigo);
+}
+
+html {
+  color-scheme: light;
+  background: var(--fg-canvas);
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  color: var(--fg-ink);
+  background: var(--fg-canvas);
+  font-size: 15px;
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+button:disabled,
+input:disabled,
+textarea:disabled,
+select:disabled {
+  cursor: not-allowed !important;
+  opacity: 0.58;
+}
+:where(button, a, input, textarea, select):focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--fg-primary) 28%, transparent) !important;
+  outline-offset: 2px !important;
+}
+:where(input, textarea, select):focus {
+  border-color: var(--fg-primary) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--fg-primary) 11%, transparent) !important;
+}
+::selection {
+  color: #fff;
+  background: var(--fg-primary);
+}
+
+.eyebrow {
+  color: var(--fg-primary) !important;
+  font-size: 10px !important;
+  font-weight: 750 !important;
+  letter-spacing: 0.055em !important;
+}
+.role-portal,
+.admin-shell,
+.admin-shell.admin-dark {
+  color: var(--fg-ink);
+  background: linear-gradient(135deg, #f8faff, #f3f6fd 58%, #f6f4ff);
+}
+.portal-content,
+.admin-dashboard,
+.users-module {
+  color: var(--fg-ink) !important;
+}
+.portal-workspace > header,
+.admin-topbar {
+  border-color: var(--fg-border) !important;
+  background: rgb(255 255 255 / 92%) !important;
+  backdrop-filter: blur(14px);
+}
+
+/* El texto operativo no debe depender de tamaños microscópicos. */
+.portal-sidebar nav button,
+.admin-modules button,
+.calendar-toolbar button,
+.company-card-actions button,
+.publication-card > footer button,
+.pdf-controls button,
+.pdf-controls a,
+.structure-module button {
+  font-size: max(10px, 0.68rem) !important;
+}
+.portal-sidebar small,
+.portal-workspace > header small,
+.company-switcher small,
+.portal-profile small,
+.publication-body small,
+.content-detail small,
+.calendar-card-meta small,
+.calendar-platforms small {
+  line-height: 1.35;
+}
+
+/* Acciones principales compartidas. */
+:where(
+  .primary-action,
+  .save-user,
+  .save-publication,
+  .company-dialog-submit,
+  .pdf-download,
+  .pdf-generate,
+  .submit-button
+) {
+  border: 1px solid transparent !important;
+  border-radius: var(--fg-radius-sm) !important;
+  color: #fff !important;
+  background: var(--fg-primary) !important;
+  box-shadow: none !important;
+  font-weight: 750;
+}
+:where(
+    .primary-action,
+    .save-user,
+    .save-publication,
+    .company-dialog-submit,
+    .pdf-download,
+    .pdf-generate,
+    .submit-button
+  ):hover:not(:disabled) {
+  background: var(--fg-primary-hover) !important;
+  transform: translateY(-1px);
+}
+
+/* Superficies compartidas. */
+:where(
+  .users-table-card,
+  .publication-card,
+  .company-management-grid > article,
+  .pdf-controls,
+  .structure-module form,
+  .portal-integrity,
+  .real-data-note
+) {
+  border-color: var(--fg-border) !important;
+  color: var(--fg-ink) !important;
+  background: var(--fg-surface) !important;
+}
+
+/* Mensajes y confirmaciones. */
+.app-toast-region {
+  width: min(390px, calc(100vw - 32px));
+}
+.app-toast {
+  border: 1px solid var(--fg-border) !important;
+  border-radius: var(--fg-radius-md) !important;
+  color: var(--fg-ink) !important;
+  background: rgb(255 255 255 / 97%) !important;
+  box-shadow: var(--fg-shadow-md) !important;
+}
+.app-toast.info i {
+  color: #fff !important;
+  background: var(--fg-primary) !important;
+}
+.app-toast.error i {
+  color: #fff !important;
+  background: var(--fg-danger) !important;
+}
+.calendar-error,
+.company-dialog-error {
+  color: var(--fg-danger) !important;
+}
+
+/* Desplazamiento coherente y discreto. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #b7c4da transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: #b7c4da;
+  background-clip: padding-box;
+}
+
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+  }
+  .portal-content {
+    padding-inline: 14px !important;
+  }
+  .app-toast-region {
+    right: 16px;
+    left: 16px;
+    width: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

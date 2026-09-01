@@ -45,6 +45,7 @@ import { confirmAction, requestText, showToast } from "./lib/appDialog.js";
 import { createCalendarPdf } from "./lib/calendarPdf.js";
 import { goTo, pathForRole } from "./lib/navigation.js";
 import "./styles.css";
+import "./design-system.css";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -517,7 +518,11 @@ function RegisterManager() {
               {error}
             </div>
           )}
-          <button className="submit-button" disabled={saving}>
+          <button
+            className="submit-button"
+            disabled={saving}
+            aria-busy={saving}
+          >
             {saving ? "Creando cuenta…" : "Crear cuenta de gestor"}
             <ArrowRight />
           </button>
@@ -838,7 +843,7 @@ function UserModal({ user, onClose, onSaved }) {
             <button type="button" onClick={onClose}>
               Cancelar
             </button>
-            <button className="save-user" disabled={saving}>
+            <button className="save-user" disabled={saving} aria-busy={saving}>
               {saving
                 ? "Guardando…"
                 : user
@@ -1498,7 +1503,11 @@ function PlanModal({ initial, period, company, onClose, onSaved }) {
             <button type="button" onClick={onClose}>
               Cancelar
             </button>
-            <button className="save-publication" disabled={saving}>
+            <button
+              className="save-publication"
+              disabled={saving}
+              aria-busy={saving}
+            >
               <Save />
               {saving ? "Guardando…" : "Guardar estrategia"}
             </button>
@@ -1622,10 +1631,18 @@ function CalendarPresentation({
         </div>
       )}
       <div className="calendar-legend" aria-label="Leyenda del calendario">
-        <span className="post"><i></i>Publicación</span>
-        <span className="reel"><i></i>Reel</span>
-        <span className="historia"><i></i>Historia</span>
-        <span className="key-date"><i></i>Fecha clave</span>
+        <span className="post">
+          <i></i>Publicación
+        </span>
+        <span className="reel">
+          <i></i>Reel
+        </span>
+        <span className="historia">
+          <i></i>Historia
+        </span>
+        <span className="key-date">
+          <i></i>Fecha clave
+        </span>
         <small>Selecciona un contenido para ver todos sus detalles</small>
       </div>
       <div className="month-calendar">
@@ -2505,7 +2522,11 @@ function CalendarModule({ manager, company }) {
                 >
                   Cancelar
                 </button>
-                <button className="save-publication" disabled={savingContent}>
+                <button
+                  className="save-publication"
+                  disabled={savingContent}
+                  aria-busy={savingContent}
+                >
                   <Save /> {savingContent ? "Guardando…" : "Guardar contenido"}
                 </button>
               </footer>
@@ -2683,12 +2704,18 @@ function CompaniesModule({
                     <button onClick={() => editCompany(company)}>
                       <Pencil /> Editar
                     </button>
-                    <button className="delete-company" onClick={() => deleteCompany(company)}>
+                    <button
+                      className="delete-company"
+                      onClick={() => deleteCompany(company)}
+                    >
                       <Trash2 /> Eliminar
                     </button>
                   </>
                 )}
-                <button className="add-company-user" onClick={() => addClient(company.name)}>
+                <button
+                  className="add-company-user"
+                  onClick={() => addClient(company.name)}
+                >
                   <UserPlus /> Agregar usuario
                 </button>
               </div>
@@ -2809,7 +2836,11 @@ function CompaniesModule({
                 <button type="button" onClick={() => setOpen(false)}>
                   Cancelar
                 </button>
-                <button className="save-publication" disabled={saving}>
+                <button
+                  className="save-publication"
+                  disabled={saving}
+                  aria-busy={saving}
+                >
                   <UserPlus />
                   {saving ? "Creando…" : "Crear usuario cliente"}
                 </button>
@@ -2960,7 +2991,11 @@ function CollaboratorsModule({ collaborators, owner, onCreated }) {
                 >
                   Cancelar
                 </button>
-                <button className="save-publication" disabled={saving}>
+                <button
+                  className="save-publication"
+                  disabled={saving}
+                  aria-busy={saving}
+                >
                   {saving ? "Creando…" : "Crear colaborador"}
                 </button>
               </footer>
@@ -3255,7 +3290,11 @@ function MonthStructureModule({ company }) {
             >
               {message}
             </span>
-            <button className="save-publication" disabled={saving}>
+            <button
+              className="save-publication"
+              disabled={saving}
+              aria-busy={saving}
+            >
               <Save />
               {saving ? "Guardando…" : "Guardar y crear espacios"}
             </button>
@@ -3475,8 +3514,17 @@ function RolePortal({ user }) {
   function companyDeleted(company) {
     const remaining = companies.filter((item) => item.id !== company.id);
     setCompanies(remaining);
-    setActiveCompany((active) => active.toLowerCase() === company.name.toLowerCase() ? remaining[0]?.name || "" : active);
-    setClients((current) => current.filter((client) => client.company_name.toLowerCase() !== company.name.toLowerCase()));
+    setActiveCompany((active) =>
+      active.toLowerCase() === company.name.toLowerCase()
+        ? remaining[0]?.name || ""
+        : active,
+    );
+    setClients((current) =>
+      current.filter(
+        (client) =>
+          client.company_name.toLowerCase() !== company.name.toLowerCase(),
+      ),
+    );
   }
   async function logout() {
     await api("/api/auth/logout", { method: "POST" });

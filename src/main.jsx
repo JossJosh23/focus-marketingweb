@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { AlertTriangle, ArrowLeft, ArrowRight, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, Copy, Dices, Eye, EyeOff, FileImage, Image, LayoutDashboard, LockKeyhole, LogOut, Mail, Menu, Pencil, Plus, RefreshCw, Save, Search, ShieldCheck, Smartphone, Trash2, Upload, UserPlus, UserRound, Users, Video, X } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Building2, CalendarDays, Check, CheckCircle2, ChevronDown, Copy, Dices, Download, Eye, EyeOff, FileDown, FileImage, Image, LayoutDashboard, LockKeyhole, LogOut, Mail, Menu, Pencil, Plus, RefreshCw, Save, Search, ShieldCheck, Smartphone, Trash2, Upload, UserPlus, UserRound, Users, Video, X } from "lucide-react";
 import { Logo } from "./components/Logo.jsx";
 import { api } from "./lib/api.js";
 import { requestCompanyName, showAppNotice } from "./lib/companyDialog.js";
+import { createCalendarPdf } from "./lib/calendarPdf.js";
 import { goTo, pathForRole } from "./lib/navigation.js";
 import "./styles.css";
 
@@ -343,6 +344,34 @@ function CompaniesModule({ companies, clients, owner, onClientCreated, onCompany
 
 function CollaboratorsModule({ collaborators, owner, onCreated }) { const [open, setOpen] = useState(false); const [form, setForm] = useState({ name: "", username: "", email: "", password: "" }); const [error, setError] = useState(""); function update(field, value) { setForm((current) => ({ ...current, [field]: value })); } async function submit(event) { event.preventDefault(); setError(""); try { const result = await api("/api/manager/collaborators", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) }); onCreated(result.collaborator); setOpen(false); } catch (requestError) { setError(requestError.message); } } return <section className="manager-clients"><header><div><span className="eyebrow">EQUIPO INTERNO</span><h2>Colaboradores</h2><p>Miembros de tu agencia que pueden trabajar en las empresas y calendarios asignados.</p></div>{owner && <button onClick={() => setOpen(true)}><UserPlus /> Nuevo colaborador</button>}</header><div className="manager-client-grid">{collaborators.map((item) => <article key={item.id}><i>{item.name.split(" ").map((part) => part[0]).slice(0, 2).join("")}</i><div><b>{item.name}</b><span>{item.email}</span><small>@{item.username}</small></div><em className={item.active ? "active" : ""}>{item.active ? "Activo" : "Suspendido"}</em></article>)}</div>{!collaborators.length && <div className="calendar-empty"><Users /><h3>Sin colaboradores</h3><p>El propietario de la agencia puede crear miembros internos.</p></div>}{open && <div className="publication-modal-backdrop"><section className="publication-modal"><header><h2>Nuevo colaborador</h2><button onClick={() => setOpen(false)}><X /></button></header><form onSubmit={submit}><div className="publication-form-grid"><label>Nombre<input value={form.name} onChange={(e) => update("name", e.target.value)} required /></label><label>Usuario<input value={form.username} onChange={(e) => update("username", e.target.value)} required /></label><label>Correo<input type="email" value={form.email} onChange={(e) => update("email", e.target.value)} required /></label><label>Contraseña<input type="password" minLength="10" value={form.password} onChange={(e) => update("password", e.target.value)} required /></label></div>{error && <div className="calendar-error">{error}</div>}<footer><button type="button" onClick={() => setOpen(false)}>Cancelar</button><button className="save-publication">Crear colaborador</button></footer></form></section></div>}</section>; }
 
+function CalendarPdfModule({ company }) {
+  const [period, setPeriod] = useState(() => new Date().toISOString().slice(0, 7));
+  const [pdfUrl, setPdfUrl] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [error, setError] = useState("");
+  const urlRef = useRef("");
+  useEffect(() => () => { if (urlRef.current) URL.revokeObjectURL(urlRef.current); }, []);
+  useEffect(() => { setPdfUrl(""); setFileName(""); if (urlRef.current) { URL.revokeObjectURL(urlRef.current); urlRef.current = ""; } }, [company]);
+  async function generatePreview() {
+    if (!company) return setError("Selecciona primero una empresa activa.");
+    setGenerating(true); setError("");
+    try {
+      const headers = { "X-Focugex-Company": company };
+      const [publicationResult, planResult] = await Promise.all([api("/api/calendar/publications", { headers }), api(`/api/calendar/plan?period=${period}`, { headers })]);
+      const publications = publicationResult.publications.filter((item) => item.date?.startsWith(period));
+      if (!publications.length) throw new Error("No hay publicaciones guardadas para el mes seleccionado.");
+      const document = await createCalendarPdf({ company, period, plan: planResult.plan, publications });
+      if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      urlRef.current = URL.createObjectURL(document.output("blob"));
+      setPdfUrl(urlRef.current);
+      setFileName(`Cronograma_${company}_${period}.pdf`.replace(/[^a-zA-Z0-9._-]+/g, "_"));
+    } catch (requestError) { setError(requestError.message); setPdfUrl(""); setFileName(""); }
+    finally { setGenerating(false); }
+  }
+  return <section className="pdf-module"><header><div><span className="eyebrow">DOCUMENTO PARA ENTREGA</span><h2>Crear PDF cronograma</h2><p>Genera el documento con las publicaciones reales de la empresa y revisa el resultado antes de descargarlo.</p></div></header><div className="pdf-controls"><label><span>Mes del cronograma</span><input className="period-picker" type="month" value={period} onChange={(event) => { setPeriod(event.target.value); setPdfUrl(""); setFileName(""); }} /></label><button className="pdf-generate" onClick={generatePreview} disabled={generating || !company}>{generating ? <RefreshCw className="spin" /> : <Eye />}{generating ? "Generando…" : "Generar vista previa"}</button>{pdfUrl && <a className="pdf-download" href={pdfUrl} download={fileName}><Download /> Descargar PDF</a>}</div>{error && <div className="calendar-error"><AlertTriangle />{error}</div>}{pdfUrl ? <div className="pdf-preview"><header><span><FileDown />Vista previa del documento</span><small>{fileName}</small></header><iframe src={pdfUrl} title={`Vista previa del cronograma de ${company}`} /></div> : <div className="pdf-empty"><FileDown /><h3>Prepara el cronograma para descargar</h3><p>Selecciona el mes y genera la vista previa. La descarga estará disponible después de revisarla.</p></div>}</section>;
+}
+
 function RolePortal({ user }) {
   const [section, setSection] = useState("overview");
   const manager = ['manager', 'collaborator'].includes(user.role);
@@ -356,7 +385,7 @@ function RolePortal({ user }) {
   function clientCreated({ client, company }) { setClients((current) => [client, ...current]); setCompanies((current) => current.some((item) => item.name.toLowerCase() === company.name.toLowerCase()) ? current : [...current, { ...company, clients: 1 }]); setActiveCompany(company.name); }
   function companyCreated(company) { setCompanies((current) => current.some((item) => item.id === company.id) ? current : [...current, company]); setActiveCompany(company.name); }
   async function logout() { await api("/api/auth/logout", { method: "POST" }); window.location.assign("/"); }
-  const modules = manager ? [...portalModules, { id: "companies", label: "Empresas", icon: Building2 }, { id: "collaborators", label: "Colaboradores", icon: Users }] : portalModules;
+  const modules = manager ? [...portalModules, { id: "calendar-pdf", label: "Crear PDF cronograma", icon: FileDown }, { id: "companies", label: "Empresas", icon: Building2 }, { id: "collaborators", label: "Colaboradores", icon: Users }] : portalModules;
   return <main className={`role-portal ${manager ? "manager-portal" : "client-portal"}`}>
     <aside className="portal-sidebar"><Logo /><span className="portal-role">{manager ? user.agency_name || "GESTOR DE MARKETING" : "PORTAL DEL CLIENTE"}</span><nav>{modules.map(({ id, label, icon: Icon }) => <button key={id} className={section === id ? "active" : ""} onClick={() => setSection(id)}><Icon />{label}</button>)}</nav><div className="portal-company"><Building2 /><span><small>{manager ? "CLIENTE ACTIVO" : "TU EMPRESA"}</small><b>{activeCompany || user.company_name || "Sin empresa seleccionada"}</b></span></div><button className="portal-logout" onClick={logout}><LogOut /> Cerrar sesión</button></aside>
     <section className="portal-workspace"><header><div><small>{manager ? "OPERACIÓN DE MARKETING" : "SEGUIMIENTO DE MARKETING"}</small><b>{modules.find((item) => item.id === section)?.label}</b></div><div className="portal-header-actions">{manager && <label className="company-switcher"><Building2 /><span><small>EMPRESA ACTIVA</small><select value={activeCompany} onChange={(e) => setActiveCompany(e.target.value)}>{companies.map((company) => <option key={company.id} value={company.name}>{company.name}</option>)}</select></span></label>}<div className="portal-profile"><i>{user.name.split(" ").map((part) => part[0]).slice(0, 2).join("")}</i><span><b>{user.name}</b><small>{manager ? "Gestor" : "Cliente"}</small></span></div></div></header>
@@ -364,6 +393,7 @@ function RolePortal({ user }) {
         {section === "overview" && <div className="portal-welcome"><div><span className="eyebrow">{manager ? "CENTRO DE GESTIÓN" : "TODO EN UN SOLO LUGAR"}</span><h1>Hola, {firstName}</h1><p>{manager ? "Organiza el contenido, los cronogramas y las entregas de tus clientes." : "Revisa el avance, los próximos contenidos y los resultados de tu marca."}</p></div>{manager && <button onClick={() => setSection("calendar")}><Plus /> Nuevo contenido</button>}</div>}
         {section === "overview" && <section className="portal-real-overview"><button onClick={() => setSection("calendar")}><CalendarDays /><span><small>CONTENIDO COMPARTIDO</small><b>Abrir calendario editorial</b><p>{manager ? "Crea y organiza las publicaciones de la empresa activa." : "Consulta las publicaciones compartidas por tu gestor."}</p></span><ArrowRight /></button>{manager && <button onClick={() => setSection("companies")}><Building2 /><span><small>CARTERA DE LA AGENCIA</small><b>Administrar empresas</b><p>Crea empresas y sus usuarios con rol cliente.</p></span><ArrowRight /></button>}<div className="portal-integrity"><ShieldCheck /><span><b>Información real y aislada por empresa</b><p>Solo se muestran datos guardados en la plataforma para {activeCompany || user.company_name || "tu empresa"}.</p></span></div></section>}
         {section === "calendar" && <CalendarModule manager={manager} company={manager ? activeCompany : user.company_name} />}
+        {section === "calendar-pdf" && <CalendarPdfModule company={activeCompany} />}
         {section === "companies" && <CompaniesModule companies={companies} clients={clients} owner={owner} onClientCreated={clientCreated} onCompanyCreated={companyCreated} />}
         {section === "collaborators" && <CollaboratorsModule collaborators={collaborators} owner={owner} onCreated={(item) => setCollaborators((current) => [item, ...current])} />}
       </div>

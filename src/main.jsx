@@ -2207,7 +2207,10 @@ function CalendarModule({ manager, company }) {
         ) : periodItems.length ? (
           <div className="publication-grid">
             {periodItems.map((item) => (
-              <article className="publication-card" key={item.id}>
+              <article
+                className={`publication-card format-${item.format}`}
+                key={item.id}
+              >
                 <div
                   className={`publication-media ${item.mediaType || "empty"}`}
                 >

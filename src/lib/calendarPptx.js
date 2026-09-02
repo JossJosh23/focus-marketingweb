@@ -48,7 +48,7 @@ export async function createCalendarPptxFromPdf({ document: pdfDocument, title }
     });
     page.cleanup();
   }
-  await pdf.destroy();
+  if (typeof pdf.cleanup === "function") pdf.cleanup();
   return pptx;
 }
 

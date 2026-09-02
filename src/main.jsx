@@ -3149,7 +3149,7 @@ function MonthStructureModule({ company }) {
   );
   function distributionLabel(total, paid) {
     const organic = Math.max(total - paid, 0);
-    return `${organic} ${organic === 1 ? "orgÃ¡nico" : "orgÃ¡nicos"} + ${paid} para pauta`;
+    return `${organic} ${organic === 1 ? "orgánico" : "orgánicos"} + ${paid} para pauta`;
   }
   function updatePostTotal(value) {
     const total = Number(value);
@@ -3261,7 +3261,7 @@ function MonthStructureModule({ company }) {
                 onChange={(event) => updatePaidPosts(event.target.value)}
                 aria-label="Cantidad de posts para pauta"
               />
-              <small><span>Todos orgÃ¡nicos</span><span>MÃ¡ximo {totalPosts} para pauta</span></small>
+              <small><span>Todos orgánicos</span><span>Máximo {totalPosts} para pauta</span></small>
             </div>
           </label>
           <label>

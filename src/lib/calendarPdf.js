@@ -20,7 +20,7 @@ function pdfSafeText(value) {
 function canvasText(doc, value, x, y, width, height, options = {}) {
   if (typeof document === "undefined") return false;
   const content = String(value || "-").normalize("NFC");
-  const scale = 5;
+  const scale = 10;
   const canvas = document.createElement("canvas");
   canvas.width = Math.ceil(width * scale);
   canvas.height = Math.ceil(height * scale);
@@ -29,7 +29,7 @@ function canvasText(doc, value, x, y, width, height, options = {}) {
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = options.color || "#172033";
   context.textBaseline = "top";
-  let fontSize = options.size || 11;
+  let fontSize = (options.size || 11) * (scale / 5);
   let lines = [];
   let lineHeight = 0;
   const wrap = () => {
@@ -54,7 +54,7 @@ function canvasText(doc, value, x, y, width, height, options = {}) {
     }
   };
   wrap();
-  while (lines.length * lineHeight > canvas.height && fontSize > 6) {
+  while (lines.length * lineHeight > canvas.height && fontSize > 12) {
     fontSize -= .5;
     wrap();
   }

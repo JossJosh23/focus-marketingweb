@@ -23,7 +23,7 @@ export async function createCalendarPptxFromPdf({ document: pdfDocument, title }
   const source = pdfDocument.output("arraybuffer");
   const pdf = await pdfjs.getDocument({ data: source }).promise;
   const pptx = new PptxGenJS();
-  pptx.defineLayout({ name: "PDF_A4_LANDSCAPE", width: 13.333, height: 9.428 });
+  pptx.defineLayout({ name: "PDF_A4_LANDSCAPE", width: 11.69, height: 8.27 });
   pptx.layout = "PDF_A4_LANDSCAPE";
   pptx.author = "FOCUGEX";
   pptx.title = title;
@@ -31,7 +31,7 @@ export async function createCalendarPptxFromPdf({ document: pdfDocument, title }
   pptx.lang = "es-EC";
   for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
     const page = await pdf.getPage(pageNumber);
-    const viewport = page.getViewport({ scale: 2 });
+    const viewport = page.getViewport({ scale: 4 });
     const canvas = document.createElement("canvas");
     canvas.width = Math.ceil(viewport.width);
     canvas.height = Math.ceil(viewport.height);
@@ -43,8 +43,8 @@ export async function createCalendarPptxFromPdf({ document: pdfDocument, title }
       data: canvas.toDataURL("image/png", .96),
       x: 0,
       y: 0,
-      w: 13.333,
-      h: 9.428,
+      w: 11.69,
+      h: 8.27,
     });
     page.cleanup();
   }

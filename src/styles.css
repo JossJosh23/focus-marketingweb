@@ -1421,3 +1421,27 @@ body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; back
   .publication-grid { grid-template-columns: 1fr !important; }
   .publication-media { height: 190px !important; }
 }
+
+/* Estructura mensual: formulario guiado y fÃ¡cil de escanear */
+.structure-module form { padding: 26px !important; gap: 14px !important; border-radius: 14px !important; background: #f7f9fd !important; }
+.structure-module form > label { min-width: 0; padding: 16px; border: 1px solid #dde5f2; border-radius: 10px; align-content: start; background: #fff; }
+.structure-module form > label > span { min-height: 28px; display: flex; align-items: flex-start; color: #344054 !important; font-size: 11px !important; line-height: 1.45; }
+.structure-module form > label.structure-wide > span { min-height: auto; }
+.structure-module input:not(.period-picker), .structure-module textarea { border-radius: 8px !important; background: #fbfcff !important; }
+.structure-module input::placeholder, .structure-module textarea::placeholder { color: #98a2b3; }
+.structure-module input:focus, .structure-module textarea:focus { border-color: #315bff !important; box-shadow: 0 0 0 3px #315bff14 !important; }
+.key-dates { margin-top: 4px !important; padding: 20px !important; border-radius: 10px !important; background: #f2f6ff !important; }
+.key-dates legend { color: #172033 !important; font-size: 12px !important; }
+.key-dates > p { color: #667085 !important; line-height: 1.5; }
+.key-dates > div.key-date-head { margin: 0 0 2px; padding: 0 3px; display: grid; grid-template-columns: 155px minmax(170px, .8fr) minmax(220px, 1.2fr) 40px; gap: 8px; }
+.key-date-head span { color: #667085; font-size: 9px; font-weight: 750; letter-spacing: .025em; }
+.key-dates > div:not(.key-date-head) { padding: 8px; border: 1px solid #dce4f2; border-radius: 9px; background: #fff; }
+.structure-module form > footer { margin-top: 4px; padding: 18px 0 0 !important; border-color: #dce4f2 !important; }
+@media (max-width: 760px) {
+  .structure-module form { padding: 14px !important; }
+  .structure-module form > label { padding: 13px; }
+  .key-dates { padding: 14px !important; }
+  .key-dates > div.key-date-head { display: none; }
+  .key-dates > div:not(.key-date-head) { grid-template-columns: 1fr !important; }
+  .key-dates > div:not(.key-date-head) button { min-height: 40px; }
+}

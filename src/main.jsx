@@ -3289,6 +3289,14 @@ function MonthStructureModule({ company }) {
               Agrega celebraciones, campañas o contenidos que deben publicarse
               en un día exacto.
             </p>
+            {!!form.keyDates.length && (
+              <div className="key-date-head" aria-hidden="true">
+                <span>Fecha</span>
+                <span>Nombre del contenido</span>
+                <span>DescripciÃ³n o intenciÃ³n</span>
+                <span></span>
+              </div>
+            )}
             {form.keyDates.map((item, index) => (
               <div key={`${item.date}-${index}`}>
                 <input

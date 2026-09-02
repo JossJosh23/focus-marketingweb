@@ -8,7 +8,7 @@ function text(doc, value, x, y, options = {}) {
   doc.setFont("helvetica", options.bold ? "bold" : "normal");
   doc.setFontSize(options.size || 10);
   doc.setTextColor(...(options.color || INK));
-  let lines = doc.splitTextToSize(String(value || "—"), options.width || 100);
+  let lines = doc.splitTextToSize(String(value ?? "—"), options.width || 100);
   if (options.maxLines && lines.length > options.maxLines) {
     lines = lines.slice(0, options.maxLines);
     lines[lines.length - 1] = `${lines[lines.length - 1].replace(/[.…]+$/, "")}…`;
@@ -99,8 +99,8 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
   doc.addPage("a4", "landscape");
   doc.setFillColor(...PAPER);
   doc.rect(0, 0, 297, 210, "F");
-  text(doc, "Una estructura clara con espacio para nuevas ideas", 18, 23, { bold: true, size: 17, width: 205, maxLines: 1 });
-  text(doc, plan?.strategySummary || "Planificación mensual de contenidos.", 18, 33, { size: 8.5, color: MUTED, width: 205, maxLines: 2 });
+  text(doc, "Plan de contenido del mes", 18, 23, { bold: true, size: 17, width: 205, maxLines: 1 });
+  text(doc, "Resumen simple de la frecuencia, formatos y líneas principales.", 18, 33, { size: 8.5, color: MUTED, width: 205, maxLines: 2 });
   doc.setDrawColor(...ORANGE); doc.setLineWidth(1); doc.line(18, 39, 40, 39);
   if (logoData) { try { addContainedImage(doc, logoData, 244, 10, 37, 24); } catch { text(doc, company, 281, 22, { bold: true, size: 12, color: GREEN, align: "right", width: 55 }); } }
   else text(doc, company, 281, 22, { bold: true, size: 12, color: GREEN, align: "right", width: 55 });
@@ -116,10 +116,12 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
   ];
   rows.forEach(([title, value, detail], index) => {
     const y = 58 + index * 32;
-    text(doc, title, 20, y, { bold: true, size: 7, color: ORANGE, width: 47, maxLines: 1 });
-    text(doc, value, 73, y + 1, { bold: true, size: 12, color: GREEN, width: 88, maxLines: 2 });
-    text(doc, detail, 166, y + 1, { size: 9, width: 105, maxLines: 3 });
-    doc.setDrawColor(216, 225, 220); doc.setLineWidth(.25); doc.line(18, y + 17, 276, y + 17);
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(220, 228, 240);
+    doc.roundedRect(18, y - 9, 258, 25, 3, 3, "FD");
+    text(doc, title, 24, y + 1, { bold: true, size: 7, color: ORANGE, width: 43, maxLines: 1 });
+    text(doc, value, 72, y + 1, { bold: true, size: 11, color: GREEN, width: 86, maxLines: 2 });
+    text(doc, detail, 164, y + 1, { size: 8.5, width: 104, maxLines: 3 });
   });
   pageFooter(doc, period, 2);
   let nextPageNumber = 3;
@@ -128,18 +130,22 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
     const group = keyDates.slice(start, start + 5);
     doc.addPage("a4", "landscape");
     doc.setFillColor(...PAPER); doc.rect(0, 0, 297, 210, "F");
-    text(doc, `${keyDates.length} ideas ya le dan dirección al mes`, 18, 23, { bold: true, size: 17, width: 205, maxLines: 1 });
-    text(doc, "Las demás fechas se mantienen abiertas para completar la planificación.", 18, 33, { size: 8.5, color: MUTED, width: 205, maxLines: 1 });
+    text(doc, `Fechas clave del mes (${keyDates.length})`, 18, 23, { bold: true, size: 17, width: 205, maxLines: 1 });
+    text(doc, "Contenidos que deben publicarse en un día específico.", 18, 33, { size: 8.5, color: MUTED, width: 205, maxLines: 1 });
     doc.setDrawColor(...ORANGE); doc.setLineWidth(1); doc.line(18, 39, 40, 39);
     if (logoData) { try { addContainedImage(doc, logoData, 244, 10, 37, 24); } catch { text(doc, company, 281, 22, { bold: true, size: 12, color: GREEN, align: "right", width: 55 }); } }
     else text(doc, company, 281, 22, { bold: true, size: 12, color: GREEN, align: "right", width: 55 });
     group.forEach((item, index) => {
       const y = 55 + index * 27;
       const dateLabel = new Date(`${item.date}T12:00:00`).toLocaleDateString("es-EC", { day: "2-digit", month: "short" }).toUpperCase().replace(".", "");
-      text(doc, dateLabel, 20, y, { bold: true, size: 8, color: ORANGE, width: 28, maxLines: 1 });
-      text(doc, item.title, 52, y, { bold: true, size: 12, color: GREEN, width: 85, maxLines: 2 });
-      text(doc, item.description || "Contenido por desarrollar", 145, y, { size: 9, width: 125, maxLines: 3 });
-      doc.setDrawColor(216, 225, 220); doc.setLineWidth(.25); doc.line(18, y + 13, 276, y + 13);
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(220, 228, 240);
+      doc.roundedRect(18, y - 9, 258, 22, 3, 3, "FD");
+      doc.setFillColor(...ORANGE);
+      doc.roundedRect(23, y - 4.5, 25, 11, 2, 2, "F");
+      text(doc, dateLabel, 35.5, y + 2, { bold: true, size: 7, color: [255, 255, 255], align: "center", width: 21, maxLines: 1 });
+      text(doc, item.title, 55, y, { bold: true, size: 11, color: GREEN, width: 82, maxLines: 2 });
+      text(doc, item.description || "Contenido por desarrollar", 143, y, { size: 8.5, width: 126, maxLines: 3 });
     });
     pageFooter(doc, period, nextPageNumber++);
   }
@@ -197,7 +203,7 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
   doc.addPage("a4", "landscape");
   doc.setFillColor(...PAPER); doc.rect(0, 0, 297, 210, "F");
   text(doc, `Así queda ${periodLabel}`, 18, 22, { bold: true, size: 18, width: 205, maxLines: 1 });
-  text(doc, "Las publicaciones, fechas clave y espacios abiertos del mes en una sola vista.", 18, 32, { size: 8.5, color: MUTED, width: 205, maxLines: 1 });
+  text(doc, "Publicaciones y fechas clave del mes en una sola vista.", 18, 32, { size: 8.5, color: MUTED, width: 205, maxLines: 1 });
   doc.setDrawColor(...ORANGE); doc.setLineWidth(1); doc.line(18, 38, 40, 38);
   if (logoData) { try { addContainedImage(doc, logoData, 244, 9, 37, 24); } catch { text(doc, company, 281, 21, { bold: true, size: 12, color: GREEN, align: "right", width: 55 }); } }
   else text(doc, company, 281, 21, { bold: true, size: 12, color: GREEN, align: "right", width: 55 });

@@ -1465,3 +1465,91 @@ body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; back
   .range-control > small { grid-column: 1; }
   .day-selector > div { grid-template-columns: repeat(7, minmax(28px, 1fr)); }
 }
+
+/* Experiencia moderna y adaptable para la estructura mensual */
+.structure-module { width: min(100%, 1500px); margin-inline: auto; }
+.structure-module > header {
+  margin-bottom: 20px;
+  padding: 4px 2px;
+  align-items: center;
+}
+.structure-module > header h2 { font-size: clamp(28px, 3vw, 38px) !important; letter-spacing: -.045em; }
+.structure-module > header p { max-width: 620px; line-height: 1.6; }
+.structure-module form {
+  align-items: start;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.structure-form-progress {
+  padding: 18px 20px;
+  border: 1px solid #d8e2f3;
+  border-radius: 14px;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto minmax(220px, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  background: linear-gradient(135deg, #fff, #f4f7ff);
+  box-shadow: 0 10px 30px #294a950d;
+}
+.structure-form-progress > div:first-child { display: grid; gap: 4px; }
+.structure-form-progress span { color: #315bff; font-size: 8px; font-weight: 850; letter-spacing: .065em; }
+.structure-form-progress strong { color: #172033; font-size: 15px; }
+.structure-form-progress small { color: #667085; font-size: 9px; white-space: nowrap; }
+.structure-progress-track { height: 9px; overflow: hidden; border-radius: 999px; background: #e7edf8; }
+.structure-progress-track i { height: 100%; display: block; border-radius: inherit; background: linear-gradient(90deg, #315bff, #7758e8 65%, #26aeea); transition: width .3s ease; }
+.structure-module form > label {
+  width: 100%;
+  min-height: 0;
+  border-color: #dbe4f2;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px #294a9509;
+  transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.structure-module form > label:hover { border-color: #bccbea; box-shadow: 0 12px 30px #294a9511; }
+.structure-module form > label:focus-within { border-color: #9eb2ed; box-shadow: 0 0 0 3px #315bff0d, 0 12px 30px #294a9512; }
+.structure-module form > label > span { color: #26334d !important; font-size: 10px !important; }
+.range-control { min-height: 72px; }
+.range-control output { border-radius: 10px; box-shadow: 0 7px 16px #315bff24; }
+.distribution-range output { box-shadow: none; }
+.range-control input[type="range"] { min-height: 22px !important; background: #dfe7f5 !important; }
+.range-control input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: linear-gradient(90deg, #315bff, #7758e8); }
+.day-selector > div { padding: 8px; border-radius: 10px; background: #f5f8fd; }
+.day-selector button { min-height: 34px; transition: border-color .15s ease, color .15s ease, background .15s ease, transform .15s ease; }
+.day-selector button:active:not(:disabled) { transform: scale(.94); }
+.key-dates { border-color: #d8e3f4 !important; box-shadow: inset 0 1px #fff; }
+.key-dates > div:not(.key-date-head) { transition: border-color .18s ease, box-shadow .18s ease; }
+.key-dates > div:not(.key-date-head):focus-within { border-color: #a9bced; box-shadow: 0 7px 20px #315bff0d; }
+.key-dates .add-key-date { min-height: 42px; border-color: #b9c9f5 !important; color: #315bff !important; background: #fff !important; }
+.structure-module form > footer { position: sticky; bottom: 10px; z-index: 5; padding: 13px 14px !important; border: 1px solid #d8e2f2 !important; border-radius: 12px; background: #fffffff2; box-shadow: 0 12px 35px #172b5519; backdrop-filter: blur(12px); }
+.structure-module form > footer button { border-radius: 9px !important; }
+@media (max-width: 900px) {
+  .structure-form-progress { grid-template-columns: 1fr auto; }
+  .structure-progress-track { grid-column: 1 / -1; grid-row: 2; }
+  .structure-form-progress small { grid-column: 2; grid-row: 1; }
+}
+@media (max-width: 760px) {
+  .structure-module { padding-bottom: 70px; }
+  .structure-module > header { margin-bottom: 12px; align-items: stretch; }
+  .structure-module > header h2 { font-size: 28px !important; }
+  .structure-module form { gap: 11px !important; }
+  .structure-form-progress { padding: 15px; grid-template-columns: 1fr; gap: 10px; }
+  .structure-form-progress small, .structure-progress-track { grid-column: 1; grid-row: auto; }
+  .structure-form-progress small { white-space: normal; }
+  .structure-module form > label { border-radius: 12px; }
+  .structure-module form > label > span { min-height: auto; margin-bottom: 4px; }
+  .range-control { min-height: 0; gap: 9px; }
+  .range-control input[type="range"] { width: calc(100% - 8px) !important; margin-inline: 4px; }
+  .day-selector > div { padding: 6px; grid-template-columns: repeat(5, 1fr); }
+  .key-dates > div:not(.key-date-head) { padding: 10px; gap: 8px; }
+  .structure-module form > footer { position: fixed; right: 10px; bottom: 10px; left: 10px; padding: 10px !important; flex-direction: row; align-items: center; }
+  .structure-module form > footer > span { max-width: 48%; font-size: 8px; }
+  .structure-module form > footer button { min-height: 46px; margin-left: auto; justify-content: center; }
+}
+@media (max-width: 430px) {
+  .structure-module > header h2 { font-size: 25px !important; }
+  .structure-module form > footer > span:empty { display: none; }
+  .structure-module form > footer > span:empty + button { width: 100%; }
+  .structure-module form > footer button { padding-inline: 12px !important; font-size: 9px !important; }
+}

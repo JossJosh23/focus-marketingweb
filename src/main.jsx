@@ -3200,6 +3200,21 @@ function MonthStructureModule({ company }) {
     30,
     Math.max(1, Number(String(form.videoBoostDetail || "").match(/\d+/)?.[0] || 10)),
   );
+  const structureChecks = [
+    Boolean(form.strategySummary?.trim()),
+    totalPosts > 0,
+    Boolean(form.postsDetail?.trim()),
+    totalVideos > 0,
+    Boolean(form.videosDetail?.trim()),
+    selectedVideoDays.length > 0,
+    Boolean(form.videoBoostDetail?.trim()),
+    Number(form.mainLinesCount || 0) > 0,
+    Boolean(form.mainLines?.trim()),
+    form.keyDates.length > 0,
+  ];
+  const structureProgress = Math.round(
+    (structureChecks.filter(Boolean).length / structureChecks.length) * 100,
+  );
   async function save(event) {
     event.preventDefault();
     setSaving(true);
@@ -3257,6 +3272,16 @@ function MonthStructureModule({ company }) {
         </div>
       ) : (
         <form onSubmit={save}>
+          <div className="structure-form-progress">
+            <div>
+              <span>AVANCE DE LA ESTRUCTURA</span>
+              <strong>{structureProgress}% completado</strong>
+            </div>
+            <div className="structure-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={structureProgress}>
+              <i style={{ width: `${structureProgress}%` }}></i>
+            </div>
+            <small>{structureChecks.filter(Boolean).length} de {structureChecks.length} apartados configurados</small>
+          </div>
           <label className="structure-wide">
             <span>1. ¿Cómo resumirías la planificación de este mes?</span>
             <textarea

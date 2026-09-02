@@ -53,8 +53,8 @@ export async function createCalendarPptxFromPdf({ document: pdfDocument, title }
 }
 
 function addHeader(slide, company, periodLabel, logoData) {
-  slide.addText("CRONOGRAMA", { x: .45, y: .25, w: 1.55, h: .28, fontFace: "Aptos Display", fontSize: 18, bold: true, color: COLORS.ink, margin: 0 });
-  slide.addText("de contenido", { x: .45, y: .55, w: 1.4, h: .2, fontFace: "Aptos", fontSize: 9, color: COLORS.green, margin: 0 });
+  slide.addText("CRONOGRAMA", { x: .45, y: .18, w: 1.55, h: .38, fontFace: "Aptos Display", fontSize: 16, bold: true, color: COLORS.ink, margin: 0, fit: "shrink" });
+  slide.addText("de contenido", { x: .45, y: .57, w: 1.4, h: .2, fontFace: "Aptos", fontSize: 9, color: COLORS.green, margin: 0 });
   slide.addShape("line", { x: 2.05, y: .25, w: 0, h: .55, line: { color: COLORS.green, width: 2 } });
   slide.addText(periodLabel.toUpperCase(), { x: 2.25, y: .3, w: 3.5, h: .22, fontFace: "Aptos", fontSize: 9, bold: true, color: COLORS.green, margin: 0 });
   slide.addText("Planificación de redes sociales", { x: 2.25, y: .57, w: 3.5, h: .18, fontFace: "Aptos", fontSize: 7, color: COLORS.muted, margin: 0 });
@@ -72,6 +72,12 @@ function baseSlide(pptx) {
   const slide = pptx.addSlide();
   slide.background = { color: COLORS.paper };
   return slide;
+}
+
+function fittedFont(value, preferred, capacity, minimum = 5.5) {
+  const length = String(value || "").length;
+  if (!length || length <= capacity) return preferred;
+  return Math.max(minimum, Number((preferred * Math.sqrt(capacity / length)).toFixed(1)));
 }
 
 export async function createCalendarPptx({ company, logoData, period, plan, publications }) {
@@ -154,15 +160,15 @@ export async function createCalendarPptx({ company, logoData, period, plan, publ
     facts.forEach(([name, value], index) => {
       const y = 1.85 + index * .82;
       slide.addText(name, { x: .75, y, w: 2.4, h: .14, fontSize: 6, bold: true, color: "DDF6ED", margin: 0 });
-      slide.addText(value, { x: .75, y: y + .22, w: 2.4, h: .42, fontSize: 8.5, bold: true, color: COLORS.white, margin: 0, fit: "shrink" });
+      slide.addText(value, { x: .75, y: y + .22, w: 2.4, h: .42, fontSize: fittedFont(value, 8.5, 70, 5.5), bold: true, color: COLORS.white, margin: 0, fit: "shrink", valign: "top" });
     });
     slide.addShape("roundRect", { x: 3.72, y: 1.15, w: 9.13, h: 5.75, rectRadius: .04, fill: { color: COLORS.white }, line: { color: COLORS.line } });
     slide.addShape("rect", { x: 3.72, y: 1.15, w: 9.13, h: .62, fill: { color: COLORS.blue }, line: { color: COLORS.blue } });
     slide.addText(item.topic || "Sin título", { x: 4, y: 1.34, w: 8.55, h: .22, fontSize: 15, bold: true, color: COLORS.white, align: "center", margin: 0, fit: "shrink" });
     slide.addText("OBJETIVO", { x: 4.05, y: 2.03, w: 1.2, h: .14, fontSize: 7, bold: true, color: COLORS.blue, margin: 0 });
-    slide.addText(item.objective || "Sin objetivo agregado", { x: 4.05, y: 2.3, w: 3.65, h: .75, fontSize: 10, bold: true, color: COLORS.ink, margin: 0, fit: "shrink" });
+    slide.addText(item.objective || "Sin objetivo agregado", { x: 4.05, y: 2.3, w: 3.65, h: .75, fontSize: fittedFont(item.objective, 10, 180, 6), bold: true, color: COLORS.ink, margin: 0, fit: "shrink", valign: "top" });
     slide.addText("TEXTO DE PUBLICACIÓN", { x: 4.05, y: 3.18, w: 2.2, h: .14, fontSize: 7, bold: true, color: COLORS.blue, margin: 0 });
-    slide.addText(item.copy || "Sin texto agregado", { x: 4.05, y: 3.48, w: 3.65, h: 2.85, fontFace: "Aptos", fontSize: 9, color: COLORS.ink, margin: 0, breakLine: false, fit: "shrink", valign: "top" });
+    slide.addText(item.copy || "Sin texto agregado", { x: 4.05, y: 3.48, w: 3.65, h: 2.85, fontFace: "Segoe UI Emoji", fontSize: fittedFont(item.copy, 9, 620, 5.5), color: COLORS.ink, margin: .02, fit: "shrink", valign: "top", breakLine: true });
     slide.addText("REFERENCIA VISUAL", { x: 8.05, y: 2.03, w: 1.9, h: .14, fontSize: 7, bold: true, color: COLORS.blue, margin: 0 });
     slide.addShape("roundRect", { x: 8.05, y: 2.3, w: 4.35, h: 4.05, rectRadius: .04, fill: { color: "EEF3F8" }, line: { color: COLORS.line } });
     if (item.mediaUrl && item.mediaType === "image") slide.addImage({ data: item.mediaUrl, x: 8.18, y: 2.43, w: 4.09, h: 3.79, sizing: "contain" });

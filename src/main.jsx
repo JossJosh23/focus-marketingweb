@@ -44,7 +44,7 @@ import { api } from "./lib/api.js";
 import { requestCompanyName, showAppNotice } from "./lib/companyDialog.js";
 import { confirmAction, requestText, showToast } from "./lib/appDialog.js";
 import { createCalendarPdf } from "./lib/calendarPdf.js";
-import { createCalendarPptxFromPdf } from "./lib/calendarPptx.js";
+import { createCalendarPptx } from "./lib/calendarPptx.js";
 import { goTo, pathForRole } from "./lib/navigation.js";
 import "./styles.css";
 import "./design-system.css";
@@ -3555,9 +3555,12 @@ function CalendarPdfModule({ company }) {
         publications,
         calendarItems: publications,
       });
-      const presentation = await createCalendarPptxFromPdf({
-        document,
-        title: `Cronograma ${company} ${period}`,
+      const presentation = await createCalendarPptx({
+        company,
+        logoData: companyResult.company.logoData,
+        period,
+        plan: planResult.plan,
+        publications,
       });
       const presentationBlob = await presentation.write({ outputType: "blob" });
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);

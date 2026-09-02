@@ -23,6 +23,7 @@
     "lucide-react": "latest",
     "nodemailer": "^9.1.0",
     "pg": "^8.23.0",
+    "pptxgenjs": "^4.0.1",
     "react": "latest",
     "react-dom": "latest",
     "vite": "latest"

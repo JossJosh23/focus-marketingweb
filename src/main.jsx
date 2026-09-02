@@ -25,6 +25,7 @@ import {
   Menu,
   Pencil,
   Plus,
+  Presentation,
   RefreshCw,
   Save,
   Search,
@@ -43,6 +44,7 @@ import { api } from "./lib/api.js";
 import { requestCompanyName, showAppNotice } from "./lib/companyDialog.js";
 import { confirmAction, requestText, showToast } from "./lib/appDialog.js";
 import { createCalendarPdf } from "./lib/calendarPdf.js";
+import { createCalendarPptx } from "./lib/calendarPptx.js";
 import { goTo, pathForRole } from "./lib/navigation.js";
 import "./styles.css";
 import "./design-system.css";
@@ -3494,21 +3496,31 @@ function CalendarPdfModule({ company }) {
   );
   const [pdfUrl, setPdfUrl] = useState("");
   const [fileName, setFileName] = useState("");
+  const [pptxUrl, setPptxUrl] = useState("");
+  const [pptxFileName, setPptxFileName] = useState("");
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
   const urlRef = useRef("");
+  const pptxUrlRef = useRef("");
   useEffect(
     () => () => {
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+      if (pptxUrlRef.current) URL.revokeObjectURL(pptxUrlRef.current);
     },
     [],
   );
   useEffect(() => {
     setPdfUrl("");
     setFileName("");
+    setPptxUrl("");
+    setPptxFileName("");
     if (urlRef.current) {
       URL.revokeObjectURL(urlRef.current);
       urlRef.current = "";
+    }
+    if (pptxUrlRef.current) {
+      URL.revokeObjectURL(pptxUrlRef.current);
+      pptxUrlRef.current = "";
     }
   }, [company]);
   async function generatePreview() {
@@ -3543,16 +3555,32 @@ function CalendarPdfModule({ company }) {
         publications,
         calendarItems: publications,
       });
+      const presentation = await createCalendarPptx({
+        company,
+        logoData: companyResult.company.logoData,
+        period,
+        plan: planResult.plan,
+        publications,
+      });
+      const presentationBlob = await presentation.write({ outputType: "blob" });
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
       urlRef.current = URL.createObjectURL(document.output("blob"));
       setPdfUrl(urlRef.current);
       setFileName(
         `Cronograma_${company}_${period}.pdf`.replace(/[^a-zA-Z0-9._-]+/g, "_"),
       );
+      if (pptxUrlRef.current) URL.revokeObjectURL(pptxUrlRef.current);
+      pptxUrlRef.current = URL.createObjectURL(presentationBlob);
+      setPptxUrl(pptxUrlRef.current);
+      setPptxFileName(
+        `Cronograma_${company}_${period}.pptx`.replace(/[^a-zA-Z0-9._-]+/g, "_"),
+      );
     } catch (requestError) {
       setError(requestError.message);
       setPdfUrl("");
       setFileName("");
+      setPptxUrl("");
+      setPptxFileName("");
     } finally {
       setGenerating(false);
     }
@@ -3580,6 +3608,8 @@ function CalendarPdfModule({ company }) {
               setPeriod(event.target.value);
               setPdfUrl("");
               setFileName("");
+              setPptxUrl("");
+              setPptxFileName("");
             }}
           />
         </label>
@@ -3594,6 +3624,11 @@ function CalendarPdfModule({ company }) {
         {pdfUrl && (
           <a className="pdf-download" href={pdfUrl} download={fileName}>
             <Download /> Descargar PDF
+          </a>
+        )}
+        {pptxUrl && (
+          <a className="pptx-download" href={pptxUrl} download={pptxFileName}>
+            <Presentation /> Descargar diapositivas
           </a>
         )}
       </div>

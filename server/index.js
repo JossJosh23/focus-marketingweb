@@ -399,26 +399,28 @@ app.post("/api/calendar/generate-slots", authenticate, requireMarketing, async (
   const company = await companyForRequest(req);
   const period = String(req.body.period || "");
   if (!company || !/^\d{4}-\d{2}$/.test(period)) return res.status(400).json({ error: "Selecciona un mes válido." });
-  const planResult = await pool.query(`SELECT posts_per_week, videos_per_month, publication_interval_days, key_dates FROM content_plans WHERE LOWER(company_name) = LOWER($1) AND period = $2`, [company, period]);
+  const planResult = await pool.query(`SELECT key_dates FROM content_plans WHERE LOWER(company_name) = LOWER($1) AND period = $2`, [company, period]);
   if (!planResult.rowCount) return res.status(404).json({ error: "Guarda primero la estructura del mes." });
-  const plan = planResult.rows[0];
-  const [year, month] = period.split("-").map(Number);
-  const days = new Date(year, month, 0).getDate();
-  const postCount = Number(plan.posts_per_week) * Math.ceil(days / 7);
-  const videoCount = Number(plan.videos_per_month);
-  const keyDates = Array.isArray(plan.key_dates) ? plan.key_dates.filter((item) => item.date && item.title) : [];
-  const genericPostCount = Math.max(0, postCount - keyDates.length);
-  const interval = Number(plan.publication_interval_days) || Math.max(1, Math.floor(days / Math.max(1, genericPostCount + videoCount)));
-  const slots = Array.from({ length: genericPostCount + videoCount }, (_, index) => ({ date: `${period}-${String(1 + (index * interval) % days).padStart(2, "0")}`, topic: `Espacio editable ${index + 1}`, copy: "", format: index < videoCount ? "reel" : "post" }));
-  for (const item of keyDates) slots.push({ date: item.date, topic: item.title, copy: item.description || "", format: "post" });
+  const keyDates = Array.isArray(planResult.rows[0].key_dates)
+    ? [...new Map(planResult.rows[0].key_dates.filter((item) => item.date && item.title).map((item) => [item.date, item])).values()]
+    : [];
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
-    await client.query(`DELETE FROM calendar_publications WHERE LOWER(company_name) = LOWER($1) AND TO_CHAR(publication_date, 'YYYY-MM') = $2 AND is_draft_slot = TRUE`, [company, period]);
-    for (const slot of slots) await client.query(`INSERT INTO calendar_publications (id, company_name, created_by, publication_date, topic, copy, format, platforms, is_draft_slot) VALUES ($1,$2,$3,$4,$5,$6,$7,'{}',TRUE)`, [crypto.randomUUID(), company, req.user.id, slot.date, slot.topic, slot.copy, slot.format]);
+    await client.query("SELECT pg_advisory_xact_lock(hashtext(LOWER($1) || ':' || $2))", [company, period]);
+    await client.query(`DELETE FROM calendar_publications WHERE LOWER(company_name) = LOWER($1) AND TO_CHAR(publication_date, 'YYYY-MM') = $2 AND is_draft_slot = TRUE AND topic ~ '^Espacio editable [0-9]+$'`, [company, period]);
+    const existingResult = await client.query(`SELECT TO_CHAR(publication_date, 'YYYY-MM-DD') AS date FROM calendar_publications WHERE LOWER(company_name) = LOWER($1) AND TO_CHAR(publication_date, 'YYYY-MM') = $2`, [company, period]);
+    const occupiedDates = new Set(existingResult.rows.map((item) => item.date));
+    let addedCount = 0;
+    for (const item of keyDates) {
+      if (occupiedDates.has(item.date)) continue;
+      await client.query(`INSERT INTO calendar_publications (id, company_name, created_by, publication_date, topic, copy, format, platforms, is_draft_slot) VALUES ($1,$2,$3,$4,$5,$6,'post','{}',TRUE)`, [crypto.randomUUID(), company, req.user.id, item.date, item.title, item.description || ""]);
+      occupiedDates.add(item.date);
+      addedCount += 1;
+    }
     await client.query("COMMIT");
-    await logActivity(req.user.id, "calendar.slots_generated", "company", company, { period, count: slots.length });
-    res.json({ count: slots.length });
+    await logActivity(req.user.id, "calendar.slots_generated", "company", company, { period, count: addedCount });
+    res.json({ count: addedCount });
   } catch (error) { await client.query("ROLLBACK"); throw error; }
   finally { client.release(); }
 });

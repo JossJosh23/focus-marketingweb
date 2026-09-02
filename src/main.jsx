@@ -1526,6 +1526,18 @@ const platformMarks = {
   YouTube: "▶",
 };
 function CalendarContentCard({ item, onSelect }) {
+  if (item.isDraftSlot) {
+    return (
+      <div
+        className="calendar-pending-slot"
+        aria-label={`Contenido pendiente para el ${item.date}`}
+      >
+        <span>PENDIENTE</span>
+        <strong>Contenido por completar</strong>
+        <small>Esta fecha aÃºn no ha sido llenada</small>
+      </div>
+    );
+  }
   const status =
     item.approvalStatus === "approved"
       ? "Aprobado"
@@ -1643,6 +1655,9 @@ function CalendarPresentation({
         <span className="key-date">
           <i></i>Fecha clave
         </span>
+        <span className="pending-slot">
+          <i></i>Por completar
+        </span>
         <small>Selecciona un contenido para ver todos sus detalles</small>
       </div>
       <div className="month-calendar">
@@ -1730,7 +1745,13 @@ function WeekPresentation({ items, selectedDate, onSelectContent }) {
                 </small>
                 <b>{date.getDate()}</b>
               </header>
-              {entries.map((item) => (
+              {entries.map((item) => item.isDraftSlot ? (
+                <div className="calendar-pending-slot" key={item.id}>
+                  <span>PENDIENTE</span>
+                  <strong>Contenido por completar</strong>
+                  <small>Esta fecha aÃºn no ha sido llenada</small>
+                </div>
+              ) : (
                 <button
                   type="button"
                   className={`${item.distributionType || "organic"} format-${item.format}`}
@@ -1756,23 +1777,29 @@ function WeekPresentation({ items, selectedDate, onSelectContent }) {
 
 function DayPresentation({ items, selectedDate, company }) {
   const entries = items.filter((item) => item.date === selectedDate);
+  const completedEntries = entries.filter((item) => !item.isDraftSlot);
+  const hasPendingSlot = entries.some((item) => item.isDraftSlot);
   const statusLabel = (item) =>
     item.approvalStatus === "approved"
       ? "APROBADO"
       : item.approvalStatus === "changes_requested"
         ? "CAMBIOS SOLICITADOS"
         : "PENDIENTE";
-  if (!entries.length)
+  if (!completedEntries.length)
     return (
-      <section className="daily-empty">
+      <section className={`daily-empty ${hasPendingSlot ? "has-pending-slot" : ""}`}>
         <CalendarDays />
-        <h3>Sin contenido para este día</h3>
-        <p>Selecciona otra fecha para consultar su ficha de presentación.</p>
+        <h3>{hasPendingSlot ? "Contenido pendiente" : "Sin contenido para este día"}</h3>
+        <p>
+          {hasPendingSlot
+            ? "Esta fecha forma parte de la estructura mensual, pero su contenido aún no ha sido llenado."
+            : "Selecciona otra fecha para consultar su ficha de presentación."}
+        </p>
       </section>
     );
   return (
     <div className="daily-presentations">
-      {entries.map((item, index) => (
+      {completedEntries.map((item, index) => (
         <section className="daily-sheet" key={item.id}>
           <header>
             <div>
@@ -1922,6 +1949,7 @@ function CalendarModule({ manager, company }) {
   const preview = !manager || clientPreview;
   const periodItems = items.filter((item) => item.date?.startsWith(period));
   const presentationItems = periodItems.filter((item) => !item.isDraftSlot);
+  const clientCalendarItems = preview ? periodItems : presentationItems;
   const totalContents = periodItems.length;
   const completedContents = presentationItems.length;
   const pendingContents = Math.max(totalContents - completedContents, 0);
@@ -2222,7 +2250,7 @@ function CalendarModule({ manager, company }) {
       {preview && viewMode === "month" && (
         <CalendarPresentation
           plan={plan}
-          items={presentationItems}
+          items={clientCalendarItems}
           period={period}
           company={company}
           onSelectContent={(item) => setSelectedContent(item)}
@@ -2230,14 +2258,14 @@ function CalendarModule({ manager, company }) {
       )}
       {preview && viewMode === "week" && (
         <WeekPresentation
-          items={presentationItems}
+          items={clientCalendarItems}
           selectedDate={selectedDate}
           onSelectContent={(item) => setSelectedContent(item)}
         />
       )}
       {preview && viewMode === "day" && (
         <DayPresentation
-          items={presentationItems}
+          items={clientCalendarItems}
           selectedDate={selectedDate}
           company={company}
         />
@@ -3139,7 +3167,9 @@ function MonthStructureModule({ company }) {
       });
       setForm((current) => ({ ...current, ...plan }));
       setMessage(
-        `Estructura guardada y ${generated.count} espacios editables creados en el calendario.`,
+        generated.count
+          ? `Estructura guardada. Se agregaron ${generated.count} fechas nuevas al calendario.`
+          : "Estructura guardada. No hay fechas nuevas para agregar al calendario.",
       );
     } catch (error) {
       setMessage(error.message);
@@ -3328,7 +3358,7 @@ function MonthStructureModule({ company }) {
               aria-busy={saving}
             >
               <Save />
-              {saving ? "Guardando…" : "Guardar y crear espacios"}
+              {saving ? "Guardando…" : "Guardar estrategia y fechas"}
             </button>
           </footer>
         </form>
@@ -3375,7 +3405,7 @@ function CalendarPdfModule({ company }) {
         item.date?.startsWith(period),
       );
       const publications = calendarItems.filter((item) => !item.isDraftSlot);
-      if (!calendarItems.length && !planResult.plan?.keyDates?.length)
+      if (!publications.length && !planResult.plan?.keyDates?.length)
         throw new Error(
           "No hay publicaciones ni fechas específicas guardadas para el mes seleccionado.",
         );
@@ -3385,7 +3415,7 @@ function CalendarPdfModule({ company }) {
         period,
         plan: planResult.plan,
         publications,
-        calendarItems,
+        calendarItems: publications,
       });
       if (urlRef.current) URL.revokeObjectURL(urlRef.current);
       urlRef.current = URL.createObjectURL(document.output("blob"));

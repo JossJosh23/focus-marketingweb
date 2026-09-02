@@ -1048,6 +1048,7 @@ body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; back
 .calendar-legend .reel i { background: #7758e8; }
 .calendar-legend .historia i { background: #e59a22; }
 .calendar-legend .key-date i { background: #315bff; }
+.calendar-legend .pending-slot i { background: #98a2b3; }
 .calendar-legend small { margin-left: auto; color: #8490a5; font-size: 9px; }
 .month-calendar { padding: 8px 22px 24px !important; background: #f8faff; }
 .weekdays { margin-bottom: 7px !important; }
@@ -1100,6 +1101,27 @@ body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; back
   filter: none !important;
   transform: translateY(-1px);
 }
+.calendar-pending-slot {
+  min-height: 86px;
+  padding: 10px;
+  border: 1px dashed #aeb9cb;
+  border-left: 3px solid #98a2b3;
+  border-radius: 7px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  color: #667085;
+  background: #f7f9fc;
+}
+.calendar-pending-slot > span {
+  color: #667085;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: .06em;
+}
+.calendar-pending-slot > strong { color: #344054; font-size: 9px; }
+.calendar-pending-slot > small { color: #8490a5; font-size: 7px; line-height: 1.35; }
 .calendar-card-top em {
   padding: 3px 6px !important;
   border-radius: 4px !important;

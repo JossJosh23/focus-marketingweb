@@ -17,6 +17,52 @@ function pdfSafeText(value) {
     .trim();
 }
 
+function canvasText(doc, value, x, y, width, height, options = {}) {
+  if (typeof document === "undefined") return false;
+  const content = String(value || "-").normalize("NFC");
+  const scale = 5;
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.ceil(width * scale);
+  canvas.height = Math.ceil(height * scale);
+  const context = canvas.getContext("2d");
+  if (!context) return false;
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = options.color || "#172033";
+  context.textBaseline = "top";
+  let fontSize = options.size || 11;
+  let lines = [];
+  let lineHeight = 0;
+  const wrap = () => {
+    context.font = `${options.bold ? "700" : "400"} ${fontSize}px Arial, "Segoe UI Emoji", "Apple Color Emoji", sans-serif`;
+    lineHeight = fontSize * 1.28;
+    lines = [];
+    for (const paragraph of content.replace(/\r/g, "").split("\n")) {
+      if (!paragraph.trim()) {
+        lines.push("");
+        continue;
+      }
+      let current = "";
+      for (const word of paragraph.split(/\s+/)) {
+        const candidate = current ? `${current} ${word}` : word;
+        if (context.measureText(candidate).width <= canvas.width || !current) current = candidate;
+        else {
+          lines.push(current);
+          current = word;
+        }
+      }
+      if (current) lines.push(current);
+    }
+  };
+  wrap();
+  while (lines.length * lineHeight > canvas.height && fontSize > 6) {
+    fontSize -= .5;
+    wrap();
+  }
+  lines.forEach((line, index) => context.fillText(line, 0, index * lineHeight, canvas.width));
+  doc.addImage(canvas.toDataURL("image/png"), "PNG", x, y, width, height, undefined, "FAST");
+  return true;
+}
+
 function text(doc, value, x, y, options = {}) {
   doc.setFont("helvetica", options.bold ? "bold" : "normal");
   doc.setFontSize(options.size || 10);
@@ -205,7 +251,8 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
     label(doc, "Objetivo", 98, 66);
     text(doc, item.objective || "Sin objetivo agregado", 98, 78, { bold: true, size: 9, width: 74, maxLines: 3 });
     label(doc, "Texto de publicación", 98, 103);
-    text(doc, item.copy || "Sin texto agregado", 98, 115, { size: 8.5, width: 74, maxLines: 14 });
+    if (!canvasText(doc, item.copy || "Sin texto agregado", 98, 113, 74, 62, { size: 12 }))
+      text(doc, item.copy || "Sin texto agregado", 98, 115, { size: 7, width: 74, maxLines: 23 });
     label(doc, "Referencia visual", 187, 66);
     doc.setFillColor(231, 240, 235);
     doc.setDrawColor(201, 217, 208);

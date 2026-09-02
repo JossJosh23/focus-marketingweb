@@ -53,6 +53,7 @@ function pageFooter(doc, period, page) {
 }
 
 function statusLabel(item) {
+  if (item.isDraftSlot) return "POR COMPLETAR";
   if (item.approvalStatus === "approved") return "APROBADO";
   if (item.approvalStatus === "changes_requested") return "CAMBIOS SOLICITADOS";
   return "PENDIENTE";

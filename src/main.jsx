@@ -3490,10 +3490,15 @@ function CalendarPdfModule({ company }) {
       const calendarItems = publicationResult.publications.filter((item) =>
         item.date?.startsWith(period),
       );
-      const publications = calendarItems.filter((item) => !item.isDraftSlot);
-      if (!publications.length)
+      const keyDateDays = new Set(
+        (planResult.plan?.keyDates || []).map((item) => item.date),
+      );
+      const publications = calendarItems.filter(
+        (item) => !item.isDraftSlot || keyDateDays.has(item.date),
+      );
+      if (!publications.length && !planResult.plan)
         throw new Error(
-          "No hay publicaciones completadas en el calendario para generar el PDF de este mes.",
+          "Primero agrega la estructura del mes o una publicación para generar el PDF.",
         );
       const document = await createCalendarPdf({
         company,

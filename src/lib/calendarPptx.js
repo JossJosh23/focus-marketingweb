@@ -9,6 +9,49 @@ const COLORS = {
   white: "FFFFFF",
 };
 
+export async function createCalendarPptxFromPdf({ document: pdfDocument, title }) {
+  if (typeof window === "undefined" || typeof document === "undefined")
+    throw new Error("La exportación de diapositivas requiere un navegador.");
+  const [{ default: PptxGenJS }, pdfjs] = await Promise.all([
+    import("pptxgenjs"),
+    import("pdfjs-dist/build/pdf.mjs"),
+  ]);
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/build/pdf.worker.min.mjs",
+    import.meta.url,
+  ).href;
+  const source = pdfDocument.output("arraybuffer");
+  const pdf = await pdfjs.getDocument({ data: source }).promise;
+  const pptx = new PptxGenJS();
+  pptx.defineLayout({ name: "PDF_A4_LANDSCAPE", width: 13.333, height: 9.428 });
+  pptx.layout = "PDF_A4_LANDSCAPE";
+  pptx.author = "FOCUGEX";
+  pptx.title = title;
+  pptx.subject = title;
+  pptx.lang = "es-EC";
+  for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+    const page = await pdf.getPage(pageNumber);
+    const viewport = page.getViewport({ scale: 2 });
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.ceil(viewport.width);
+    canvas.height = Math.ceil(viewport.height);
+    const context = canvas.getContext("2d", { alpha: false });
+    await page.render({ canvasContext: context, viewport }).promise;
+    const slide = pptx.addSlide();
+    slide.background = { color: "F7F9FF" };
+    slide.addImage({
+      data: canvas.toDataURL("image/png", .96),
+      x: 0,
+      y: 0,
+      w: 13.333,
+      h: 9.428,
+    });
+    page.cleanup();
+  }
+  await pdf.destroy();
+  return pptx;
+}
+
 function addHeader(slide, company, periodLabel, logoData) {
   slide.addText("CRONOGRAMA", { x: .45, y: .25, w: 1.55, h: .28, fontFace: "Aptos Display", fontSize: 18, bold: true, color: COLORS.ink, margin: 0 });
   slide.addText("de contenido", { x: .45, y: .55, w: 1.4, h: .2, fontFace: "Aptos", fontSize: 9, color: COLORS.green, margin: 0 });

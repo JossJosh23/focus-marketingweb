@@ -269,7 +269,7 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
   doc.addPage("a4", "landscape");
   doc.setFillColor(...PAPER); doc.rect(0, 0, 297, 210, "F");
   text(doc, `Así queda ${periodLabel}`, 18, 22, { bold: true, size: 18, width: 205, maxLines: 1 });
-  text(doc, "Publicaciones y fechas clave del mes en una sola vista.", 18, 32, { size: 8.5, color: MUTED, width: 205, maxLines: 1 });
+  text(doc, "Publicaciones del mes en una sola vista.", 18, 32, { size: 8.5, color: MUTED, width: 205, maxLines: 1 });
   doc.setDrawColor(...ORANGE); doc.setLineWidth(1); doc.line(18, 38, 40, 38);
   if (logoData) { try { addContainedImage(doc, logoData, 244, 9, 37, 24); } catch { text(doc, company, 281, 21, { bold: true, size: 12, color: GREEN, align: "right", width: 55 }); } }
   else text(doc, company, 281, 21, { bold: true, size: 12, color: GREEN, align: "right", width: 55 });

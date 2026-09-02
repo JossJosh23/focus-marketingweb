@@ -3081,7 +3081,6 @@ function MonthStructureModule({ company }) {
     videoBoostDetail: "",
     mainLinesCount: 0,
     mainLines: "",
-    publicationIntervalDays: 0,
     keyDates: [],
   });
   const [loading, setLoading] = useState(true);
@@ -3107,7 +3106,6 @@ function MonthStructureModule({ company }) {
             videoBoostDetail: "",
             mainLinesCount: 0,
             mainLines: "",
-            publicationIntervalDays: 0,
             keyDates: [],
             ...(plan || {}),
           }),
@@ -3285,21 +3283,8 @@ function MonthStructureModule({ company }) {
               onChange={(event) => update("mainLines", event.target.value)}
             />
           </label>
-          <label className="structure-wide">
-            <span>10. ¿Cada cuántos días debe existir una publicación?</span>
-            <input
-              type="number"
-              min="1"
-              max="31"
-              value={form.publicationIntervalDays || 0}
-              onChange={(event) =>
-                update("publicationIntervalDays", Number(event.target.value))
-              }
-              placeholder="Ej. cada 2 días"
-            />
-          </label>
           <fieldset className="key-dates">
-            <legend>11. Fechas específicas del mes</legend>
+            <legend>10. Fechas específicas del mes</legend>
             <p>
               Agrega celebraciones, campañas o contenidos que deben publicarse
               en un día exacto.

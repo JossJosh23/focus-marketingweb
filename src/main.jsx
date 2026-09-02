@@ -3132,7 +3132,7 @@ function MonthStructureModule({ company }) {
       ...current,
       keyDates: [
         ...current.keyDates,
-        { date: `${period}-01`, title: "", description: "", format: "post" },
+        { id: crypto.randomUUID(), date: `${period}-01`, title: "", description: "", format: "post" },
       ],
     }));
   }

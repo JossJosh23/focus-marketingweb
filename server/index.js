@@ -369,7 +369,7 @@ app.put("/api/calendar/plan", authenticate, requireMarketing, async (req, res) =
   const videoBoostDetail = String(req.body.videoBoostDetail || "").trim();
   const mainLinesCount = Number(req.body.mainLinesCount || 0);
   const publicationIntervalDays = Number(req.body.publicationIntervalDays || 0);
-  const keyDates = Array.isArray(req.body.keyDates) ? req.body.keyDates.map((item) => ({ date: String(item.date || ""), title: String(item.title || "").trim(), description: String(item.description || "").trim(), format: ["post", "reel"].includes(item.format) ? item.format : "post" })) : [];
+  const keyDates = Array.isArray(req.body.keyDates) ? req.body.keyDates.map((item) => ({ id: /^[0-9a-f-]{36}$/i.test(String(item.id || "")) ? String(item.id) : crypto.randomUUID(), date: String(item.date || ""), title: String(item.title || "").trim(), description: String(item.description || "").trim(), format: ["post", "reel"].includes(item.format) ? item.format : "post" })) : [];
   const validKeyDates = keyDates.length <= 40 && keyDates.every((item) => item.date.startsWith(`${period}-`) && validIsoDate(item.date) && item.title.length <= 200 && item.description.length <= 500 && ["post", "reel"].includes(item.format));
   if (!company || !/^\d{4}-\d{2}$/.test(period) || !Number.isInteger(postsPerWeek) || postsPerWeek < 0 || postsPerWeek > 30 || !Number.isInteger(videosPerMonth) || videosPerMonth < 0 || videosPerMonth > 100 || !Number.isInteger(mainLinesCount) || mainLinesCount < 0 || mainLinesCount > 100 || !Number.isInteger(publicationIntervalDays) || publicationIntervalDays < 0 || publicationIntervalDays > 31 || !validKeyDates || strategySummary.length > 5000 || mainLines.length > 5000 || [postsDetail, videosDetail, videoBoostDetail, videoSchedule].some((value) => value.length > 500)) return res.status(400).json({ error: "La configuración mensual no es válida." });
   const result = await pool.query(`INSERT INTO content_plans (company_name, period, strategy_summary, posts_per_week, videos_per_month, video_schedule, main_lines, posts_detail, videos_detail, video_boost_detail, main_lines_count, publication_interval_days, key_dates, updated_by)
@@ -402,25 +402,30 @@ app.post("/api/calendar/generate-slots", authenticate, requireMarketing, async (
   const planResult = await pool.query(`SELECT key_dates FROM content_plans WHERE LOWER(company_name) = LOWER($1) AND period = $2`, [company, period]);
   if (!planResult.rowCount) return res.status(404).json({ error: "Guarda primero la estructura del mes." });
   const keyDates = Array.isArray(planResult.rows[0].key_dates)
-    ? [...new Map(planResult.rows[0].key_dates.filter((item) => item.date && item.title).map((item) => [item.date, item])).values()]
+    ? [...new Map(planResult.rows[0].key_dates.filter((item) => item.date && item.title).map((item) => [item.id || `${item.date}:${item.title.toLowerCase()}`, item])).values()]
     : [];
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
     await client.query("SELECT pg_advisory_xact_lock(hashtext(LOWER($1) || ':' || $2))", [company, period]);
     await client.query(`DELETE FROM calendar_publications WHERE LOWER(company_name) = LOWER($1) AND TO_CHAR(publication_date, 'YYYY-MM') = $2 AND is_draft_slot = TRUE AND topic ~ '^Espacio editable [0-9]+$'`, [company, period]);
-    const existingResult = await client.query(`SELECT id, TO_CHAR(publication_date, 'YYYY-MM-DD') AS date, is_draft_slot FROM calendar_publications WHERE LOWER(company_name) = LOWER($1) AND TO_CHAR(publication_date, 'YYYY-MM') = $2`, [company, period]);
-    const existingByDate = new Map(existingResult.rows.map((item) => [item.date, item]));
+    const existingResult = await client.query(`SELECT id, TO_CHAR(publication_date, 'YYYY-MM-DD') AS date, topic, production_reference, is_draft_slot FROM calendar_publications WHERE LOWER(company_name) = LOWER($1) AND TO_CHAR(publication_date, 'YYYY-MM') = $2`, [company, period]);
+    const existingItems = existingResult.rows;
     let addedCount = 0;
     for (const item of keyDates) {
-      const existing = existingByDate.get(item.date);
+      const reference = `key-date:${item.id}`;
+      const existing = existingItems.find((entry) =>
+        entry.production_reference === reference ||
+        (entry.date === item.date && entry.topic?.trim().toLowerCase() === item.title.trim().toLowerCase())
+      );
       if (existing) {
         if (existing.is_draft_slot)
-          await client.query(`UPDATE calendar_publications SET topic = $1, copy = $2, format = $3, updated_at = NOW() WHERE id = $4`, [item.title, item.description || "", item.format || "post", existing.id]);
+          await client.query(`UPDATE calendar_publications SET topic = $1, copy = $2, format = $3, production_reference = $4, updated_at = NOW() WHERE id = $5`, [item.title, item.description || "", item.format || "post", reference, existing.id]);
         continue;
       }
-      await client.query(`INSERT INTO calendar_publications (id, company_name, created_by, publication_date, topic, copy, format, platforms, is_draft_slot) VALUES ($1,$2,$3,$4,$5,$6,$7,'{}',TRUE)`, [crypto.randomUUID(), company, req.user.id, item.date, item.title, item.description || "", item.format || "post"]);
-      existingByDate.set(item.date, { date: item.date, is_draft_slot: true });
+      const publicationId = crypto.randomUUID();
+      await client.query(`INSERT INTO calendar_publications (id, company_name, created_by, publication_date, topic, copy, format, platforms, production_reference, is_draft_slot) VALUES ($1,$2,$3,$4,$5,$6,$7,'{}',$8,TRUE)`, [publicationId, company, req.user.id, item.date, item.title, item.description || "", item.format || "post", reference]);
+      existingItems.push({ id: publicationId, date: item.date, topic: item.title, production_reference: reference, is_draft_slot: true });
       addedCount += 1;
     }
     await client.query("COMMIT");

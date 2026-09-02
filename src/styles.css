@@ -1191,6 +1191,61 @@ body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; back
   box-shadow: none !important;
 }
 .calendar-toolbar .primary-action:hover { background: #244be0 !important; transform: translateY(-1px); }
+.calendar-progress {
+  margin: 0 0 18px;
+  padding: 18px 22px;
+  border: 1px solid #dce4f2;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 10px 30px #27467f0a;
+}
+.calendar-progress-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+}
+.calendar-progress-heading > div { display: grid; gap: 5px; }
+.calendar-progress-heading span {
+  color: #315bff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .065em;
+}
+.calendar-progress-heading strong { color: #172033; font-size: 18px; }
+.calendar-progress-heading p { margin: 0; color: #667085; font-size: 11px; }
+.calendar-progress-heading p b { color: #172033; font-size: 13px; }
+.calendar-progress-track {
+  height: 10px;
+  margin-top: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e9eef8;
+}
+.calendar-progress-track > span {
+  height: 100%;
+  min-width: 0;
+  display: block;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #315bff, #7758e8 65%, #26aeea);
+  box-shadow: 0 0 14px #315bff42;
+  transition: width .35s ease;
+}
+.calendar-progress-stats {
+  margin-top: 11px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  color: #526078;
+  font-size: 10px;
+  font-weight: 650;
+}
+.calendar-progress-stats span { display: inline-flex; align-items: center; gap: 6px; }
+.calendar-progress-stats i { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e7; }
+.calendar-progress-stats i.completed { background: #20a979; }
+.calendar-progress-stats i.pending { background: #e59a22; }
+.calendar-progress-stats small { margin-left: auto; color: #8490a5; font-size: 9px; }
 .publication-grid {
   margin-top: 0 !important;
   grid-template-columns: repeat(3, minmax(260px, 1fr)) !important;
@@ -1337,6 +1392,10 @@ body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; back
   .calendar-module:not(:has(.calendar-presentation)) .calendar-toolbar { padding: 17px; align-items: stretch; }
   .calendar-toolbar > div:last-child { justify-content: stretch; }
   .calendar-toolbar > div:last-child > * { width: 100%; flex: 1 1 170px; }
+  .calendar-progress { padding: 16px 17px; }
+  .calendar-progress-heading { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .calendar-progress-stats { align-items: flex-start; flex-direction: column; }
+  .calendar-progress-stats small { margin-left: 0; }
   .publication-grid { grid-template-columns: 1fr !important; }
   .publication-media { height: 190px !important; }
 }

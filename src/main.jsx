@@ -1922,6 +1922,12 @@ function CalendarModule({ manager, company }) {
   const preview = !manager || clientPreview;
   const periodItems = items.filter((item) => item.date?.startsWith(period));
   const presentationItems = periodItems.filter((item) => !item.isDraftSlot);
+  const totalContents = periodItems.length;
+  const completedContents = presentationItems.length;
+  const pendingContents = Math.max(totalContents - completedContents, 0);
+  const monthProgress = totalContents
+    ? Math.round((completedContents / totalContents) * 100)
+    : 0;
   useEffect(() => {
     let active = true;
     const legacyKey = `focugex_calendar_${(company || "general").toLowerCase().replace(/[^a-z0-9]/g, "_")}`;
@@ -2170,6 +2176,32 @@ function CalendarModule({ manager, company }) {
           )}
         </div>
       </header>
+      <section className="calendar-progress" aria-label="Progreso del contenido mensual">
+        <div className="calendar-progress-heading">
+          <div>
+            <span>PROGRESO DEL MES</span>
+            <strong>{monthProgress}% completado</strong>
+          </div>
+          <p>
+            <b>{completedContents}</b> de <b>{totalContents}</b> contenidos listos
+          </p>
+        </div>
+        <div
+          className="calendar-progress-track"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow={monthProgress}
+          aria-label={`${monthProgress}% del contenido mensual completado`}
+        >
+          <span style={{ width: `${monthProgress}%` }} />
+        </div>
+        <div className="calendar-progress-stats">
+          <span><i className="completed" />{completedContents} contenidos creados</span>
+          <span><i className="pending" />{pendingContents} contenidos por completar</span>
+          <small>{totalContents ? `${monthProgress}% de la estructura mensual` : "Aún no hay una estructura para este mes"}</small>
+        </div>
+      </section>
       {preview && (
         <nav className="calendar-view-switch" aria-label="Vista del calendario">
           {[

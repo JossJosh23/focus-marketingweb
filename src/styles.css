@@ -1267,6 +1267,7 @@ body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; back
 .calendar-progress-stats i { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e7; }
 .calendar-progress-stats i.completed { background: #20a979; }
 .calendar-progress-stats i.pending { background: #e59a22; }
+.calendar-progress-stats .format-quota { padding: 5px 8px; border: 1px solid #dce4f2; border-radius: 6px; color: #526078; background: #f7f9fd; font-size: 9px; }
 .calendar-progress-stats small { margin-left: auto; color: #8490a5; font-size: 9px; }
 .publication-grid {
   margin-top: 0 !important;

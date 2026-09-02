@@ -1950,11 +1950,21 @@ function CalendarModule({ manager, company }) {
   const periodItems = items.filter((item) => item.date?.startsWith(period));
   const presentationItems = periodItems.filter((item) => !item.isDraftSlot);
   const clientCalendarItems = preview ? periodItems : presentationItems;
-  const totalContents = periodItems.length;
-  const completedContents = presentationItems.length;
-  const pendingContents = Math.max(totalContents - completedContents, 0);
+  const daysInCalendarMonth = new Date(Number(period.slice(0, 4)), Number(period.slice(5, 7)), 0).getDate();
+  const weeksInCalendarMonth = Math.ceil(daysInCalendarMonth / 7);
+  const formatCounts = {
+    post: periodItems.filter((item) => item.format === "post").length,
+    reel: periodItems.filter((item) => item.format === "reel").length,
+    historia: periodItems.filter((item) => item.format === "historia").length,
+  };
+  const postLimit = Number(plan?.postsPerWeek || 0) * weeksInCalendarMonth;
+  const reelLimit = Number(plan?.videosPerMonth || 0);
+  const plannedContents = postLimit + reelLimit + formatCounts.historia;
+  const createdContents = periodItems.length;
+  const totalContents = plannedContents || createdContents;
+  const pendingContents = Math.max(totalContents - createdContents, 0);
   const monthProgress = totalContents
-    ? Math.round((completedContents / totalContents) * 100)
+    ? Math.min(100, Math.round((createdContents / totalContents) * 100))
     : 0;
   useEffect(() => {
     let active = true;
@@ -2055,6 +2065,17 @@ function CalendarModule({ manager, company }) {
   async function save(event) {
     event.preventDefault();
     if (savingContent) return;
+    const selectedLimit = { post: postLimit, reel: reelLimit }[editing.format];
+    const hasSelectedLimit = Boolean(plan) && ["post", "reel"].includes(editing.format);
+    const prospectiveCount = periodItems.filter(
+      (item) => item.id !== editing.id && item.format === editing.format,
+    ).length + 1;
+    if (hasSelectedLimit && prospectiveCount > selectedLimit) {
+      setCalendarError(
+        `Alcanzaste el límite mensual de ${selectedLimit} ${editing.format === "reel" ? "reels" : "posts"} definido en la estructura.`,
+      );
+      return;
+    }
     setSavingContent(true);
     setCalendarError("");
     try {
@@ -2211,7 +2232,7 @@ function CalendarModule({ manager, company }) {
             <strong>{monthProgress}% completado</strong>
           </div>
           <p>
-            <b>{completedContents}</b> de <b>{totalContents}</b> contenidos listos
+            <b>{createdContents}</b> de <b>{totalContents}</b> contenidos creados
           </p>
         </div>
         <div
@@ -2225,9 +2246,12 @@ function CalendarModule({ manager, company }) {
           <span style={{ width: `${monthProgress}%` }} />
         </div>
         <div className="calendar-progress-stats">
-          <span><i className="completed" />{completedContents} contenidos creados</span>
+          <span><i className="completed" />{createdContents} contenidos creados</span>
           <span><i className="pending" />{pendingContents} contenidos por completar</span>
-          <small>{totalContents ? `${monthProgress}% de la estructura mensual` : "Aún no hay una estructura para este mes"}</small>
+          <span className="format-quota">Posts {formatCounts.post}/{plan ? postLimit : "sin límite"}</span>
+          <span className="format-quota">Reels {formatCounts.reel}/{plan ? reelLimit : "sin límite"}</span>
+          <span className="format-quota">Historias {formatCounts.historia}</span>
+          <small>{totalContents ? `${monthProgress}% del objetivo mensual` : "Aún no hay una estructura para este mes"}</small>
         </div>
       </section>
       {preview && (

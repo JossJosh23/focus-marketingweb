@@ -3491,9 +3491,9 @@ function CalendarPdfModule({ company }) {
         item.date?.startsWith(period),
       );
       const publications = calendarItems.filter((item) => !item.isDraftSlot);
-      if (!publications.length && !planResult.plan?.keyDates?.length)
+      if (!publications.length)
         throw new Error(
-          "No hay publicaciones ni fechas específicas guardadas para el mes seleccionado.",
+          "No hay publicaciones completadas en el calendario para generar el PDF de este mes.",
         );
       const document = await createCalendarPdf({
         company,

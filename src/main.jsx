@@ -1959,7 +1959,7 @@ function CalendarModule({ manager, company }) {
     const legacyKey = `focugex_calendar_${(company || "general").toLowerCase().replace(/[^a-z0-9]/g, "_")}`;
     setLoadingCalendar(true);
     setCalendarError("");
-    api("/api/calendar/publications", {
+    api(`/api/calendar/publications?period=${period}`, {
       headers: manager ? { "X-Focugex-Company": company } : {},
     })
       .then(async ({ publications }) => {
@@ -1994,7 +1994,7 @@ function CalendarModule({ manager, company }) {
     return () => {
       active = false;
     };
-  }, [company, manager]);
+  }, [company, manager, period]);
   useEffect(() => {
     let active = true;
     api(`/api/calendar/plan?period=${period}`, {
@@ -2259,7 +2259,12 @@ function CalendarModule({ manager, company }) {
           ))}
         </nav>
       )}
-      {preview && viewMode === "month" && (
+      {preview && loadingCalendar && (
+        <div className="calendar-loading calendar-loading-preview" role="status">
+          <RefreshCw /> Preparando el calendario del mes…
+        </div>
+      )}
+      {preview && !loadingCalendar && viewMode === "month" && (
         <CalendarPresentation
           plan={plan}
           items={clientCalendarItems}
@@ -2268,14 +2273,14 @@ function CalendarModule({ manager, company }) {
           onSelectContent={(item) => setSelectedContent(item)}
         />
       )}
-      {preview && viewMode === "week" && (
+      {preview && !loadingCalendar && viewMode === "week" && (
         <WeekPresentation
           items={clientCalendarItems}
           selectedDate={selectedDate}
           onSelectContent={(item) => setSelectedContent(item)}
         />
       )}
-      {preview && viewMode === "day" && (
+      {preview && !loadingCalendar && viewMode === "day" && (
         <DayPresentation
           items={clientCalendarItems}
           selectedDate={selectedDate}
@@ -3533,7 +3538,7 @@ function CalendarPdfModule({ company }) {
     try {
       const headers = { "X-Focugex-Company": company };
       const [publicationResult, planResult, companyResult] = await Promise.all([
-        api("/api/calendar/publications", { headers }),
+        api(`/api/calendar/publications?period=${period}`, { headers }),
         api(`/api/calendar/plan?period=${period}`, { headers }),
         api("/api/company/current", { headers }),
       ]);

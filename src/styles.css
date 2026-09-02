@@ -1173,6 +1173,76 @@ body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; back
   .month-calendar .calendar-days > article.has-content { min-height: 148px !important; }
 }
 
+/* Portal del cliente: identidad visual propia y carga perceptible */
+.client-portal {
+  --client-primary: #0f8f78;
+  --client-primary-dark: #096b5c;
+  --client-accent: #ff8a4c;
+  --client-soft: #eefaf7;
+  --client-line: #cfe8e1;
+}
+.client-portal .portal-content { background: linear-gradient(145deg, #f5fbfa 0%, #f8fafc 48%, #fff8f3 100%) !important; }
+.client-portal .portal-sidebar { border-color: #d9e9e5 !important; background: #fff !important; }
+.client-portal .portal-sidebar > .brand b,
+.client-portal .portal-sidebar > .brand i { color: var(--client-primary) !important; }
+.client-portal .portal-role { color: #70827e !important; }
+.client-portal .portal-sidebar nav button.active {
+  border-color: #a9d9ce !important;
+  color: var(--client-primary-dark) !important;
+  background: var(--client-soft) !important;
+  box-shadow: inset 3px 0 var(--client-primary) !important;
+}
+.client-portal .portal-sidebar nav button.active svg,
+.client-portal .portal-company > svg { color: var(--client-primary) !important; }
+.client-portal .portal-company { border-color: var(--client-line) !important; background: #f3fbf9 !important; }
+.client-portal .calendar-view-switch { border-color: var(--client-line) !important; background: #fff !important; }
+.client-portal .calendar-view-switch button.active {
+  color: #fff !important;
+  background: linear-gradient(135deg, var(--client-primary), #14ad91) !important;
+  box-shadow: 0 7px 18px #0f8f7828 !important;
+}
+.client-portal .calendar-presentation { border-color: var(--client-line) !important; box-shadow: 0 20px 50px #146b5c12 !important; }
+.client-portal .calendar-presentation > header {
+  background: linear-gradient(125deg, #086c60, #0f8f78 58%, #15a58b) !important;
+}
+.client-portal .calendar-presentation > header span { color: #c9fff2 !important; }
+.client-portal .calendar-presentation > header p { color: #e0fff7 !important; }
+.client-portal .plan-summary,
+.client-portal .calendar-legend,
+.client-portal .month-calendar { background: #f7fcfb !important; }
+.client-portal .plan-summary > article,
+.client-portal .plan-summary > div { border-color: var(--client-line) !important; }
+.client-portal .plan-summary > article:nth-child(1) { border-top-color: var(--client-primary) !important; }
+.client-portal .plan-summary > article:nth-child(2) { border-top-color: #7656d8 !important; }
+.client-portal .plan-summary > article:nth-child(3) { border-top-color: var(--client-accent) !important; }
+.client-portal .calendar-days > article.has-content { border-color: #bcded6 !important; }
+.client-portal .calendar-days > article:hover { border-color: #72b9a9 !important; }
+.client-portal .calendar-days > article.is-today { border-color: var(--client-accent) !important; box-shadow: inset 0 0 0 1px var(--client-accent) !important; }
+.client-portal .calendar-days article.is-today > b { background: var(--client-accent) !important; }
+.client-portal .calendar-progress { border-color: var(--client-line); box-shadow: 0 10px 30px #146b5c0b; }
+.client-portal .calendar-progress-heading span { color: var(--client-primary); }
+.client-portal .calendar-progress-track { background: #e3f1ed; }
+.client-portal .calendar-progress-track > span {
+  background: linear-gradient(90deg, var(--client-primary-dark), #13a98d 68%, #40c8a7);
+  box-shadow: 0 0 14px #0f8f7838;
+}
+.client-portal .calendar-progress-stats .format-quota { border-color: var(--client-line); background: #f5fbf9; }
+.calendar-loading-preview {
+  min-height: 420px;
+  margin-top: 18px;
+  border: 1px solid #dce7e4;
+  border-radius: 14px;
+  color: #58706a;
+  background: linear-gradient(110deg, #fff 20%, #f1faf8 45%, #fff 70%);
+  background-size: 240% 100%;
+  animation: calendar-loading-sheen 1.4s ease-in-out infinite;
+}
+.client-portal .calendar-loading-preview svg { color: var(--client-primary); }
+@keyframes calendar-loading-sheen { to { background-position: -140% 0; } }
+@media (max-width: 640px) {
+  .calendar-loading-preview { min-height: 280px; margin-top: 12px; border-radius: 9px; }
+}
+
 /* Biblioteca de publicaciones: tarjetas compactas y controles editoriales */
 .calendar-module:not(:has(.calendar-presentation)) .calendar-toolbar {
   margin-bottom: 18px;

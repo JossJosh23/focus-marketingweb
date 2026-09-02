@@ -335,12 +335,14 @@ app.post("/api/manager/clients", authenticate, requireMarketing, async (req, res
 app.get("/api/calendar/publications", authenticate, async (req, res) => {
   const company = await companyForRequest(req);
   if (!company) return res.json({ publications: [] });
+  const period = String(req.query.period || "");
+  if (period && !/^\d{4}-\d{2}$/.test(period)) return res.status(400).json({ error: "El mes solicitado no es válido." });
   const result = await pool.query(`SELECT id, TO_CHAR(publication_date, 'YYYY-MM-DD') AS date, TO_CHAR(publication_time, 'HH24:MI') AS time, topic, copy, format, platforms, objective,
     distribution_type AS "distributionType", production_reference AS "productionReference", footer_text AS "footerText",
     media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName", approval_status AS "approvalStatus", client_comment AS "clientComment", reviewed_at AS "reviewedAt", is_draft_slot AS "isDraftSlot"
     FROM calendar_publications WHERE LOWER(company_name) = LOWER($1)
-    AND ($2::boolean = TRUE OR is_draft_slot = FALSE)
-    ORDER BY publication_date, publication_time NULLS LAST`, [company, ['manager', 'collaborator'].includes(req.user.role)]);
+    AND ($2 = '' OR (publication_date >= TO_DATE($2 || '-01', 'YYYY-MM-DD') AND publication_date < TO_DATE($2 || '-01', 'YYYY-MM-DD') + INTERVAL '1 month'))
+    ORDER BY publication_date, publication_time NULLS LAST`, [company, period]);
   res.json({ publications: result.rows });
 });
 

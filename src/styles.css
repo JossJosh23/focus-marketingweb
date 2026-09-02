@@ -1347,6 +1347,11 @@ body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; back
   letter-spacing: .04em;
 }
 .content-detail span { color: #667085 !important; font-size: 9px; line-height: 1.45; }
+.publication-footer { border-left: 3px solid #315bff; white-space: pre-wrap; }
+.publication-footer-field > small { color: #8490a5; font-size: 9px; font-weight: 500; }
+.daily-footer-text { margin-top: 14px; padding-top: 12px; border-top: 1px dashed #cfd8e8; }
+.daily-footer-text > small { color: #315bff !important; }
+.daily-footer-text > p { margin: 7px 0 0; color: #667085; white-space: pre-wrap; }
 .publication-body > p {
   min-height: 0 !important;
   margin: 10px 0 0 !important;

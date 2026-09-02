@@ -1379,6 +1379,7 @@ const emptyPublication = {
   copy: "",
   objective: "",
   productionReference: "",
+  footerText: "",
   distributionType: "organic",
   format: "post",
   platforms: [],
@@ -1862,6 +1863,12 @@ function DayPresentation({ items, selectedDate, company }) {
               <section>
                 <small>TEXTO DE PUBLICACIÓN</small>
                 <p>{item.copy || "Sin texto agregado"}</p>
+                {item.footerText && (
+                  <div className="daily-footer-text">
+                    <small>FOOTER</small>
+                    <p>{item.footerText}</p>
+                  </div>
+                )}
               </section>
               <section className="visual-reference">
                 <small>REFERENCIA VISUAL</small>
@@ -2354,6 +2361,12 @@ function CalendarModule({ manager, company }) {
                     </span>
                   </div>
                   <p>{item.copy || "Sin copy agregado."}</p>
+                  {item.footerText && (
+                    <div className="content-detail publication-footer">
+                      <small>FOOTER</small>
+                      <span>{item.footerText}</span>
+                    </div>
+                  )}
                   {item.productionReference && (
                     <div className="content-detail">
                       <small>PRODUCCIÓN / REFERENCIA</small>
@@ -2511,6 +2524,17 @@ function CalendarModule({ manager, company }) {
                     placeholder="Describe la fotografía, escena, diseño o material necesario"
                     rows="3"
                   />
+                </label>
+                <label className="wide publication-footer-field">
+                  Footer
+                  <textarea
+                    value={editing.footerText || ""}
+                    onChange={(e) => update("footerText", e.target.value)}
+                    placeholder="Direcciones, teléfonos, horarios o información recurrente"
+                    rows="4"
+                    maxLength="3000"
+                  />
+                  <small>No se incluirá en el PDF ni en las diapositivas.</small>
                 </label>
               </div>
               <fieldset>

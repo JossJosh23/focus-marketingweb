@@ -336,7 +336,7 @@ app.get("/api/calendar/publications", authenticate, async (req, res) => {
   const company = await companyForRequest(req);
   if (!company) return res.json({ publications: [] });
   const result = await pool.query(`SELECT id, TO_CHAR(publication_date, 'YYYY-MM-DD') AS date, TO_CHAR(publication_time, 'HH24:MI') AS time, topic, copy, format, platforms, objective,
-    distribution_type AS "distributionType", production_reference AS "productionReference",
+    distribution_type AS "distributionType", production_reference AS "productionReference", footer_text AS "footerText",
     media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName", approval_status AS "approvalStatus", client_comment AS "clientComment", reviewed_at AS "reviewedAt", is_draft_slot AS "isDraftSlot"
     FROM calendar_publications WHERE LOWER(company_name) = LOWER($1)
     AND ($2::boolean = TRUE OR is_draft_slot = FALSE)
@@ -445,24 +445,25 @@ app.put("/api/calendar/publications/:id", authenticate, requireMarketing, async 
   const objective = String(req.body.objective || "").trim();
   const distributionType = String(req.body.distributionType || "organic");
   const productionReference = String(req.body.productionReference || "").trim();
+  const footerText = String(req.body.footerText || "").trim();
   const format = String(req.body.format || "");
   const platforms = Array.isArray(req.body.platforms) ? req.body.platforms.map(String).slice(0, 10) : [];
   const mediaUrl = String(req.body.mediaUrl || "");
   const mediaType = ["image", "video"].includes(req.body.mediaType) ? req.body.mediaType : null;
   const mediaName = String(req.body.mediaName || "").slice(0, 255) || null;
   const allowedPlatforms = ["Instagram", "Facebook", "TikTok", "LinkedIn", "YouTube"];
-  if (!company || !/^[0-9a-f-]{36}$/i.test(id) || !validIsoDate(date) || !topic || topic.length > 200 || copy.length > 10000 || objective.length > 500 || productionReference.length > 5000 || !['organic', 'paid'].includes(distributionType) || !["post", "reel", "historia"].includes(format) || platforms.some((item) => !allowedPlatforms.includes(item))) return res.status(400).json({ error: "Los datos de la publicación no son válidos." });
+  if (!company || !/^[0-9a-f-]{36}$/i.test(id) || !validIsoDate(date) || !topic || topic.length > 200 || copy.length > 10000 || objective.length > 500 || productionReference.length > 5000 || footerText.length > 3000 || !['organic', 'paid'].includes(distributionType) || !["post", "reel", "historia"].includes(format) || platforms.some((item) => !allowedPlatforms.includes(item))) return res.status(400).json({ error: "Los datos de la publicación no son válidos." });
   if (mediaUrl && (!/^data:(image\/(jpeg|png|webp|gif)|video\/(mp4|webm|quicktime));base64,/.test(mediaUrl) || mediaUrl.length > 14_000_000)) return res.status(400).json({ error: "El archivo multimedia no es válido o supera los 10 MB." });
-  const result = await pool.query(`INSERT INTO calendar_publications (id, company_name, created_by, publication_date, publication_time, topic, copy, format, platforms, media_data, media_type, media_name, objective, distribution_type, production_reference)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+  const result = await pool.query(`INSERT INTO calendar_publications (id, company_name, created_by, publication_date, publication_time, topic, copy, format, platforms, media_data, media_type, media_name, objective, distribution_type, production_reference, footer_text)
+    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
     ON CONFLICT (id) DO UPDATE SET publication_date = EXCLUDED.publication_date, publication_time = EXCLUDED.publication_time,
       topic = EXCLUDED.topic, copy = EXCLUDED.copy, format = EXCLUDED.format, platforms = EXCLUDED.platforms,
       media_data = EXCLUDED.media_data, media_type = EXCLUDED.media_type, media_name = EXCLUDED.media_name, objective = $13,
-      distribution_type = $14, production_reference = $15, is_draft_slot = FALSE, updated_at = NOW()
+      distribution_type = $14, production_reference = $15, footer_text = $16, is_draft_slot = FALSE, updated_at = NOW()
     WHERE LOWER(calendar_publications.company_name) = LOWER(EXCLUDED.company_name)
     RETURNING id, TO_CHAR(publication_date, 'YYYY-MM-DD') AS date, TO_CHAR(publication_time, 'HH24:MI') AS time, topic, copy, format, platforms,
       media_data AS "mediaUrl", media_type AS "mediaType", media_name AS "mediaName", objective, distribution_type AS "distributionType",
-      production_reference AS "productionReference", approval_status AS "approvalStatus", client_comment AS "clientComment", reviewed_at AS "reviewedAt", is_draft_slot AS "isDraftSlot"`, [id, company, req.user.id, date, time, topic, copy, format, platforms, mediaUrl || null, mediaType, mediaName, objective, distributionType, productionReference]);
+      production_reference AS "productionReference", footer_text AS "footerText", approval_status AS "approvalStatus", client_comment AS "clientComment", reviewed_at AS "reviewedAt", is_draft_slot AS "isDraftSlot"`, [id, company, req.user.id, date, time, topic, copy, format, platforms, mediaUrl || null, mediaType, mediaName, objective, distributionType, productionReference, footerText]);
   if (!result.rowCount) return res.status(403).json({ error: "No puedes modificar publicaciones de otra empresa." });
   await logActivity(req.user.id, "publication.saved", "publication", id, { company });
   res.json({ publication: result.rows[0] });

@@ -105,6 +105,7 @@ export async function initializeDatabase() {
     ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS objective VARCHAR(500) NOT NULL DEFAULT '';
     ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS distribution_type VARCHAR(20) NOT NULL DEFAULT 'organic';
     ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS production_reference TEXT NOT NULL DEFAULT '';
+    ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS footer_text TEXT NOT NULL DEFAULT '';
     ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS approval_status VARCHAR(30) NOT NULL DEFAULT 'pending';
     ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS client_comment TEXT NOT NULL DEFAULT '';
     ALTER TABLE calendar_publications ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ;

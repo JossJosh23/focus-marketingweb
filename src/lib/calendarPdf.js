@@ -4,16 +4,34 @@ const INK = [23, 32, 51];
 const MUTED = [102, 112, 133];
 const PAPER = [247, 249, 255];
 
+function pdfSafeText(value) {
+  return String(value ?? "—")
+    .normalize("NFC")
+    .replace(/[\p{Extended_Pictographic}\u200d\ufe0f]/gu, "")
+    .replace(/[\u{1f1e6}-\u{1f1ff}]/gu, "")
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"')
+    .replace(/\u2026/g, "...")
+    .replace(/[^\x09\x0a\x0d\x20-\x7e\u00a0-\u00ff]/g, "")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
 function text(doc, value, x, y, options = {}) {
   doc.setFont("helvetica", options.bold ? "bold" : "normal");
   doc.setFontSize(options.size || 10);
   doc.setTextColor(...(options.color || INK));
-  let lines = doc.splitTextToSize(String(value ?? "—"), options.width || 100);
+  const safeValue = pdfSafeText(value) || "-";
+  let lines = doc.splitTextToSize(safeValue, options.width || 100);
   if (options.maxLines && lines.length > options.maxLines) {
     lines = lines.slice(0, options.maxLines);
     lines[lines.length - 1] = `${lines[lines.length - 1].replace(/[.…]+$/, "")}…`;
   }
-  doc.text(lines, x, y, { align: options.align || "left" });
+  doc.text(lines, x, y, {
+    align: options.align || "left",
+    maxWidth: options.width || 100,
+    lineHeightFactor: 1.12,
+  });
   return lines.length;
 }
 

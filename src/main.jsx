@@ -1532,7 +1532,7 @@ function CalendarContentCard({ item, onSelect }) {
         className="calendar-pending-slot"
         aria-label={`Contenido pendiente para el ${item.date}`}
       >
-        <span>PENDIENTE</span>
+        <span>{String(item.format || "post").toUpperCase()} · PENDIENTE</span>
         <strong>Contenido por completar</strong>
         <small>Esta fecha aún no ha sido llenada</small>
       </div>
@@ -1747,7 +1747,7 @@ function WeekPresentation({ items, selectedDate, onSelectContent }) {
               </header>
               {entries.map((item) => item.isDraftSlot ? (
                 <div className="calendar-pending-slot" key={item.id}>
-                  <span>PENDIENTE</span>
+                  <span>{String(item.format || "post").toUpperCase()} · PENDIENTE</span>
                   <strong>Contenido por completar</strong>
                   <small>Esta fecha aún no ha sido llenada</small>
                 </div>
@@ -3132,7 +3132,7 @@ function MonthStructureModule({ company }) {
       ...current,
       keyDates: [
         ...current.keyDates,
-        { date: `${period}-01`, title: "", description: "" },
+        { date: `${period}-01`, title: "", description: "", format: "post" },
       ],
     }));
   }
@@ -3385,6 +3385,7 @@ function MonthStructureModule({ company }) {
             {!!form.keyDates.length && (
               <div className="key-date-head" aria-hidden="true">
                 <span>Fecha</span>
+                <span>Formato</span>
                 <span>Nombre del contenido</span>
                 <span>Descripción o intención</span>
                 <span></span>
@@ -3402,6 +3403,16 @@ function MonthStructureModule({ company }) {
                   }
                   required
                 />
+                <select
+                  value={item.format || "post"}
+                  onChange={(event) =>
+                    updateKeyDate(index, "format", event.target.value)
+                  }
+                  aria-label="Formato del contenido"
+                >
+                  <option value="post">Post</option>
+                  <option value="reel">Reel</option>
+                </select>
                 <input
                   value={item.title}
                   onChange={(event) =>

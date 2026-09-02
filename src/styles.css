@@ -1433,9 +1433,11 @@ body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; back
 .key-dates { margin-top: 4px !important; padding: 20px !important; border-radius: 10px !important; background: #f2f6ff !important; }
 .key-dates legend { color: #172033 !important; font-size: 12px !important; }
 .key-dates > p { color: #667085 !important; line-height: 1.5; }
-.key-dates > div.key-date-head { margin: 0 0 2px; padding: 0 3px; display: grid; grid-template-columns: 155px minmax(170px, .8fr) minmax(220px, 1.2fr) 40px; gap: 8px; }
+.key-dates > div.key-date-head { margin: 0 0 2px; padding: 0 3px; display: grid; grid-template-columns: 155px 105px minmax(170px, .8fr) minmax(220px, 1.2fr) 40px; gap: 8px; }
 .key-date-head span { color: #667085; font-size: 9px; font-weight: 750; letter-spacing: .025em; }
-.key-dates > div:not(.key-date-head) { padding: 8px; border: 1px solid #dce4f2; border-radius: 9px; background: #fff; }
+.key-dates > div:not(.key-date-head) { padding: 8px; border: 1px solid #dce4f2; border-radius: 9px; grid-template-columns: 155px 105px minmax(170px, .8fr) minmax(220px, 1.2fr) 40px; background: #fff; }
+.key-dates select { width: 100%; min-height: 100%; padding: 0 10px; border: 1px solid #d7e0f2; border-radius: 8px; color: #344054; background: #fbfcff; font: inherit; font-size: 10px; }
+.key-dates select:focus { border-color: #315bff; outline: 0; box-shadow: 0 0 0 3px #315bff14; }
 .structure-module form > footer { margin-top: 4px; padding: 18px 0 0 !important; border-color: #dce4f2 !important; }
 .range-control { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px 14px; }
 .range-control output { min-width: 42px; height: 42px; padding: 0 9px; border-radius: 8px; display: grid; place-items: center; color: #fff; background: #315bff; font-size: 15px; font-weight: 800; }

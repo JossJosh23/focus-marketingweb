@@ -1445,6 +1445,14 @@ body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; back
 .range-control input[type="range"]::-moz-range-thumb { width: 15px; height: 15px; border: 3px solid #fff; border-radius: 50%; background: #315bff; box-shadow: 0 2px 8px #315bff55; }
 .range-control input[type="range"]:disabled { cursor: not-allowed; opacity: .4; }
 .range-control > small { grid-column: 2; display: flex; justify-content: space-between; color: #8490a5; font-size: 8px; }
+.day-selector { display: grid; gap: 10px; }
+.day-selector > output { color: #2447c7; font-size: 10px; font-weight: 750; }
+.day-selector > div { display: grid; grid-template-columns: repeat(10, minmax(28px, 1fr)); gap: 5px; }
+.day-selector button { min-height: 30px; padding: 0; border: 1px solid #d8e1f2; border-radius: 6px; color: #526078; background: #f9fbff; font-size: 9px; font-weight: 700; }
+.day-selector button:hover:not(:disabled) { border-color: #9db1ec; color: #315bff; background: #eef3ff; }
+.day-selector button.selected { border-color: #315bff; color: #fff; background: #315bff; box-shadow: 0 4px 10px #315bff2b; }
+.day-selector button:disabled { cursor: not-allowed; opacity: .38; }
+.field-help { color: #8490a5; font-size: 9px; font-weight: 500; }
 @media (max-width: 760px) {
   .structure-module form { padding: 14px !important; }
   .structure-module form > label { padding: 13px; }
@@ -1455,4 +1463,5 @@ body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; back
   .range-control { grid-template-columns: 1fr; }
   .range-control output, .distribution-range output { width: 100%; min-width: 0; }
   .range-control > small { grid-column: 1; }
+  .day-selector > div { grid-template-columns: repeat(7, minmax(28px, 1fr)); }
 }

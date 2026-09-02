@@ -1534,7 +1534,7 @@ function CalendarContentCard({ item, onSelect }) {
       >
         <span>PENDIENTE</span>
         <strong>Contenido por completar</strong>
-        <small>Esta fecha aÃºn no ha sido llenada</small>
+        <small>Esta fecha aún no ha sido llenada</small>
       </div>
     );
   }
@@ -1749,7 +1749,7 @@ function WeekPresentation({ items, selectedDate, onSelectContent }) {
                 <div className="calendar-pending-slot" key={item.id}>
                   <span>PENDIENTE</span>
                   <strong>Contenido por completar</strong>
-                  <small>Esta fecha aÃºn no ha sido llenada</small>
+                  <small>Esta fecha aún no ha sido llenada</small>
                 </div>
               ) : (
                 <button
@@ -3164,6 +3164,42 @@ function MonthStructureModule({ company }) {
     const paid = Math.min(Number(value), totalPosts);
     update("postsDetail", distributionLabel(totalPosts, paid));
   }
+  const totalVideos = Number(form.videosPerMonth || 0);
+  const reelVideos = Math.min(
+    totalVideos,
+    Number(String(form.videosDetail || "").match(/(\d+)\s*reels?/i)?.[1] || 0),
+  );
+  const videoMixLabel = (total, reels) =>
+    `${reels} ${reels === 1 ? "reel" : "reels"} + ${Math.max(total - reels, 0)} TikTok${total - reels === 1 ? "" : "s"}`;
+  function updateVideoTotal(value) {
+    const total = Number(value);
+    const adjustedReels = Math.min(reelVideos, total);
+    setForm((current) => ({
+      ...current,
+      videosPerMonth: total,
+      videosDetail: videoMixLabel(total, adjustedReels),
+      videoSchedule: (String(current.videoSchedule || "").match(/\d+/g) || [])
+        .map(Number)
+        .slice(0, total)
+        .sort((a, b) => a - b)
+        .join(", "),
+    }));
+  }
+  const selectedVideoDays = [...new Set((String(form.videoSchedule || "").match(/\d+/g) || []).map(Number))]
+    .filter((day) => day >= 1 && day <= new Date(Number(period.slice(0, 4)), Number(period.slice(5, 7)), 0).getDate());
+  const daysInPeriod = new Date(Number(period.slice(0, 4)), Number(period.slice(5, 7)), 0).getDate();
+  function toggleVideoDay(day) {
+    const selected = selectedVideoDays.includes(day)
+      ? selectedVideoDays.filter((item) => item !== day)
+      : selectedVideoDays.length < totalVideos
+        ? [...selectedVideoDays, day]
+        : selectedVideoDays;
+    update("videoSchedule", selected.sort((a, b) => a - b).join(", "));
+  }
+  const boostFrequency = Math.min(
+    30,
+    Math.max(1, Number(String(form.videoBoostDetail || "").match(/\d+/)?.[0] || 10)),
+  );
   async function save(event) {
     event.preventDefault();
     setSaving(true);
@@ -3266,50 +3302,44 @@ function MonthStructureModule({ company }) {
           </label>
           <label>
             <span>4. ¿Cuántos videos tendrá el mes?</span>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={form.videosPerMonth || 0}
-              onChange={(event) =>
-                update("videosPerMonth", Number(event.target.value))
-              }
-            />
+            <div className="range-control">
+              <output>{totalVideos}</output>
+              <input type="range" min="0" max="30" step="1" value={totalVideos} onChange={(event) => updateVideoTotal(event.target.value)} aria-label="Videos del mes" />
+              <small><span>0</span><span>30 videos</span></small>
+            </div>
           </label>
           <label>
             <span>5. ¿Qué tipos de videos se producirán?</span>
-            <input
-              value={form.videosDetail || ""}
-              onChange={(event) => update("videosDetail", event.target.value)}
-            />
+            <div className="range-control distribution-range">
+              <output>{videoMixLabel(totalVideos, reelVideos)}</output>
+              <input type="range" min="0" max={totalVideos} step="1" value={reelVideos} disabled={!totalVideos} onChange={(event) => update("videosDetail", videoMixLabel(totalVideos, Number(event.target.value)))} aria-label="Distribución de videos" />
+              <small><span>Todos TikToks</span><span>Máximo {totalVideos} reels</span></small>
+            </div>
           </label>
           <label>
             <span>6. ¿En qué fechas se pautarán los videos?</span>
-            <input
-              value={form.videoSchedule || ""}
-              onChange={(event) => update("videoSchedule", event.target.value)}
-            />
+            <div className="day-selector">
+              <output>{selectedVideoDays.length} de {totalVideos} fechas seleccionadas</output>
+              <div>{Array.from({ length: daysInPeriod }, (_, index) => index + 1).map((day) => (
+                <button type="button" className={selectedVideoDays.includes(day) ? "selected" : ""} disabled={!selectedVideoDays.includes(day) && selectedVideoDays.length >= totalVideos} onClick={() => toggleVideoDay(day)} key={day}>{day}</button>
+              ))}</div>
+            </div>
           </label>
           <label>
             <span>7. ¿Cuál será la frecuencia o intención de la pauta?</span>
-            <input
-              value={form.videoBoostDetail || ""}
-              onChange={(event) =>
-                update("videoBoostDetail", event.target.value)
-              }
-            />
+            <div className="range-control distribution-range">
+              <output>Cada {boostFrequency} días</output>
+              <input type="range" min="1" max="30" step="1" value={boostFrequency} onChange={(event) => update("videoBoostDetail", `Un impulso cada ${event.target.value} días`)} aria-label="Frecuencia de la pauta" />
+              <small><span>Diaria</span><span>Cada 30 días</span></small>
+            </div>
           </label>
           <label>
             <span>8. ¿Cuántas líneas principales habrá?</span>
-            <input
-              type="number"
-              min="0"
-              max="100"
-              value={form.mainLinesCount || 0}
-              onChange={(event) =>
-                update("mainLinesCount", Number(event.target.value))
-              }
-            />
+            <div className="range-control">
+              <output>{form.mainLinesCount || 0}</output>
+              <input type="range" min="0" max="20" step="1" value={form.mainLinesCount || 0} onChange={(event) => update("mainLinesCount", Number(event.target.value))} aria-label="Líneas principales" />
+              <small><span>0</span><span>20 líneas</span></small>
+            </div>
           </label>
           <label>
             <span>9. ¿Cuáles son esas líneas de contenido?</span>
@@ -3317,7 +3347,9 @@ function MonthStructureModule({ company }) {
               rows="4"
               value={form.mainLines || ""}
               onChange={(event) => update("mainLines", event.target.value)}
+              placeholder="Escribe una línea de contenido por renglón"
             />
+            <small className="field-help">Sugerencia: usa un renglón para cada una de las {form.mainLinesCount || 0} líneas.</small>
           </label>
           <fieldset className="key-dates">
             <legend>10. Fechas específicas del mes</legend>
@@ -3329,7 +3361,7 @@ function MonthStructureModule({ company }) {
               <div className="key-date-head" aria-hidden="true">
                 <span>Fecha</span>
                 <span>Nombre del contenido</span>
-                <span>DescripciÃ³n o intenciÃ³n</span>
+                <span>Descripción o intención</span>
                 <span></span>
               </div>
             )}

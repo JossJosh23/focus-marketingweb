@@ -190,7 +190,7 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
   });
   pageFooter(doc, period, 2);
   let nextPageNumber = 3;
-  const keyDates = Array.isArray(plan?.keyDates) ? [...plan.keyDates].filter((item) => item.date && item.title).sort((a, b) => a.date.localeCompare(b.date)) : [];
+  const keyDates = [];
   for (let start = 0; start < keyDates.length; start += 5) {
     const group = keyDates.slice(start, start + 5);
     doc.addPage("a4", "landscape");
@@ -290,7 +290,7 @@ export async function createCalendarPdf({ company, logoData, period, plan, publi
     const hiddenCount = calendarEntries.filter((item) => item.date === dayKey).length - entries.length;
     if (hiddenCount > 0) text(doc, `+${hiddenCount} más`, x + columnWidth - 3, y + rowHeight - 4, { bold: true, size: 5.5, color: MUTED, align: "right", width: 18, maxLines: 1 });
   }
-  [[GREEN, "Post"], [[155, 108, 255], "Reel"], [[255, 181, 71], "Historia"], [ORANGE, "Fecha clave"], [MUTED, "Pendiente"]].forEach(([color, label], index) => { const x = 20 + index * 42; doc.setFillColor(...color); doc.circle(x, 185, 1.2, "F"); text(doc, label, x + 3, 187, { bold: true, size: 6.5, color, width: 34, maxLines: 1 }); });
+  [[GREEN, "Post"], [[155, 108, 255], "Reel"], [[255, 181, 71], "Historia"], [MUTED, "Pendiente"]].forEach(([color, label], index) => { const x = 20 + index * 42; doc.setFillColor(...color); doc.circle(x, 185, 1.2, "F"); text(doc, label, x + 3, 187, { bold: true, size: 6.5, color, width: 34, maxLines: 1 }); });
   pageFooter(doc, period, nextPageNumber + publications.length);
 
   return doc;

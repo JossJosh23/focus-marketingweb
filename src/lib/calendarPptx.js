@@ -128,7 +128,7 @@ export async function createCalendarPptx({ company, logoData, period, plan, publ
   });
   addFooter(slide, period, page++);
 
-  const keyDates = Array.isArray(plan?.keyDates) ? plan.keyDates.filter((item) => item.date && item.title) : [];
+  const keyDates = [];
   for (let start = 0; start < keyDates.length; start += 5) {
     slide = baseSlide(pptx);
     addHeader(slide, company, periodLabel, logoData);

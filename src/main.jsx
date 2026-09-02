@@ -1655,9 +1655,6 @@ function CalendarPresentation({
         <span className="historia">
           <i></i>Historia
         </span>
-        <span className="key-date">
-          <i></i>Fecha clave
-        </span>
         <span className="pending-slot">
           <i></i>Por completar
         </span>
@@ -1677,17 +1674,9 @@ function CalendarPresentation({
             const day = index + 1;
             const date = `${period}-${String(day).padStart(2, "0")}`;
             const entries = items.filter((item) => item.date === date);
-            const keyDates = (plan?.keyDates || []).filter(
-              (item) =>
-                item.date === date &&
-                !entries.some(
-                  (entry) =>
-                    entry.topic.toLowerCase() === item.title.toLowerCase(),
-                ),
-            );
             return (
               <article
-                className={`${entries.length || keyDates.length ? "has-content" : ""} ${date === todayIso ? "is-today" : ""} ${(offset + index) % 7 > 4 ? "is-weekend" : ""}`.trim()}
+                className={`${entries.length ? "has-content" : ""} ${date === todayIso ? "is-today" : ""} ${(offset + index) % 7 > 4 ? "is-weekend" : ""}`.trim()}
                 key={day}
               >
                 <b>{day}</b>
@@ -1697,16 +1686,6 @@ function CalendarPresentation({
                     onSelect={onSelectContent}
                     key={item.id}
                   />
-                ))}
-                {keyDates.map((item, keyIndex) => (
-                  <div
-                    className="calendar-key-date"
-                    key={`${item.date}-${item.title}-${keyIndex}`}
-                    title={item.description}
-                  >
-                    <small>FECHA CLAVE</small>
-                    {item.title}
-                  </div>
                 ))}
               </article>
             );

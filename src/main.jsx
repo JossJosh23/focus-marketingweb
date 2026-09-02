@@ -3142,6 +3142,28 @@ function MonthStructureModule({ company }) {
       keyDates: current.keyDates.filter((_, itemIndex) => itemIndex !== index),
     }));
   }
+  const totalPosts = Number(form.postsPerWeek || 0);
+  const paidPosts = Math.min(
+    totalPosts,
+    Number(String(form.postsDetail || "").match(/(\d+)\s*(?:para\s*)?pauta/i)?.[1] || 0),
+  );
+  function distributionLabel(total, paid) {
+    const organic = Math.max(total - paid, 0);
+    return `${organic} ${organic === 1 ? "orgÃ¡nico" : "orgÃ¡nicos"} + ${paid} para pauta`;
+  }
+  function updatePostTotal(value) {
+    const total = Number(value);
+    const adjustedPaid = Math.min(paidPosts, total);
+    setForm((current) => ({
+      ...current,
+      postsPerWeek: total,
+      postsDetail: distributionLabel(total, adjustedPaid),
+    }));
+  }
+  function updatePaidPosts(value) {
+    const paid = Math.min(Number(value), totalPosts);
+    update("postsDetail", distributionLabel(totalPosts, paid));
+  }
   async function save(event) {
     event.preventDefault();
     setSaving(true);
@@ -3211,22 +3233,36 @@ function MonthStructureModule({ company }) {
           </label>
           <label>
             <span>2. ¿Cuántos espacios para posts habrá por semana?</span>
-            <input
-              type="number"
-              min="0"
-              max="30"
-              value={form.postsPerWeek || 0}
-              onChange={(event) =>
-                update("postsPerWeek", Number(event.target.value))
-              }
-            />
+            <div className="range-control">
+              <output>{totalPosts}</output>
+              <input
+                type="range"
+                min="0"
+                max="30"
+                step="1"
+                value={totalPosts}
+                onChange={(event) => updatePostTotal(event.target.value)}
+                aria-label="Posts por semana"
+              />
+              <small><span>0</span><span>30 posts</span></small>
+            </div>
           </label>
           <label>
             <span>3. ¿Cómo se distribuyen esos posts?</span>
-            <input
-              value={form.postsDetail || ""}
-              onChange={(event) => update("postsDetail", event.target.value)}
-            />
+            <div className="range-control distribution-range">
+              <output>{distributionLabel(totalPosts, paidPosts)}</output>
+              <input
+                type="range"
+                min="0"
+                max={totalPosts}
+                step="1"
+                value={paidPosts}
+                disabled={!totalPosts}
+                onChange={(event) => updatePaidPosts(event.target.value)}
+                aria-label="Cantidad de posts para pauta"
+              />
+              <small><span>Todos orgÃ¡nicos</span><span>MÃ¡ximo {totalPosts} para pauta</span></small>
+            </div>
           </label>
           <label>
             <span>4. ¿Cuántos videos tendrá el mes?</span>

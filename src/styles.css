@@ -1437,6 +1437,14 @@ body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; back
 .key-date-head span { color: #667085; font-size: 9px; font-weight: 750; letter-spacing: .025em; }
 .key-dates > div:not(.key-date-head) { padding: 8px; border: 1px solid #dce4f2; border-radius: 9px; background: #fff; }
 .structure-module form > footer { margin-top: 4px; padding: 18px 0 0 !important; border-color: #dce4f2 !important; }
+.range-control { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px 14px; }
+.range-control output { min-width: 42px; height: 42px; padding: 0 9px; border-radius: 8px; display: grid; place-items: center; color: #fff; background: #315bff; font-size: 15px; font-weight: 800; }
+.distribution-range output { min-width: 185px; padding: 0 12px; color: #2447c7; background: #eef3ff; font-size: 11px; white-space: nowrap; }
+.range-control input[type="range"] { height: 6px !important; padding: 0 !important; border: 0 !important; border-radius: 999px !important; appearance: none; cursor: pointer; background: linear-gradient(90deg, #315bff, #7758e8) !important; box-shadow: none !important; }
+.range-control input[type="range"]::-webkit-slider-thumb { width: 20px; height: 20px; border: 3px solid #fff; border-radius: 50%; appearance: none; background: #315bff; box-shadow: 0 2px 8px #315bff55; }
+.range-control input[type="range"]::-moz-range-thumb { width: 15px; height: 15px; border: 3px solid #fff; border-radius: 50%; background: #315bff; box-shadow: 0 2px 8px #315bff55; }
+.range-control input[type="range"]:disabled { cursor: not-allowed; opacity: .4; }
+.range-control > small { grid-column: 2; display: flex; justify-content: space-between; color: #8490a5; font-size: 8px; }
 @media (max-width: 760px) {
   .structure-module form { padding: 14px !important; }
   .structure-module form > label { padding: 13px; }
@@ -1444,4 +1452,7 @@ body, .role-portal, .admin-shell, .admin-shell.admin-dark { color: #172033; back
   .key-dates > div.key-date-head { display: none; }
   .key-dates > div:not(.key-date-head) { grid-template-columns: 1fr !important; }
   .key-dates > div:not(.key-date-head) button { min-height: 40px; }
+  .range-control { grid-template-columns: 1fr; }
+  .range-control output, .distribution-range output { width: 100%; min-width: 0; }
+  .range-control > small { grid-column: 1; }
 }
